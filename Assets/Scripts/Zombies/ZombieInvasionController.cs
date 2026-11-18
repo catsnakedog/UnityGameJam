@@ -128,8 +128,8 @@ namespace UnityGameJam.Zombies
         {
             int loss = simulation.Rules.InvasionMentalLoss;
             foreach (var actor in roster.Characters)
-                if (actor) actor.SetMental(Mathf.Max(0, actor.CurrentMental - loss));
-            Report($"{zombie.Definition.DisplayName} 전투 방 침입 · 전원 멘탈 −{loss}");
+                if (actor) actor.ApplyMentalChange(-loss);
+            Report($"{zombie.Definition.DisplayName} 전투 방 침입 · 전원 기본 멘탈 −{loss}");
         }
         public bool CanStartDefense(ZombieAgent candidate)
         {

@@ -91,7 +91,7 @@ namespace UnityGameJam.Shelter
         void ProcessTick(int tick)
         {
             foreach (var actor in roster.Characters)
-                if (actor) { actor.AdvanceMentalTick(); actor.AdvanceHungerTick(tick); }
+                if (actor) { actor.AdvanceHungerTick(tick); actor.AdvanceMentalTick(); }
             // All due work on the last tick precedes submission of the final progress snapshot.
             if (tick % Rules.WorkEveryTicks == 0) { ProcessWork(); WorkProcessed?.Invoke(tick); }
             if (Rules.IsPresentationTick(tick))
@@ -100,7 +100,7 @@ namespace UnityGameJam.Shelter
                 var grade = Rules.GradePresentation(score);
                 LastPresentationTick = tick;
                 foreach (var actor in roster.Characters)
-                    if (actor) actor.SetMental(actor.ClampMental((long)actor.CurrentMental + grade.MentalDelta));
+                    if (actor) actor.ApplyMentalChange(grade.MentalDelta);
                 PresentationDue?.Invoke(tick, score, grade);
             }
             else if (tick < Rules.TotalTicks && tick % Rules.RandomEventEveryTicks == 0) RandomEventDue?.Invoke(tick);
@@ -156,7 +156,7 @@ namespace UnityGameJam.Shelter
                         continue;
                 }
                 if (Rules.MentalCostPerWork > 0)
-                    actor.SetMental(Math.Max(0, actor.CurrentMental - Rules.MentalCostPerWork));
+                    actor.ApplyMentalChange(-Rules.MentalCostPerWork);
             }
             development.AddProgress(GameDevField.Programming, (float)Math.Min(100, programming * Rules.PercentPerAbility));
             development.AddProgress(GameDevField.Graphics, (float)Math.Min(100, graphics * Rules.PercentPerAbility));

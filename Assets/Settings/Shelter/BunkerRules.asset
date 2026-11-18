@@ -50,6 +50,7 @@ MonoBehaviour:
   wakeMental: 50
   hungerEveryTicks: 5
   hungerLoss: 1
+  emptyHungerMentalLossMultiplier: 2
   foodRestore: 5
   servingsPerCan: 4
   evaluationTargetProgress: 96

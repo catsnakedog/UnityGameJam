@@ -215,8 +215,8 @@ namespace UnityGameJam.Zombies
                 return $"좀비 HP -{Rules.DamageToZombie}";
             }
             if (actor != attackTarget) return "공격 실패";
-            actor.SetMental(Mathf.Max(0, actor.CurrentMental - Rules.MentalDamage));
-            return $"멘탈 -{Rules.MentalDamage}";
+            int change = actor.ApplyMentalChange(-Rules.MentalDamage);
+            return $"멘탈 {change}";
         }
         void BeginInvasion()
         {

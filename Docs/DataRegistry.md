@@ -6,6 +6,8 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 ## 등록된 데이터
 
+허기가 0인 생존자의 멘탈 감소 배율은 `data.bunker.rules.emptyHungerMentalLossMultiplier`에서 조정한다. [필드 명세](DataSpecs/BunkerRules.md) · [변경 이력](DataHistory/20261119-empty-hunger-mental.md)
+
 중간 발표의 시각·등급별 멘탈과 첫 좀비 습격 틱은 기존 `data.bunker.rules`에서 편집한다. 시계·팝업은 이 규칙과 시뮬레이션의 회차 상태를 읽는다. [필드 명세](DataSpecs/BunkerRules.md) · [원문 대조와 검증](DataHistory/20261119-midterm-clock.md)
 
 수면실 정원은 기존 `data.bunker.rules.sleepingRoomCapacity`가 소유한다. 이동 중 자리 예약과 구조 대상의 병상은 생존자의 회차 상태로 계산한다. [방 규칙](DataSpecs/BunkerRules.md) · [변경 전 조사](DataHistory/20261119-sleep-capacity-plan.md)

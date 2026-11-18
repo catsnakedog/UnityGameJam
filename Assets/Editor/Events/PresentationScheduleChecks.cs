@@ -105,7 +105,11 @@ public static class PresentationScheduleChecks
                         Math.Abs(presentations[round].score - expectedScores[round]) < 1e-9 &&
                         presentations[round].grade.MentalDelta == expectedDeltas[round] && simulation.LastPresentationTick == tick,
                         $"Round {round + 1} dispatched its score and grade once at tick {tick}", report);
-                    var after = mental.Select(value => Mathf.Clamp(value + expectedDeltas[round], 0, simulation.Rules.MentalMaximum)).ToArray();
+                    var after = actors.Select((actor, i) =>
+                    {
+                        int multiplier = actor.Hunger == 0 && expectedDeltas[round] < 0 ? simulation.Rules.EmptyHungerMentalLossMultiplier : 1;
+                        return Mathf.Clamp(mental[i] + expectedDeltas[round] * multiplier, 0, simulation.Rules.MentalMaximum);
+                    }).ToArray();
                     Check(actors.Select(actor => actor.CurrentMental).SequenceEqual(after) && !completed.Contains(tick),
                         $"All three mental values applied before confirming round {round + 1}", report);
                     report.Add(GameDevChecks.CheckClockScheduleInPlay());

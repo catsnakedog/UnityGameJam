@@ -68,7 +68,7 @@ namespace UnityGameJam.Events
         public void ShowPresentation(int round, int tick, GameDevProgress progress, double score, BunkerRules.PresentationGrade grade)
         {
             string progressLine = $"기획 {Percent(progress.Planning)}   프로그래밍 {Percent(progress.Programming)}   그래픽 {Percent(progress.Graphics)}";
-            string summary = $"{progressLine}\n평가 점수  {score:0.000}\n팀원 1인당 멘탈  {grade.MentalDelta:+0;-0;0}";
+            string summary = $"{progressLine}\n평가 점수  {score:0.000}\n팀원 1인당 기본 멘탈  {grade.MentalDelta:+0;-0;0}";
             Open(Page.Presentation, $"{round}차 발표  ·  {tick}틱", "중간 발표", summary);
             resultLabel.text = grade.Label;
             resultLabel.color = grade.Color;

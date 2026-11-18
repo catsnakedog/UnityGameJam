@@ -37,7 +37,7 @@ namespace UnityGameJam.Events
                         foreach(var actor in targets)
                         {
                             int before=mental.TryGetValue(actor,out int staged)?staged:actor.CurrentMental;
-                            mental[actor]=actor.ClampMental((long)before+effect.Delta);
+                            mental[actor]=actor.MentalAfterChange(before, effect.Delta);
                         }
                         break;
                     case EventEffectKind.Progress:

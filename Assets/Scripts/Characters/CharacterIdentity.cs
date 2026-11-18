@@ -68,9 +68,20 @@ namespace UnityGameJam.Characters
             if (!room || !room.IsWalkable || walker.IsMoving || walker.IsInElevator ||
                 !room.ContainsFeet(transform.position)) return;
             if (room.roomType == ShelterRoomType.Sleeping && room.IsOperational && (CanAct || IsRestingAfterRescue))
-                SetMental(ClampMental((long)CurrentMental + rules.SleepMentalPerTick));
+                ApplyMentalChange(rules.SleepMentalPerTick);
             else if (room.roomType == ShelterRoomType.ZombieInvasion && CanAct)
-                SetMental(Mathf.Max(0, CurrentMental - rules.GuardMentalLossPerTick));
+                ApplyMentalChange(-rules.GuardMentalLossPerTick);
+        }
+        internal int MentalAfterChange(int before, int delta)
+        {
+            int multiplier = delta < 0 && Hunger == 0 && rules ? rules.EmptyHungerMentalLossMultiplier : 1;
+            return ClampMental(before + (long)delta * multiplier);
+        }
+        internal int ApplyMentalChange(int delta)
+        {
+            int before = CurrentMental;
+            SetMental(MentalAfterChange(before, delta));
+            return CurrentMental - before;
         }
         public int ClampMental(long value) => (int)System.Math.Max(0, System.Math.Min(rules ? rules.MentalMaximum : int.MaxValue, value));
         [SerializeField] UnityEngine.UI.Image mentalFill;

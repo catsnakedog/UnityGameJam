@@ -53,10 +53,12 @@ namespace UnityGameJam.Shelter
         [Header("허기와 통조림")]
         [SerializeField, Min(1), Tooltip("허기가 줄어드는 벙커 틱 간격")] int hungerEveryTicks;
         [SerializeField, Range(0, HungerCapacity), Tooltip("감소 시 비우는 칸 수")] int hungerLoss;
+        [SerializeField, Min(1), Tooltip("허기 0칸일 때 멘탈 감소량에 적용하는 배율")] int emptyHungerMentalLossMultiplier = 2;
         [SerializeField, Range(1, HungerCapacity), Tooltip("통조림 한 입으로 채우는 칸 수")] int foodRestore;
         [SerializeField, Min(1), Tooltip("새 통조림 한 개의 사용 횟수")] int servingsPerCan;
         public int HungerEveryTicks => hungerEveryTicks;
         public int HungerLoss => hungerLoss;
+        public int EmptyHungerMentalLossMultiplier => emptyHungerMentalLossMultiplier;
         public int FoodRestore => foodRestore;
         public int ServingsPerCan => servingsPerCan;
         [SerializeField, Min(0.001f)] double evaluationTargetProgress;
@@ -104,7 +106,7 @@ namespace UnityGameJam.Shelter
                 throw new InvalidOperationException("Invalid bunker invasion timing or mental loss.");
             if (mentalCostPerWork < 0)
                 throw new InvalidOperationException("Invalid data.bunker.rules: mentalCostPerWork must be nonnegative.");
-            if (hungerEveryTicks < 1 || hungerLoss < 0 || hungerLoss > HungerCapacity ||
+            if (hungerEveryTicks < 1 || hungerLoss < 0 || hungerLoss > HungerCapacity || emptyHungerMentalLossMultiplier < 1 ||
                 foodRestore < 1 || foodRestore > HungerCapacity || servingsPerCan < 1)
                 throw new InvalidOperationException("Invalid bunker hunger or food settings.");
             if (evaluationTargetProgress <= 0 || double.IsNaN(evaluationTargetProgress) || double.IsInfinity(evaluationTargetProgress) || evaluationReferenceTicks <= 0 ||
