@@ -44,6 +44,9 @@ namespace UnityGameJam.Shelter
             return Mathf.Abs(local.x) <= width * 0.5f && local.y >= 0f && local.y <= height;
         }
 
+        public bool ContainsFeet(Vector2 feet) =>
+            feet.x >= Left && feet.x <= Right && Mathf.Abs(feet.y - FloorY) < 0.05f;
+
         public Vector2 ArrivalPoint(float offset)
         {
             float margin = Mathf.Min(0.35f, (Right - Left) * 0.2f);

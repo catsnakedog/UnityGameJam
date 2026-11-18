@@ -5,19 +5,30 @@ namespace ShelterRun
 {
     public static class FarmingRunTransfer
     {
-        static string[] people = System.Array.Empty<string>();
-        public static IReadOnlyList<string> People => System.Array.AsReadOnly(people);
+        public static IReadOnlyList<string> People { get; private set; } = System.Array.Empty<string>();
+        public static IReadOnlyList<FarmingRecord> Items { get; private set; } = System.Array.Empty<FarmingRecord>();
         public static bool HasResult { get; private set; }
         public static void Capture(IEnumerable<string> deposited, FarmingDatabase database)
         {
-            var result = new List<string>();
+            var people = new List<string>();
+            var items = new List<FarmingRecord>();
             var unique = new HashSet<string>(System.StringComparer.Ordinal);
             foreach (var id in deposited)
-                if (database.Get(id).Type == FarmingObjectType.Person && unique.Add(id)) result.Add(id);
-            people = result.ToArray();
+            {
+                var record = database.Get(id);
+                if (record.Type == FarmingObjectType.Item) items.Add(record);
+                else if (unique.Add(id)) people.Add(id);
+            }
+            People = people.AsReadOnly();
+            Items = items.AsReadOnly();
             HasResult = true;
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void Reset() { people = System.Array.Empty<string>(); HasResult = false; }
+        public static void Reset()
+        {
+            People = System.Array.Empty<string>();
+            Items = System.Array.Empty<FarmingRecord>();
+            HasResult = false;
+        }
     }
 }

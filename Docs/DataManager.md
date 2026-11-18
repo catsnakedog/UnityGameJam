@@ -1,16 +1,33 @@
 # 데이터 관리 도구
 
-기획자용 [게임 데이터 시트와 CSV 양식](https://docs.google.com/document/d/1wl9JY-Iiv316ucy_pDvmogp1xr20tYZP/edit)에 현재 5개 시트의 30개 필드·타입·입력 제약·효과 문법·Unity 반영 절차를 정리했습니다. 콘텐츠 편집 정본은 각 Google Sheets이며 이 문서는 양식 설명입니다. [문서 반영 이력](DataHistory/20261118-data-reference-document.md).
+## 게임 실행 시 데이터 선택
+
+**Tools → Data Manager → 실행 시 스프레드시트 실시간 연동**에서 선택한다. 기본값은 꺼짐이다.
+
+| 선택 | 게임 실행 동작 |
+|---|---|
+| 켜기 | 게임을 시작하면 SpreadConfig와 활성 시트를 다시 읽는다. 공용 데이터, 파밍, 좀비를 검증한 뒤 이번 실행의 게임 데이터로 사용한다. 씬 전환 중에는 같은 값을 사용하며 다음 실행 때 시트 편집이 반영된다. |
+| 끄기 | Google Sheets 접속 없이 내부 CSV에서 생성한 기존 Addressables DB로 시작한다. 내부 CSV를 갱신할 때는 기존 수동 가져오기 절차를 사용한다. |
+
+Editor Play는 현재 토글을 읽고, Player는 빌드 시 선택한 모드로 실행한다. 시트 읽기는 로컬 CSV·DB·접근자를 쓰지 않는다. 연결 또는 값 검증이 실패하면 초기화 오류에 원인을 표시한다. 현재 Config에는 활성 6행이 있고 좀비 종류의 연결 이름은 `ZombieData`다. 연결되지 않은 `ZombieRules`는 내부 규칙을 사용한다. [설정 명세](DataSpecs/DataToolSettings.md)
+
+## 좀비 시트 연결 (2026-11-18 완료)
+
+[Zombies](https://docs.google.com/spreadsheets/d/1mk2k50Kk5fqtwSMTrCEui_cuhgOGMbh1aIX9e0zETl8/edit?gid=1826540193#gid=1826540193)(종류 4행)와 [ZombieRules](https://docs.google.com/spreadsheets/d/1mk2k50Kk5fqtwSMTrCEui_cuhgOGMbh1aIX9e0zETl8/edit?gid=551346486#gid=551346486)(공통 규칙 1행)를 게시하고 SpreadConfig에 연결했다. 기존 5개 연결을 유지하여 게시 당시 총 7개 탭이었다. [종류 명세](DataSpecs/Zombies.md), [규칙 명세](DataSpecs/ZombieRules.md).
+
+두 행을 정확한 파일명으로 함께 활성화하고 **전체 시트 가져오기**를 누른다. `Assets/Settings/Shelter/Zombies.csv`와 `ZombieRules.csv`를 갱신하고 같은 `ZombieData.asset`에 생성한다. 공용 GameDatabase로 복사하지 않는다. 생성 SO Inspector는 읽기 전용이다. 공용 고급 미리보기는 파밍·좀비를 제외하므로 전용 SO 데이터에는 전체 가져오기를 사용한다. 잘못된 값·ID 삭제·한쪽 시트만 활성화는 적용 전에 차단하고, 적용 실패 시 CSV/SO를 복구한다. 콘텐츠 빌드 전에도 좀비 CSV/SO 일치를 확인한다.
+
+기획자용 [게임 데이터 시트와 CSV 양식](https://docs.google.com/document/d/1wl9JY-Iiv316ucy_pDvmogp1xr20tYZP/edit)에 기존 5개 시트의 30개 필드·타입·입력 제약·효과 문법·Unity 반영 절차를 정리했습니다. 콘텐츠 편집 정본은 각 Google Sheets이며 이 문서는 양식 설명입니다. [문서 반영 이력](DataHistory/20261118-data-reference-document.md).
 
 AI가 데이터를 추가·수정할 때는 먼저 [데이터 목록과 중복 방지 규칙](DataRegistry.md)에서 기존 정본을 확인하고 연결된 명세를 읽습니다. 새 테이블은 [명세 양식](DataSpecs/_Template.md) 작성과 목록 등록을 먼저 마칩니다. 필드/ID/관계 변경은 같은 작업에서 명세와 이력을 갱신합니다. 프로젝트 진입 지침은 [AGENTS.md](../AGENTS.md)입니다.
 
 Unity 메뉴 **Tools → Data Manager**에서 **전체 시트 가져오기 · CSV / 클래스 갱신**을 누릅니다. Google Sheets가 유일한 편집 원본입니다. Drive에 별도 CSV를 저장할 필요가 없습니다.
 
 1. Google Sheets에서 내용과 수치를 편집합니다.
-2. Unity의 전체 시트 가져오기 버튼을 누릅니다. SpreadConfig를 다시 읽고 활성 시트(현재 공용 4개와 파밍 1개)를 내려받아 타입·ID·관계를 검증한 뒤 내부 CSV, 타입 접근 클래스, 기존 DB를 갱신합니다.
+2. Unity의 전체 시트 가져오기 버튼을 누릅니다. SpreadConfig를 다시 읽고 현재 활성 시트를 내려받아 타입·ID·관계를 검증한 뒤 내부 CSV, 타입 접근 클래스, 기존 DB를 갱신합니다.
 3. 배포용 데이터를 바꿀 때는 **Addressables 콘텐츠 빌드**를 누릅니다. 스키마 변경 시 Unity의 스크립트 컴파일 완료를 기다립니다.
 
-버튼 실행 중 취소할 수 있으며 Play 중에는 가져오기를 막습니다. 파일명과 시트 연결은 [SpreadConfig](https://docs.google.com/spreadsheets/d/1oivFPajqTe1rILgtI4Xe1l6kPKtfSmG4UMat7keT84A/edit?gid=961703615)에서 관리합니다. Unity 창에는 **SpreadConfig URL (탭 포함)**과 CSV 폴더만 저장합니다. 공용 `DataTables.cs`는 자동 생성하고 파밍은 기존 `FarmingRecord` 클래스로 파싱합니다. 아래 로컬 CSV 검증과 미리보기는 고급 작업용입니다.
+버튼 실행 중 취소할 수 있으며 Play 중에는 가져오기를 막습니다. 파일명과 시트 연결은 [SpreadConfig](https://docs.google.com/spreadsheets/d/1oivFPajqTe1rILgtI4Xe1l6kPKtfSmG4UMat7keT84A/edit?gid=961703615)에서 관리합니다. Unity 창에서 실행 시 연동 토글, **SpreadConfig URL (탭 포함)**과 CSV 폴더를 저장합니다. 공용 `DataTables.cs`는 자동 생성하고 파밍은 기존 `FarmingRecord` 클래스로 파싱합니다. 아래 로컬 CSV 검증과 미리보기는 고급 작업용입니다.
 
 ### SpreadConfig 작성
 
@@ -26,7 +43,7 @@ Config는 **1행 헤더 / 2행부터 연결 목록**이며 게임 시트의 3행
 
 `id`와 `gid`로 `https://docs.google.com/spreadsheets/d/{id}/edit?gid={gid}`를 구성합니다. 현재 Config의 빈 시트1(gid=0)이 아니라 **SpreadConfig 탭(gid=961703615)** 주소를 연결했습니다. 새 연결은 Config에 추가하면 다음 버튼 실행부터 반영됩니다. 신규 데이터 명세 등록 및 실제 게임 소비자 연결은 별도로 필요합니다.
 
-**시트 연결 설정 / 고급 미리보기 → SpreadConfig 연결 확인**으로 파일 변경 없이 현재 목록을 볼 수 있습니다. 목록은 읽기 전용이며 설정 복제본으로 저장하지 않습니다. **공용 시트 가져오기 / 미리보기 (파밍 제외)**는 공용 테이블만 검토합니다. 파밍을 포함한 갱신은 전체 가져오기 버튼을 사용합니다. Config 오류 시 예전 로컬 URL 목록으로 폴백하지 않습니다.
+**시트 연결 설정 / 고급 미리보기 → SpreadConfig 연결 확인**으로 파일 변경 없이 현재 목록을 볼 수 있습니다. 목록은 읽기 전용이며 설정 복제본으로 저장하지 않습니다. **공용 시트 미리보기 (파밍·좀비 제외)**는 공용 테이블만 검토합니다. 파밍·좀비를 포함한 갱신은 전체 가져오기 버튼을 사용합니다. Config 오류 시 예전 로컬 URL 목록으로 폴백하지 않습니다.
 
 CSV는 **UTF-8 BOM 포함**으로 저장해 Excel에서 파일을 더블클릭하여 열 수 있게 합니다. 시트 가져오기 결과도 같은 형식으로 저장합니다. Excel에서 편집 후에는 `CSV UTF-8(쉼표로 분리)` 형식으로 저장하세요. `.xlsx`는 현재 가져오기 대상이 아닙니다. 이미 열린 파일은 닫았다 다시 열어야 변경된 인코딩 표시가 적용됩니다.
 
@@ -115,15 +132,15 @@ Drive 예시와 같은 **1행 설명, 2행 타입, 3행 변수명, 4행 데이�
 
 `FarmingData`도 SpreadConfig의 같은 연결 목록에 포함된다. sheetName=FarmingData 행의 id/gid에서 다운로드하여 **기존 FarmingData.csv 경로**에 저장하고 기존 Farming 전용 임포터를 실행한다. 공용 CSV 폴더/DB에 중복 등록하지 않는다. 전용 임포터의 Person/Item 무게 제약을 유지한다.
 
-현재 사용자 Drive에 예제 제거 후 Google Sheets 5개를 관리하며 공용 4개 URL을 등록했다. 편집은 시트에서 하고 전체 시트 가져오기 버튼으로 내려받는다. FarmingData도 버튼 안에서 기존 전용 경로/임포터를 사용한다. 테스트 CSV 22개와 중간/테스트 xlsx 27개는 휴지통으로 옮겼다. `outputs/20261118-notion-data`의 xlsx는 이번 업로드용 산출물이며 편집 원본이 아니다. 자동 양방향 동기화가 아니다. [기획 대조 및 연결 상태](NotionDevelopmentCheck.md)를 확인한다.
+좀비 시트를 게시한 시점에는 게임 데이터 Google Sheets 문서 6개, 총 7개 탭을 관리했다. 공용 4개와 파밍 1개, ZombieData 문서 안의 좀비 2개 탭을 SpreadConfig에 등록했다. 편집은 시트에서 하고 전체 시트 가져오기 버튼으로 내려받는다. FarmingData도 버튼 안에서 기존 전용 경로/임포터를 사용한다. 테스트 CSV 22개와 중간/테스트 xlsx 27개는 휴지통으로 옮겼다. `outputs/20261118-notion-data`의 xlsx는 이번 업로드용 산출물이며 편집 원본이 아니다. 자동 양방향 동기화가 아니다. [기획 대조 및 연결 상태](NotionDevelopmentCheck.md)를 확인한다.
 
-현재 연결 목록은 SpreadConfig만 편집합니다. 구 Google Sheets 사용 토글·개별 URL 목록·별도 farmingSheetUrl은 제거했습니다. **공용 시트 가져오기 / 미리보기 (파밍 제외)**는 다운로드·검증만 수행합니다. **미리보기 적용**을 눌러야 공용 CSV와 DB가 갱신됩니다. 비활성·누락 연결의 기존 로컬 테이블은 유지합니다.
+현재 연결 목록은 SpreadConfig만 편집합니다. 구 Google Sheets 사용 토글·개별 URL 목록·별도 farmingSheetUrl은 제거했습니다. **공용 시트 미리보기 (파밍·좀비 제외)**는 다운로드·검증만 수행합니다. **미리보기 적용**을 눌러야 공용 CSV와 DB가 갱신됩니다. 비활성·누락 연결의 기존 로컬 테이블은 유지합니다.
 
 - 링크로 열람 가능한 Google Sheets 또는 CSV로 웹 게시된 시트를 지원합니다.
 - 비공개 시트 OAuth 로그인은 현재 제공하지 않습니다. 접근 불가·HTML 로그인 응답·네트워크 오류·잘못된 CSV는 실패로 표시합니다.
 - 가져오기는 단방향이며 원격 시트를 수정하지 않습니다. 연결된 시트가 편집 정본이고 로컬 CSV는 실행용 DB 생성에 쓰는 스냅샷입니다. 다음 시트 가져오기를 적용하면 해당 로컬 CSV 편집은 시트 값으로 대체됩니다.
 - 전체 다운로드와 검증이 끝나기 전에는 로컬 파일을 쓰지 않습니다. 취소와 실패 시 기존 파일을 유지하며, 적용 중 실패하면 CSV/DB/생성 코드의 이전 상태를 복원합니다.
-- 설정은 `ProjectSettings/GameDataTool.asset`의 spreadConfigUrl/csvFolder에 저장합니다. 신규 프로젝트에서는 Config URL을 입력해야 합니다.
+- 설정은 `ProjectSettings/GameDataTool.asset`의 useLiveSheets/spreadConfigUrl/csvFolder에 저장합니다. 신규 프로젝트에서는 Config URL을 입력해야 합니다.
 - Google의 시트 접근 정책 참고: [Google Sheets 데이터 접근](https://developers.google.com/chart/interactive/docs/spreadsheets).
 
 ## 변경 보호와 산출물

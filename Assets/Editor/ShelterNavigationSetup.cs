@@ -13,7 +13,7 @@ public static class ShelterNavigationSetup
     private static Sprite Block => AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Shelter/Block.png");
     private static Material Material => AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Shelter/Blockout.mat");
 
-    [MenuItem("Tools/Shelter/Configure Click Navigation")]
+    [MenuItem("Tools/Shelter/Legacy/Configure Ladder Navigation")]
     public static void ConfigureScene()
     {
         if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode first.");
@@ -198,7 +198,8 @@ public static class ShelterNavigationSetup
 
     [MenuItem("GameObject/Shelter/Room", false, 20)] public static void AddRoom() => AddPiece("Room");
     [MenuItem("GameObject/Shelter/Corridor", false, 21)] public static void AddCorridor() => AddPiece("Corridor");
-    [MenuItem("GameObject/Shelter/Ladder", false, 22)] public static void AddLadder() => AddPiece("Ladder");
+    [MenuItem("GameObject/Shelter/Elevator", false, 22)] public static void AddElevator() => AddPiece("Elevator");
+    public static void AddLadder() => AddElevator();
     [MenuItem("GameObject/Shelter/Survivor", false, 23)] public static void AddSurvivor() => AddPiece("Survivor");
 
     private static void AddPiece(string name)

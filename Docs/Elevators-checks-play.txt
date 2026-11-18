@@ -1,0 +1,54 @@
+PASS Built elevator Addressables load and scene contains two usable cabins
+PASS No active ladder remains in actual scene
+PASS Connected rooms 전투 장소 -> 전투 장소
+PASS Connected rooms 전투 장소 -> 아트
+PASS Connected rooms 전투 장소 -> 프로그래밍
+PASS Connected rooms 전투 장소 -> 거실
+PASS Connected rooms 전투 장소 -> 기획
+PASS Connected rooms 전투 장소 -> 수면
+PASS Connected rooms 아트 -> 전투 장소
+PASS Connected rooms 아트 -> 아트
+PASS Connected rooms 아트 -> 프로그래밍
+PASS Connected rooms 아트 -> 거실
+PASS Connected rooms 아트 -> 기획
+PASS Connected rooms 아트 -> 수면
+PASS Connected rooms 프로그래밍 -> 전투 장소
+PASS Connected rooms 프로그래밍 -> 아트
+PASS Connected rooms 프로그래밍 -> 프로그래밍
+PASS Connected rooms 프로그래밍 -> 거실
+PASS Connected rooms 프로그래밍 -> 기획
+PASS Connected rooms 프로그래밍 -> 수면
+PASS Connected rooms 거실 -> 전투 장소
+PASS Connected rooms 거실 -> 아트
+PASS Connected rooms 거실 -> 프로그래밍
+PASS Connected rooms 거실 -> 거실
+PASS Connected rooms 거실 -> 기획
+PASS Connected rooms 거실 -> 수면
+PASS Connected rooms 기획 -> 전투 장소
+PASS Connected rooms 기획 -> 아트
+PASS Connected rooms 기획 -> 프로그래밍
+PASS Connected rooms 기획 -> 거실
+PASS Connected rooms 기획 -> 기획
+PASS Connected rooms 기획 -> 수면
+PASS Connected rooms 수면 -> 전투 장소
+PASS Connected rooms 수면 -> 아트
+PASS Connected rooms 수면 -> 프로그래밍
+PASS Connected rooms 수면 -> 거실
+PASS Connected rooms 수면 -> 기획
+PASS Connected rooms 수면 -> 수면
+PASS Rescued character reaches lower floor by elevator
+PASS Two-elevator transfer reaches combat floor
+PASS Three opposite routes through two cabins complete without deadlock
+PASS Two survivors board the same visible cabin in the shelter scene
+PASS Popup pause freezes cabin and both passengers
+PASS Fainted passenger unloads safely and remains unable to walk
+PASS Companion reaches destination independently of fainted rider
+PASS Zombie queue shares cabins with a peak of two riders
+PASS Zombie descent follows spawn order [0, 1, 2, 3, 4, 5]
+PASS Elevator transport preserves six independent HP/state instances
+PASS Ground zombie queue preserves spacing at elevator landings; min=2.4
+PASS Elevator-delivered invader still occupies and disables a room
+PASS Another boarding zombie keeps its queue spacing
+PASS A zombie cannot finish its ground route on top of a waiting caller
+PASS Same-floor zombie walks past a waiting caller without joining or blocking the queue
+PASS Restart removes zombie requests and elevator ownership

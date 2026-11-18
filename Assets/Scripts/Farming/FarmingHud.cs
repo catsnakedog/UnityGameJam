@@ -7,6 +7,7 @@ namespace ShelterRun
 {
     public sealed class FarmingHud : MonoBehaviour
     {
+        [SerializeField] TMP_Text missionTitle;
         [SerializeField] TMP_Text timerText;
         [SerializeField] Image timeFill;
         [SerializeField] TMP_Text capacityText;
@@ -30,6 +31,11 @@ namespace ShelterRun
             session = value;
             actionButton.onClick.RemoveListener(OnAction);
             actionButton.onClick.AddListener(OnAction);
+        }
+        public void Prepare(FarmingRules rules)
+        {
+            missionTitle.text = $"{rules.Duration:0.##}초의 구조";
+            PrepareSlots(rules.Capacity);
         }
         public void PrepareSlots(int capacity)
         {
@@ -69,18 +75,19 @@ namespace ShelterRun
 
             toastText.gameObject.SetActive(running && Time.unscaledTime < toastUntil);
             if (session.Player.AtBunker && inventory.Used > 0) promptText.text = "[ E ]  들고 있는 대상 모두 벙커에 투입";
+            else if (session.Player.FocusedDoor != null) promptText.text = $"[ E ]  {session.Player.FocusedDoor.DestinationLabel} 이동";
             else if (session.Player.Focused != null)
             {
                 var item = session.Player.Focused;
                 string kind = item.Record.Type == FarmingObjectType.Person ? "사람" : "물자";
                 promptText.text = inventory.CanAdd(item) ? $"[ E ]  {kind} 들기 · {item.Record.Weight}칸" : $"공간 부족 · {kind} {item.Record.Weight}칸 필요";
             }
-            else promptText.text = inventory.Used > 0 ? "[ E ]  마지막 대상 내려놓기   ·   민트색 벙커로 이동" : "W A S D  이동   ·   가까이 가서 [ E ] 들기";
+            else promptText.text = inventory.Used > 0 ? "[ E ]  마지막 대상 내려놓기   ·   출구 문으로 복도 복귀" : "A / D  좌우 이동   ·   [ E ] 문 / 들기";
 
             if (session.Phase == FarmingPhase.Ready)
             {
-                overlayTitle.text = $"{session.Rules.Duration:0}초, 챙기고 구하라";
-                overlayBody.text = $"복도 왼쪽 325호에서 사람 {session.PeopleTotal}명과 물자를 구하세요.\n문으로 들어가면 방 내부가 보입니다.\n\nW A S D   이동       E   들기 / 던지기\n한 번에 {session.Rules.Capacity}칸 · 사람 2~4칸 · 물자 1~2칸\n복도 입구의 민트색 벙커에서 E로 투입하세요.";
+                overlayTitle.text = $"{session.Rules.Duration:0.##}초, 챙기고 구하라";
+                overlayBody.text = $"복도에서 시작해 325호의 사람 {session.PeopleTotal}명과 물자를 구하세요.\n문 앞에서 E로 입실 · 출구 문에서 E로 복도 복귀\n\nA / D   좌우 이동       E   문 / 들기 / 내려놓기\n한 번에 {session.Rules.Capacity}칸 · 사람 2~4칸 · 물자 1~2칸\n들고 나온 대상은 복도 왼쪽 벙커에서 E로 투입하세요.";
                 actionText.text = "E   파밍 시작";
             }
             else if (session.Phase == FarmingPhase.Finished)

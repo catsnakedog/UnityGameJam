@@ -1,0 +1,18 @@
+using System.Linq;
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityGameJam.Shelter;
+if (EditorApplication.isPlaying) throw new System.InvalidOperationException("Exit Play first.");
+var scene = EditorSceneManager.OpenScene("Assets/Scenes/ShelterPrototype.unity");
+var camera = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<ShelterCamera>(true)).Single();
+Undo.RecordObjects(new UnityEngine.Object[] { camera, camera.transform, camera.GetComponent<Camera>() }, "Configure bunker free camera");
+camera.roster = Object.FindFirstObjectByType<ShelterRoster>();
+camera.commander = Object.FindFirstObjectByType<ShelterCommander>();
+var common = Object.FindObjectsByType<ShelterArea>(FindObjectsSortMode.None).Single(a => a.kind == ShelterArea.AreaKind.Room && a.roomType == ShelterRoomType.Common);
+camera.transform.position = new Vector3(common.Centre.x, common.FloorY + common.height * 0.5f, camera.transform.position.z);
+camera.GetComponent<Camera>().orthographicSize = camera.viewHalfHeight;
+EditorUtility.SetDirty(camera);
+EditorSceneManager.MarkSceneDirty(scene);
+EditorSceneManager.SaveScene(scene);
+return new { size = camera.viewHalfHeight, position = camera.transform.position, roster = camera.roster.name, commander = camera.commander.name };

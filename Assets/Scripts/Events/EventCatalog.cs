@@ -37,7 +37,7 @@ namespace UnityGameJam.Events
         public static EventCatalog FromTable(DataTable table, ShelterItemCatalog items)
         {
             if (table.Count == 0) throw new FormatException("Events must contain at least one event.");
-            if (table.Columns.Count != 7 || table.Columns[table.KeyIndex].Name != "id") throw new FormatException("Events requires v2 choice schema.");
+            if (table.Columns[table.KeyIndex].Name != "id") throw new FormatException("Events requires id as its key.");
             var values = new List<EventDefinition>();
             foreach (var row in table.Rows)
             {

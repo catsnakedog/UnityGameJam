@@ -22,12 +22,14 @@ namespace UnityGameJam.Zombies
         [SerializeField] TextMesh statusLabel;
         readonly List<ZombieAgent> zombies = new List<ZombieAgent>();
         readonly Dictionary<CharacterIdentity, Vector2> previousPositions = new Dictionary<CharacterIdentity, Vector2>();
+        readonly Dictionary<CharacterIdentity, (int tick, ZombieAgent zombie)> lastAttacks = new Dictionary<CharacterIdentity, (int, ZombieAgent)>();
         Task initializing;
         public ZombieData Data { get; private set; }
         public bool IsReady => Data != null;
         public string LastError { get; private set; }
         public string Message { get; private set; } = "좀비 침입 대기";
         public int Wave { get; private set; }
+        public event Action<ZombieAgent> ZombieSpawned;
         public IReadOnlyList<ZombieAgent> Zombies => zombies.AsReadOnly();
         public ShelterRoster Roster => roster;
         public ShelterNavigation Navigation => navigation;
@@ -68,10 +70,15 @@ namespace UnityGameJam.Zombies
             if (development) { development.DevelopmentRestarted -= ResetRun; development.Changed -= OnDevelopmentChanged; }
             ClearZombies();
         }
-        void OnDevelopmentChanged() { if (development.Phase != GameDevPhase.Developing) ClearZombies(); }
+        void OnDevelopmentChanged()
+        {
+            if (development.Phase != GameDevPhase.AwaitingScore) return;
+            foreach (var zombie in zombies) if (zombie) zombie.StopCombat();
+        }
         public void ResetRun() { ClearZombies(); Wave = 0; LastError = null; Report("좀비 침입 대기"); RememberPositions(); }
         void ClearZombies()
         {
+            lastAttacks.Clear();
             foreach (var zombie in zombies.ToArray()) if (zombie) { zombie.Cleanup(); Destroy(zombie.gameObject); }
             zombies.Clear();
         }
@@ -87,11 +94,109 @@ namespace UnityGameJam.Zombies
             if (!entry) { LastError = "활성 전투 공간(ZombieInvasion)이 필요합니다"; Report(LastError); return null; }
             int wave = ++Wave;
             var definition = Data.ForWave(wave);
-            var zombie = Instantiate(zombiePrefab, new Vector3(entry.Right + Data.SpawnOffset, entry.FloorY), Quaternion.identity, transform);
+            navigation.Refresh();
+            navigation.GetConnectedFloorBounds(entry.Centre, out var left, out var right);
+            // Approach from the exposed wall, away from the interior landing and its boarding queue.
+            int side = right - entry.Right > entry.Left - left ? -1 : 1;
+            Vector2 doorway = entry.ArrivalPoint(side * (entry.Right - entry.Left) * 0.5f);
+            float spawnDistance = Data.WalkSpeed * simulation.Rules.SecondsPerTick * simulation.Rules.InvasionApproachTicks;
+            // Append behind the queue rather than filling a gap ahead of an older arrival.
+            foreach (var other in zombies)
+                if (IsLive(other) && other.EntryRoom == entry && other.State == ZombieState.Approaching)
+                    spawnDistance = Mathf.Max(spawnDistance, side * (other.transform.position.x - doorway.x) + Data.MinimumSpacing);
+            Vector2 spawn = doorway + Vector2.right * (side * spawnDistance);
+            while (zombies.Any(z => IsLive(z) && Vector2.Distance(spawn, z.transform.position) < Data.MinimumSpacing)) spawn.x += side * Data.MinimumSpacing;
+            var zombie = Instantiate(zombiePrefab, spawn, Quaternion.identity, transform);
             zombies.Add(zombie);
-            zombie.Initialize(this, definition, simulation.GetCurrentWaveEnemyHp(definition.Hp), entry, simulation.CurrentTick);
-            Report($"{wave}차 습격 · {definition.DisplayName} HP {zombie.Hp}");
+            Report($"{wave}차 습격 · {definition.DisplayName}");
+            zombie.Initialize(this, definition, simulation.GetCurrentWaveEnemyHp(definition.Hp), entry, doorway, simulation.CurrentTick);
+            ZombieSpawned?.Invoke(zombie);
             return zombie;
+        }
+        static bool IsLive(ZombieAgent zombie) => zombie && zombie.isActiveAndEnabled && zombie.State != ZombieState.Dead;
+        internal void IncludeApproachingZombies(ref float left, ref float right)
+        {
+            foreach (var zombie in zombies)
+            {
+                if (!IsLive(zombie) || zombie.State != ZombieState.Approaching) continue;
+                float x = zombie.transform.position.x;
+                left = Mathf.Min(left, x);
+                right = Mathf.Max(right, x);
+            }
+        }
+        internal void ReportBreach(ZombieAgent zombie)
+        {
+            int loss = simulation.Rules.InvasionMentalLoss;
+            foreach (var actor in roster.Characters)
+                if (actor) actor.SetMental(Mathf.Max(0, actor.CurrentMental - loss));
+            Report($"{zombie.Definition.DisplayName} 전투 방 침입 · 전원 멘탈 −{loss}");
+        }
+        public bool CanStartDefense(ZombieAgent candidate)
+        {
+            foreach (var other in zombies)
+            {
+                if (other == candidate) return true;
+                if (IsLive(other) && other.EntryRoom == candidate.EntryRoom && (other.State == ZombieState.Approaching || other.State == ZombieState.Defending)) return false;
+            }
+            return false;
+        }
+        public float MovementFraction(ZombieAgent moving, Vector2 from, Vector2 to)
+        {
+            float allowed = 1f;
+            var walker = moving.GetComponent<ShelterWalker>();
+            bool walkingPast = walker.IsMoving && !walker.RequestedElevator && walker.Destination;
+            Vector2 destination = walkingPast ? walker.Destination.ArrivalPoint(walker.arrivalOffset) : from;
+            foreach (var other in zombies)
+            {
+                if (other == moving || !IsLive(other)) continue;
+                var obstacle = other.GetComponent<ShelterWalker>();
+                if (obstacle.IsInElevator) continue;
+                // A passer may cross a call pad, but cannot park on top of its caller.
+                if (walkingPast && obstacle.RequestedElevator && Vector2.Distance(destination, obstacle.transform.position) >= Data.MinimumSpacing &&
+                    Vector2.Distance(obstacle.transform.position, obstacle.RequestedElevator.WaitingPoint(obstacle)) < 0.03f) continue;
+                allowed = Mathf.Min(allowed, ZombieTraffic.SafeFraction(from, to, other.transform.position, Data.MinimumSpacing));
+            }
+            return allowed;
+        }
+        bool IsGroundObstacle(ZombieAgent moving, ZombieAgent other) =>
+            other != moving && IsLive(other) && !other.GetComponent<ShelterWalker>().IsInElevator;
+
+        bool HasGroundSpace(ZombieAgent moving, Vector2 point)
+        {
+            foreach (var other in zombies)
+                if (IsGroundObstacle(moving, other) &&
+                    Vector2.Distance(point, other.transform.position) < Data.MinimumSpacing - 0.0001f) return false;
+            return true;
+        }
+        public Vector2? FindLandingSpace(ZombieAgent moving, Vector2 exit, Vector2 previous)
+        {
+            if (HasGroundSpace(moving, previous)) return previous;
+            if (HasGroundSpace(moving, exit)) return exit;
+            navigation.GetConnectedFloorBounds(exit, out var left, out var right);
+            Vector2? best = null;
+            float nearest = float.PositiveInfinity;
+            void Consider(float x)
+            {
+                float distance = Mathf.Abs(x - exit.x);
+                if (x < left || x > right || distance >= nearest) return;
+                var point = new Vector2(x, exit.y);
+                if (!navigation.AreaAt(point) || !HasGroundSpace(moving, point)) return;
+                best = point;
+                nearest = distance;
+            }
+            // With an occupied doorway, the nearest free spot borders a grounded zombie's clearance radius.
+            foreach (var other in zombies)
+            {
+                if (!IsGroundObstacle(moving, other)) continue;
+                Vector2 obstacle = other.transform.position;
+                float dy = obstacle.y - exit.y;
+                float radius = Data.MinimumSpacing;
+                if (Mathf.Abs(dy) >= radius) continue;
+                float dx = Mathf.Sqrt(radius * radius - dy * dy);
+                Consider(obstacle.x - dx);
+                Consider(obstacle.x + dx);
+            }
+            return best;
         }
         public IEnumerable<ShelterArea> SceneRooms() => FindObjectsByType<ShelterArea>(FindObjectsSortMode.InstanceID)
             .Where(a => a.gameObject.scene == gameObject.scene && a.kind == ShelterArea.AreaKind.Room && a.IsWalkable);
@@ -99,8 +204,11 @@ namespace UnityGameJam.Zombies
         {
             if (!room || !room.IsWalkable) yield break;
             foreach (var actor in roster.Characters)
-                if (actor && actor.isActiveAndEnabled && Mathf.Abs(actor.transform.position.y - room.FloorY) < 0.05f && room.ContainsClick(actor.transform.position)) yield return actor;
+                if (actor && actor.isActiveAndEnabled && !actor.GetComponent<ShelterWalker>().IsInElevator && room.ContainsFeet(actor.transform.position)) yield return actor;
         }
+        internal bool CanAttack(CharacterIdentity actor, ZombieAgent zombie, int tick) =>
+            !lastAttacks.TryGetValue(actor, out var attack) || attack.tick != tick || attack.zombie == zombie;
+        internal void RecordAttack(CharacterIdentity actor, ZombieAgent zombie, int tick) => lastAttacks[actor] = (tick, zombie);
         public Vector2 PreviousPosition(CharacterIdentity actor) => previousPositions.TryGetValue(actor, out var point) ? point : (Vector2)actor.transform.position;
         void RememberPositions()
         {
@@ -121,10 +229,10 @@ namespace UnityGameJam.Zombies
             RememberPositions();
         }
         public void Report(string message) { Message = message; if (statusLabel) statusLabel.text = message; }
-        public void NotifyKilled(ZombieAgent zombie)
+        internal void NotifyKilled(ZombieAgent zombie, string attacks)
         {
-            zombies.Remove(zombie);
-            Report($"{zombie.Definition.DisplayName} 처치 · 멘탈 +{Data.MentalRecovery} · 남은 좀비 {zombies.Count}");
+            if (!zombies.Remove(zombie)) return;
+            Report($"{zombie.Definition.DisplayName} 처치 · 멘탈 +{Data.MentalRecovery} · 남은 좀비 {zombies.Count}\n{attacks}");
         }
     }
 }

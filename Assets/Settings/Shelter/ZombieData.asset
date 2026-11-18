@@ -43,3 +43,4 @@ MonoBehaviour:
   climbSpeed: 1.6
   encounterDistance: 0.65
   spawnOffset: 1.2
+  minimumSpacing: 2.4

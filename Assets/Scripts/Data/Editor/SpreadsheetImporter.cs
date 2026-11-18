@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEngine.Networking;
 
 namespace GameJam.Data.Editor
 {
@@ -19,41 +17,10 @@ namespace GameJam.Data.Editor
 
     public static class SpreadsheetImporter
     {
-        public static async Task<string> DownloadCsvAsync(string url, CancellationToken cancellation)
-        {
-            cancellation.ThrowIfCancellationRequested();
-            using (var request = UnityWebRequest.Get(CsvUrl(url)))
-            {
-                request.timeout = 30;
-                var operation = request.SendWebRequest();
-                while (!operation.isDone)
-                {
-                    if (cancellation.IsCancellationRequested) { request.Abort(); cancellation.ThrowIfCancellationRequested(); }
-                    await Task.Delay(25);
-                }
-                cancellation.ThrowIfCancellationRequested();
-                if (request.result != UnityWebRequest.Result.Success)
-                    throw new IOException($"Sheet download failed ({request.responseCode}). Check link viewing access. {request.error}");
-                string csv = request.downloadHandler.text.TrimStart('\uFEFF');
-                string contentType = request.GetResponseHeader("Content-Type") ?? "";
-                if (contentType.IndexOf("text/html", StringComparison.OrdinalIgnoreCase) >= 0 || csv.TrimStart().StartsWith("<", StringComparison.Ordinal))
-                    throw new FormatException("Received a login/HTML page instead of CSV. Check sheet sharing.");
-                return csv;
-            }
-        }
+        public static Task<string> DownloadCsvAsync(string url, CancellationToken cancellation) =>
+            GoogleSheets.DownloadCsvAsync(url, cancellation);
 
-        public static string CsvUrl(string input)
-        {
-            if (!Uri.TryCreate(input?.Trim(), UriKind.Absolute, out var uri) || uri.Scheme != "https" || uri.Host != "docs.google.com")
-                throw new FormatException("Enter an HTTPS Google Sheets link (docs.google.com).");
-            var published = Regex.Match(uri.AbsolutePath, @"^/spreadsheets/d/e/([A-Za-z0-9_-]+)/pub$");
-            string gid = Regex.Match(uri.Query + "&" + uri.Fragment.TrimStart('#'), @"(?:[?&#]|^)gid=(\d+)").Groups[1].Value;
-            if (gid.Length == 0) gid = "0";
-            if (published.Success) return $"https://docs.google.com/spreadsheets/d/e/{published.Groups[1].Value}/pub?output=csv&single=true&gid={gid}";
-            var match = Regex.Match(uri.AbsolutePath, @"^/spreadsheets/d/([A-Za-z0-9_-]+)(?:/|$)");
-            if (!match.Success) throw new FormatException("Invalid Google Sheets document link.");
-            return $"https://docs.google.com/spreadsheets/d/{match.Groups[1].Value}/export?format=csv&gid={gid}";
-        }
+        public static string CsvUrl(string input) => GoogleSheets.CsvUrl(input);
 
         public static async Task<SpreadsheetPreview> DownloadAsync(string folder, IEnumerable<SpreadsheetSource> sources, CancellationToken cancellation)
         {

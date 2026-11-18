@@ -23,16 +23,8 @@ public static class ZombieSetup
         var data = AssetDatabase.LoadAssetAtPath<ZombieData>(DataPath);
         if (!data)
         {
-            data = ScriptableObject.CreateInstance<ZombieData>();
-            // First-authoring seed only. Never replaces an existing authored catalog.
-            JsonUtility.FromJsonOverwrite(@"{""entries"":[
-                {""id"":""zombie_1"",""displayName"":""좀비"",""firstWave"":1,""combat"":1,""hp"":2},
-                {""id"":""zombie_2"",""displayName"":""덩치 좀비"",""firstWave"":4,""combat"":2,""hp"":4},
-                {""id"":""zombie_3"",""displayName"":""성난 좀비"",""firstWave"":7,""combat"":3,""hp"":5},
-                {""id"":""zombie_4"",""displayName"":""거대 좀비"",""firstWave"":10,""combat"":4,""hp"":6}],
-                ""diceSides"":6,""combatEveryTicks"":5,""attemptsPerDefender"":3,""damageToZombie"":1,
-                ""mentalDamage"":2,""mentalRecovery"":5,""walkSpeed"":2,""climbSpeed"":1.6,""encounterDistance"":0.65,""spawnOffset"":1.2}", data);
-            data.Validate();
+            data = ZombieCsvImporter.Parse(File.ReadAllText(ZombieCsvImporter.CatalogPath), File.ReadAllText(ZombieCsvImporter.RulesPath));
+            data.name = "ZombieData";
             AssetDatabase.CreateAsset(data, DataPath);
         }
         data.Validate();
@@ -136,6 +128,8 @@ public static class ZombieSetup
     [MenuItem("Tools/Zombies/Build Data Content")]
     public static void BuildContent()
     {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play before building zombie data.");
+        ZombieCsvImporter.ValidateCurrent();
         AddressableAssetSettings.BuildPlayerContent(out var result);
         if (!string.IsNullOrEmpty(result.Error)) throw new InvalidOperationException(result.Error);
         var settings = AddressableAssetSettingsDefaultObject.Settings;
@@ -161,6 +155,6 @@ public sealed class ZombieInvasionEditor : Editor
             if (GUILayout.Button("좀비 1마리 생성 (Play 테스트)")) ctrl.SpawnWave();
         if (!Application.isPlaying) return;
         foreach (var zombie in ctrl.Zombies) if (zombie)
-            EditorGUILayout.LabelField(zombie.Definition.DisplayName, $"{zombie.State} · HP {zombie.Hp} · 방어 {zombie.DefenseAttempts}/{zombie.DefenseBudget}");
+            EditorGUILayout.LabelField(zombie.Definition.DisplayName, $"{zombie.State} · HP {zombie.Hp}");
     }
 }

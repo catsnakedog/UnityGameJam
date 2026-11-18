@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -11,145 +12,113 @@ public static class ShelterMovementChecks
 {
     [MenuItem("Tools/Shelter/Validate Click Navigation")]
     public static void RunFromMenu() => Debug.Log(Run());
-
     public static string Run()
     {
-        if (EditorApplication.isPlaying) throw new InvalidOperationException("Run layout checks outside Play mode.");
+        if (EditorApplication.isPlaying) throw new InvalidOperationException("Edit mode required.");
         var original = SceneManager.GetActiveScene();
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
         SceneManager.SetActiveScene(scene);
         var passed = new List<string>();
+        void Check(bool condition, string label) { if (!condition) throw new Exception("FAIL " + label); passed.Add("PASS " + label); }
         try
         {
-            var graph = new GameObject("Test graph").AddComponent<ShelterNavigation>();
-            var commander = graph.gameObject.AddComponent<ShelterCommander>();
-            commander.navigation = graph;
-            var a = Area("A", 0f, 0f, 4f);
-            var corridor = Area("Passage", 3f, 0f, 2f);
-            corridor.kind = ShelterArea.AreaKind.Corridor;
-            var b = Area("B", 6f, 0f, 4f);
-            var c = Area("C", 6f, 4f, 4f);
-            var d = Area("D", 0f, 4f, 4f);
-            Area("Upper passage", 3f, 4f, 2f);
-            var ladder = Ladder(6f, 0f, 4f);
-            var actor = Actor(graph, "One", new Vector2(-1f, 0f));
-            var other = Actor(graph, "Two", new Vector2(1f, 0f));
-            graph.Refresh();
-            Check(!commander.ClickWorld(new Vector2(6f, 6.8f)), "Room click requires a selected character", passed);
-            Check(commander.ClickWorld(new Vector2(-1f, 1f)) && commander.Selected == actor,
-                "Character selection takes priority over room click", passed);
-            Check(commander.ClickWorld(new Vector2(6f, 6.8f)) && actor.Destination == c,
-                "Room click issues an automatic route", passed);
-            Advance(actor, 15f);
-            Check(At(actor, c) && !actor.IsMoving, "Cross room, corridor and ladder to arrive upstairs", passed);
-            Check(Vector2.Distance(other.transform.position, new Vector2(1f, 0f)) < 0.001f,
-                "Uncommanded character stays still", passed);
-            Check(actor.MoveTo(a), "Downward route exists", passed);
-            Check(commander.ClickWorld(new Vector2(1f, 1f)) && commander.Selected == other && other.MoveTo(d),
-                "Switch selection and give independent orders", passed);
-            for (int i = 0; i < 1200; i++) { actor.Tick(1f / 60f); other.Tick(1f / 60f); }
-            Check(At(actor, a) && At(other, d), "Two characters finish different routes simultaneously", passed);
-
-            var isolated = Area("Disconnected", 20f, 4f, 4f);
-            Check(!actor.MoveTo(isolated), "Disconnected room is rejected", passed);
-            corridor.accessible = false;
-            Check(!actor.MoveTo(b), "Closing a corridor blocks the connection", passed);
-            corridor.accessible = true;
-            Check(actor.MoveTo(b), "Reopening the corridor restores routing without manual links", passed);
-            corridor.transform.position += Vector3.right;
-            graph.Refresh();
-            actor.Tick(1f / 60f);
-            Check(!actor.IsMoving && actor.Status == "NO ROUTE", "Moving a corridor away cancels the broken route", passed);
-            corridor.transform.position -= Vector3.right;
-            Check(actor.MoveTo(b), "Moving a corridor back reconnects it", passed);
-            ladder.transform.position += Vector3.right * 10f;
-            Check(!actor.MoveTo(c), "A misplaced ladder cannot connect floors", passed);
-            ladder.transform.position -= Vector3.right * 10f;
-            Check(actor.MoveTo(c), "Repositioned ladder auto-connects its ends", passed);
-
-            actor.transform.position = new Vector3(6f, 0f);
-            actor.Stop();
-            Check(actor.MoveTo(c), "Start ascent", passed);
-            Advance(actor, 0.5f);
-            Vector3 halfway = actor.transform.position;
-            Check(actor.IsClimbing && halfway.y > 0f && halfway.y < 4f, "Climb animation state on vertical route", passed);
-            Check(actor.MoveTo(b) && Vector3.Distance(actor.transform.position, halfway) < 0.0001f,
-                "Change destination mid-ladder without teleporting", passed);
-            Advance(actor, 5f);
-            Check(At(actor, b), "Reverse midway and finish downstairs", passed);
-            actor.MoveTo(c);
-            Advance(actor, 0.5f);
-            actor.Stop();
-            halfway = actor.transform.position;
-            Advance(actor, 1f);
-            Check(Vector3.Distance(actor.transform.position, halfway) < 0.0001f && actor.MoveTo(c),
-                "Stopped climber can resume a new route", passed);
-            ladder.accessible = false;
-            graph.Refresh();
-            actor.Tick(1f / 60f);
-            Check(!actor.IsMoving && Vector3.Distance(actor.transform.position, halfway) < 0.0001f,
-                "Removed ladder stops a climber safely", passed);
-            ladder.accessible = true;
-
-            var shortLadder = Ladder(0f, 0f, 4f);
-            actor.transform.position = Vector3.zero;
-            actor.Stop();
-            Check(graph.TryFindPath(Vector2.zero, null, d, 0f, 3.2f, 2.2f, out var shortest) &&
-                shortest.Any(p => p.ladder == shortLadder) && !shortest.Any(p => p.ladder == ladder),
-                "Choose the shortest travel-time route among multiple ladders", passed);
-            shortLadder.gameObject.SetActive(false);
-
-            var translated = Area("Translated room", 30f, 10f, 4f);
-            var translatedTop = Area("Translated upper room", 30f, 14f, 4f);
-            Ladder(30f, 10f, 4f);
-            Check(graph.TryFindPath(new Vector2(30f, 10f), null, translatedTop, 0f, 3.2f, 2.2f, out _),
-                "Arbitrary world positions and floor heights work", passed);
-            translated.transform.localScale = new Vector3(2f, 1f, 1f);
-            Check(Mathf.Abs(translated.Left - 26f) < 0.001f && Mathf.Abs(translated.Right - 34f) < 0.001f,
-                "Scaled room uses transformed walkable bounds", passed);
-
+            var rules = AssetDatabase.LoadAssetAtPath<ElevatorRules>(ShelterElevatorSetup.RulesPath); rules.Validate();
+            var graph = new GameObject("Graph").AddComponent<ShelterNavigation>();
+            var commander = graph.gameObject.AddComponent<ShelterCommander>(); commander.navigation = graph;
+            var lower = Area("Lower", 0, 0, 12); var middle = Area("Middle", 0, 4, 12); var upper = Area("Upper", 0, 8, 12);
+            var lift = new GameObject("Lift").AddComponent<ShelterElevator>(); lift.height = 8;
+            graph.Refresh(); lift.Configure(rules, null, graph); graph.Refresh();
+            var a = Actor(graph, "A", new Vector2(-4, 0)); var b = Actor(graph, "B", new Vector2(4, 8)); var c = Actor(graph, "C", new Vector2(-5, 0));
+            var actors = new[] { a, b, c };
+            void Step(float dt = 0.02f) { lift.Advance(dt); foreach (var actor in actors) if (actor.isActiveAndEnabled) actor.Tick(dt); }
+            void Until(Func<bool> done, string label) { for (int i = 0; i < 3000 && !done(); i++) Step(); Check(done(), label); }
+            void Reset() { lift.ResetService(); foreach (var actor in actors) actor.Stop(); a.transform.position = new Vector3(-4, 0); b.transform.position = new Vector3(4, 8); c.transform.position = new Vector3(-5, 0); }
+            Check(lift.Stops.SequenceEqual(new[] { 0f, 4f, 8f }), "Three floors auto-discovered from area placement");
+            Check(!commander.ClickWorld(new Vector2(0, 10)), "Room command needs selected character");
+            Check(commander.ClickWorld(new Vector2(-4, 1)) && commander.Selected == a, "Character selection precedes room selection");
+            Check(commander.ClickWorld(new Vector2(0, 10)) && a.Destination == upper, "Click room creates automatic elevator route");
+            Check(lift.Owner == a && !lift.TryBoard(b), "An actor without a request cannot board");
+            b.MoveTo(lower); c.MoveTo(middle);
+            Check(lift.QueueCount == 3 && lift.Owner == a, "Opposite-floor callers queue behind first owner");
+            int version = graph.Version;
+            Until(() => lift.Phase == ElevatorPhase.Travelling, "Owner boards cabin and begins trip");
+            Check(lift.PassengerCount == 2 && c.IsInElevator && !b.IsInElevator &&
+                Mathf.Abs(a.transform.position.x - c.transform.position.x) > 0.5f, "Two waiters from the same side take separate seats");
+            for (int i = 0; i < 25; i++) { b.MoveTo(lower); graph.Refresh(); Step(); }
+            Check(lift.Owner == a && lift.TripDestination == 4 && graph.Version == version, "Serve the on-board intermediate stop before an outside call");
+            Check(a.IsInElevator && !a.IsClimbing && Mathf.Abs(a.transform.position.y - lift.CabinY) < 0.001f, "Passenger carried inside cabin without climb state");
+            Check(!a.CanWorkInCurrentRoom, "Passenger cannot perform room work");
+            Until(() => !c.IsInElevator, "Companion gets off at the intermediate floor");
+            Check(a.IsInElevator && lift.TripDestination == 8 && !b.IsInElevator, "First rider continues to own floor while other callers wait");
+            Until(() => lift.Owner == b, "Oldest outstanding caller gets the next pickup");
+            Check(!a.IsInElevator && Mathf.Abs(a.transform.position.y - 8) < 0.001f && !c.IsInElevator, "Previous owner exits before next passenger boards");
+            Until(() => actors.All(x => !x.IsMoving), "All concurrent routes finish without call ping-pong");
+            Check(a.CurrentRoom == upper && b.CurrentRoom == lower && c.CurrentRoom == middle, "Independent destination rooms retained");
+            Reset();
+            b.transform.position = lift.CallPoint(0, 1);
+            a.MoveTo(upper); c.MoveTo(upper); b.MoveTo(upper);
+            Until(() => lift.Phase == ElevatorPhase.Travelling, "Three same-floor requests start a shared trip");
+            Check(a.IsInElevator && c.IsInElevator && !b.IsInElevator && lift.HasRequest(b), "Third waiter keeps their place for the next trip");
+            Until(() => actors.All(x => !x.IsMoving), "All three same-floor callers reach the upper room");
+            Reset();
+            b.transform.position = lift.CallPoint(0, 1);
+            var across = Area("Across", 8, 0, 4);
+            a.MoveTo(upper); b.MoveTo(upper); c.MoveTo(across);
+            Until(() => lift.PassengerCount == 2, "Waiters on opposite sides can share the cabin");
+            Check(!lift.HasRequest(c) && !c.RequestedElevator, "Same-floor passer has no elevator reservation");
+            Until(() => c.CurrentRoom == across, "Passer walks across the occupied shaft");
+            Check(a.IsInElevator && b.IsInElevator && c.transform.position.x > lift.Bottom.x, "Horizontal passage is independent of cabin travel");
+            a.gameObject.SetActive(false);
+            Until(() => b.CurrentRoom == upper, "Removing one rider in transit still delivers the other");
+            a.gameObject.SetActive(true);
+            Reset();
+            a.transform.position = lift.CallPoint(4, -1); b.transform.position = lift.CallPoint(4, 1);
+            a.MoveTo(upper); b.MoveTo(lower);
+            Until(() => lift.Phase == ElevatorPhase.Travelling, "Opposite destinations can share a pickup floor");
+            Check(a.IsInElevator && b.IsInElevator && lift.TripDestination == 8, "Opposite-direction pair visits first caller's floor first");
+            Until(() => !a.IsMoving && !b.IsMoving, "Opposite-direction pair reaches both floors");
+            Check(a.CurrentRoom == upper && b.CurrentRoom == lower, "Direction change preserves each rider's destination");
+            Reset();
+            a.transform.position = lift.CallPoint(0, -1); b.transform.position = across.ArrivalPoint(0);
+            a.MoveTo(upper); b.MoveTo(upper);
+            for (int i = 0; i < 200 && lift.Phase != ElevatorPhase.Travelling; i++) { lift.Advance(0.02f); a.Tick(0.02f); }
+            Check(lift.Phase == ElevatorPhase.Travelling && lift.PassengerCount == 1 && lift.HasRequest(b), "A distant reservation never holds a solo departure");
+            Reset(); b.MoveTo(lower);
+            Check(lift.Phase == ElevatorPhase.Calling && !lift.TryBoard(b) && !b.IsInElevator, "Wrong-floor cabin cannot be boarded");
+            Until(() => b.IsInElevator, "Empty cabin arrives at caller floor before boarding");
+            Until(() => !b.IsMoving, "Recalled cabin completes downward trip");
+            Reset(); a.MoveTo(upper); Until(() => lift.Phase == ElevatorPhase.Travelling, "Start destination-change fixture");
+            Vector3 before = a.transform.position; a.MoveTo(middle);
+            Check(a.transform.position == before && lift.TripDestination == 8, "Midride command does not teleport or reverse cabin");
+            bool reachedOriginal = false;
+            for (int i = 0; i < 3000 && a.IsMoving; i++) { Step(); reachedOriginal |= Mathf.Abs(a.transform.position.y - 8) < 0.001f; }
+            Check(reachedOriginal && a.CurrentRoom == middle && Vector2.Distance(a.transform.position, middle.ArrivalPoint(a.arrivalOffset)) < 0.002f, "New destination applied after original unloading");
+            Reset(); a.MoveTo(upper); Until(() => lift.Phase == ElevatorPhase.Travelling, "Start stop fixture"); a.Stop();
+            Until(() => !a.IsInElevator, "Stop command safely completes current ride");
+            Check(!a.IsMoving && Mathf.Abs(a.transform.position.y - 8) < 0.001f && lift.QueueCount == 0, "Stopped passenger released at destination floor");
+            Reset(); a.MoveTo(upper); b.MoveTo(lower); object gate = new object(); a.AcquireMovementLock(gate); Step();
+            Check(lift.Owner == b && !lift.HasRequest(a), "Locked waiting owner releases control to next caller"); a.ReleaseMovementLock(gate);
+            a.Stop(); b.Stop(); Reset(); a.MoveTo(upper); b.MoveTo(lower); a.gameObject.SetActive(false); Step();
+            Check(lift.Owner == b, "Disabled caller cannot hold elevator forever"); a.gameObject.SetActive(true);
+            Reset(); a.MoveTo(upper); Until(() => lift.Phase == ElevatorPhase.Travelling, "Start in-flight lock fixture"); a.AcquireMovementLock(gate);
+            Until(() => !a.IsInElevator, "In-flight lock still permits safe unloading"); a.ReleaseMovementLock(gate);
+            Reset(); a.MoveTo(upper); Until(() => lift.Phase == ElevatorPhase.Travelling, "Start disconnected lift fixture"); Step(); lift.gameObject.SetActive(false); graph.Refresh();
+            Check(!a.IsInElevator && !a.IsMoving && graph.AreaAt(a.transform.position), "Disabled cabin releases passenger onto connected floor");
+            Check(!a.MoveTo(upper), "No remaining ladder fallback across disconnected floors"); lift.gameObject.SetActive(true); graph.Refresh();
+            Check(a.MoveTo(upper), "Re-enabled elevator reconnects automatically"); Until(() => !a.IsMoving, "Route works after reconnect");
+            var isolated = Area("Isolated", 30, 8, 4); Check(!a.MoveTo(isolated), "Disconnected room rejected");
+            lift.ResetService(); middle.transform.position = new Vector3(0, 5); graph.Refresh();
+            Check(lift.Stops.SequenceEqual(new[] { 0f, 5f, 8f }), "Moved floor changes stops automatically");
             foreach (int fps in new[] { 30, 60, 144 })
-            {
-                var timed = Actor(graph, "Frame check", Vector2.zero);
-                timed.MoveTo(b);
-                for (int i = 0; i < fps; i++) timed.Tick(1f / fps);
-                Check(Mathf.Abs(timed.transform.position.x - timed.walkSpeed) < 0.002f,
-                    $"Automatic walking speed at {fps} FPS", passed);
-            }
-            return $"PASS: {passed.Count} click/navigation checks\n" + string.Join("\n", passed);
+            { var timed = Actor(graph, "Speed", new Vector2(-5, 0)); timed.MoveTo(lower); for (int i = 0; i < fps; i++) timed.Tick(1f / fps); Check(Mathf.Abs(timed.transform.position.x + 5 - timed.walkSpeed) < 0.002f, "Walking speed at " + fps + " FPS"); }
+            var invalid = UnityEngine.Object.Instantiate(rules);
+            try { var so = new SerializedObject(invalid); so.FindProperty("travelSpeed").floatValue = 0; so.ApplyModifiedPropertiesWithoutUndo(); bool rejected = false; try { invalid.Validate(); } catch (InvalidOperationException) { rejected = true; } Check(rejected, "Zero elevator speed rejected"); }
+            finally { UnityEngine.Object.DestroyImmediate(invalid); }
+            string report = string.Join("\n", passed); File.WriteAllText("Docs/Elevators-checks-edit.txt", report); return report;
         }
-        finally
-        {
-            EditorSceneManager.CloseScene(scene, true);
-            if (original.IsValid() && original.isLoaded) SceneManager.SetActiveScene(original);
-        }
+        catch (Exception e) { File.WriteAllText("Docs/Elevators-checks-edit.txt", string.Join("\n", passed) + "\n" + e); throw; }
+        finally { EditorSceneManager.CloseScene(scene, true); if (original.IsValid() && original.isLoaded) SceneManager.SetActiveScene(original); }
     }
-
-    private static ShelterArea Area(string name, float x, float y, float width)
-    {
-        var a = new GameObject(name).AddComponent<ShelterArea>();
-        a.transform.position = new Vector3(x, y);
-        a.width = width;
-        a.height = 4f;
-        return a;
-    }
-    private static ShelterLadder Ladder(float x, float y, float height)
-    {
-        var l = new GameObject("Test ladder").AddComponent<ShelterLadder>();
-        l.transform.position = new Vector3(x, y);
-        l.height = height;
-        return l;
-    }
-    private static ShelterWalker Actor(ShelterNavigation graph, string name, Vector2 point)
-    {
-        var a = new GameObject(name).AddComponent<ShelterWalker>();
-        a.transform.position = point;
-        a.navigation = graph;
-        return a;
-    }
-    private static void Advance(ShelterWalker a, float seconds)
-    { for (int i = 0; i < Mathf.RoundToInt(seconds * 60f); i++) a.Tick(1f / 60f); }
-    private static bool At(ShelterWalker a, ShelterArea area) => Vector2.Distance(a.transform.position, area.ArrivalPoint(a.arrivalOffset)) < 0.002f;
-    private static void Check(bool ok, string name, List<string> passed)
-    { if (!ok) throw new InvalidOperationException("FAIL: " + name); passed.Add(name); }
+    static ShelterArea Area(string name, float x, float y, float width) { var a = new GameObject(name).AddComponent<ShelterArea>(); a.transform.position = new Vector3(x, y); a.width = width; a.height = 3; return a; }
+    static ShelterWalker Actor(ShelterNavigation graph, string name, Vector2 point) { var a = new GameObject(name).AddComponent<ShelterWalker>(); a.navigation = graph; a.characterName = name; a.transform.position = point; return a; }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -45,10 +45,66 @@ public static class ZombieChecks
     {
         var walker = actor.GetComponent<ShelterWalker>();
         if (!walker.MoveTo(room)) throw new Exception("Could not move " + actor.Id + " to " + room.displayName);
-        walker.Tick(100); walker.ResolveInitialRoom();
+        ShelterElevatorChecks.Move(walker, room);
+    }
+    static void Advance(ZombieInvasionController ctrl, float dt)
+    {
+        foreach (var lift in ctrl.Navigation.Elevators) lift.Advance(dt);
+        ctrl.AdvanceMovement(dt);
+    }
+    // Traffic-only fixtures drive the approach clock without scheduling additional waves.
+    public static void AdvanceApproachTicks(ZombieInvasionController ctrl, ref double elapsed, float seconds)
+    {
+        if (!ctrl.CanAdvance) return;
+        double duration = ctrl.Simulation.Rules.SecondsPerTick;
+        int first = (int)(elapsed / duration) + 1;
+        elapsed += seconds;
+        for (int tick = first; tick <= (int)(elapsed / duration); tick++)
+            foreach (var zombie in ctrl.Zombies.ToArray())
+                if (zombie.State == ZombieState.Approaching) zombie.ProcessTick(tick);
     }
     static Func<int,int> Outcome(bool human)
-    { int count = 0; return sides => (++count % 2 == 1) == human ? sides : 1; }
+    { int count = 0; return sides => (++count % 2 == 0) == human ? sides : 1; }
+    static Queue<int> ScriptRolls(ZombieInvasionController ctrl, params int[] dice)
+    {
+        var rolls = new Queue<int>(dice);
+        ctrl.RollDie = _ => rolls.Dequeue();
+        return rolls;
+    }
+    static async Task CheckSharedOccupation(ZombieInvasionController ctrl, ShelterArea guard, ShelterArea room, CharacterIdentity[] actors)
+    {
+        foreach (var actor in actors) actor.SetMental(0);
+        // Make both invaders choose the same reachable end room, regardless of the random seed.
+        var otherRooms = ctrl.SceneRooms().Where(r => r != guard && r != room).ToDictionary(r => r, r => r.roomType);
+        ZombieAgent first, second;
+        try
+        {
+            foreach (var other in otherRooms.Keys) other.roomType = ShelterRoomType.ZombieInvasion;
+            first = ctrl.SpawnWave();
+            second = ctrl.SpawnWave();
+            double elapsed = 0;
+            for (int i = 0; i < 3000 && second.State != ZombieState.Occupying; i++)
+            {
+                AdvanceApproachTicks(ctrl, ref elapsed, 0.05f);
+                Advance(ctrl, 0.05f);
+            }
+        }
+        finally { foreach (var pair in otherRooms) pair.Key.roomType = pair.Value; }
+        Check(first.State == ZombieState.Occupying && second.State == ZombieState.Occupying && first.TargetRoom == room && second.TargetRoom == room, "Two live invaders occupy the same room");
+        foreach (var actor in actors) { actor.SetMental(60); Move(actor, room); }
+        Advance(ctrl, 0.05f);
+        int secondHp = second.Hp;
+        var dice = ScriptRolls(ctrl, 1, 6, 6, 6, 6);
+        ctrl.Simulation.Advance(ctrl.Data.CombatEveryTicks * ctrl.Simulation.Rules.SecondsPerTick);
+        await Frame(); // Check Unity objects and their renderers after deferred Destroy has executed.
+        Check(!first && dice.Count == 0 && ctrl.Zombies.SequenceEqual(new[] { second }) && second.isActiveAndEnabled &&
+            second.GetComponentsInChildren<SpriteRenderer>().Any(r => r.enabled) && second.Hp == secondHp && second.ResolvedCombats == 0,
+            "Four attacks kill only the engaged occupant; the other remains visible with its own HP and no attack spillover");
+        Check(room.IsOccupied && !room.IsOperational, "The surviving invader retains its occupation");
+        dice = ScriptRolls(ctrl, 1, 6, 6, 6, 6);
+        ctrl.Simulation.Advance(ctrl.Data.CombatEveryTicks * ctrl.Simulation.Rules.SecondsPerTick);
+        Check(dice.Count == 0 && ctrl.Zombies.Count == 0 && room.IsOperational, "The group can fight the second invader on the next round and liberate the room");
+    }
     public static async Task<string> RunPlay()
     {
         if (!Application.isPlaying) throw new InvalidOperationException("Play required");
@@ -56,9 +112,9 @@ public static class ZombieChecks
         ZombieInvasionController ctrl = null;
         try
         {
-            FarmingRunTransfer.Capture(new[] { "person_01", "person_02", "person_03" }, AssetDatabase.LoadAssetAtPath<FarmingDatabase>("Assets/Settings/Farming/FarmingDatabase.asset"));
+            FarmingRunTransfer.Capture(new[] { "person_01", "person_02", "person_03", "person_04" }, AssetDatabase.LoadAssetAtPath<FarmingDatabase>("Assets/Settings/Farming/FarmingDatabase.asset"));
             await SceneManager.LoadSceneAsync(GameDevKeys.ShelterScene);
-            ctrl = UnityEngine.Object.FindFirstObjectByType<ZombieInvasionController>(); await ctrl.InitializeAsync(); await Frame();
+            ctrl = UnityEngine.Object.FindFirstObjectByType<ZombieInvasionController>(); await ctrl.InitializeAsync(); await UnityEngine.Object.FindFirstObjectByType<ShelterTransit>().InitializeAsync(); await Frame();
             var sim = ctrl.Simulation; var dev = UnityEngine.Object.FindFirstObjectByType<GameDevManager>();
             var events = UnityEngine.Object.FindFirstObjectByType<EventPopupController>();
             for (int i = 0; !events.IsReady && i < 200; i++) await Task.Delay(20);
@@ -68,79 +124,113 @@ public static class ZombieChecks
             var common = ctrl.SceneRooms().First(a => a.roomType == ShelterRoomType.Common);
             var sleeping = ctrl.SceneRooms().First(a => a.roomType == ShelterRoomType.Sleeping);
             var plan = ctrl.SceneRooms().First(a => a.roomType == ShelterRoomType.Planning);
-            Check(ctrl.IsReady && actors.Length == 3 && !sim.IsPaused, "Built Addressables + rescued roster + scene wiring");
+            Check(ctrl.IsReady && actors.Length == 4 && !sim.IsPaused, "Built Addressables + four rescued survivors + scene wiring");
             Check(ReferenceEquals(ctrl.Data, await GameData.LoadSettingsAsync<ZombieData>(ZombieData.Address)), "Shared settings loader cache");
             void Reset()
             {
                 dev.RestartDevelopment();
                 foreach (var actor in actors) { actor.ResetMental(); Move(actor, sleeping); }
-                ctrl.AdvanceMovement(0);
+                Advance(ctrl, 0);
             }
-            Reset(); Move(actors[0], guard); Move(actors[1], guard);
-            ctrl.RollDie = Outcome(true); var z = ctrl.SpawnWave();
-            Check(z.State == ZombieState.Defending && z.DefenseBudget == 6, "Two guards snapshot six resolved battles");
-            Check(z.Fighter.GetComponent<ShelterWalker>().IsMovementLocked && !z.Fighter.GetComponent<ShelterWalker>().MoveTo(common), "Current fighter movement locked");
-            z.ProcessTick(4); Check(z.Hp == 2 && z.DefenseAttempts == 0, "No combat before fifth tick");
-            z.ProcessTick(5); Check(z.Hp == 1 && z.DefenseAttempts == 1, "Human win deals one HP");
-            z.ProcessTick(10); Check(z.State == ZombieState.Dead && ctrl.Zombies.Count == 0, "Zombie death ends event");
-            Check(actors[0].CurrentMental == 65 && actors[1].CurrentMental == 65 && actors[2].CurrentMental == 60, "Defense reward +5 only current guard room occupants");
-            Check(actors.All(a => !a.GetComponent<ShelterWalker>().IsMovementLocked), "Death releases locks");
+            Reset();
+            var commander = UnityEngine.Object.FindFirstObjectByType<ShelterCommander>();
+            var landing = ctrl.Navigation.Areas.First(r => r.kind == ShelterArea.AreaKind.Corridor && Mathf.Approximately(r.FloorY, guard.FloorY));
+            Vector2 overlap = new Vector2((Mathf.Max(guard.Left, landing.Left) + Mathf.Min(guard.Right, landing.Right)) / 2, guard.FloorY + 1);
+            Check(commander.ClickWorld(actors[0].transform.position + Vector3.up) && commander.ClickWorld(overlap) && commander.Selected.Destination == guard, "Clicking the shared landing and guard-room area assigns the guard room");
+            ShelterElevatorChecks.Move(commander.Selected, guard);
+            foreach (var actor in actors)
+                if (actor.GetComponent<ShelterWalker>() != commander.Selected) Move(actor, guard);
+            int period = ctrl.Data.CombatEveryTicks;
+            int volley = sim.Rules.GuardVolleyEveryTicks;
+            int travel = sim.Rules.InvasionApproachTicks;
+            void Ticks(int n) => sim.Advance(n * sim.Rules.SecondsPerTick);
+            var z = ctrl.SpawnWave();
+            var entry = z.Doorway;
+            float speed = ctrl.Data.WalkSpeed;
+            Check(travel == 6 && volley == 2 && period == 5 && Mathf.Abs(Mathf.Abs(z.transform.position.x - entry.x) - travel * speed * sim.Rules.SecondsPerTick) < 0.001f,
+                "Spawn distance is six walking ticks, ranged interval two, melee interval five");
+            var spawnX = z.transform.position.x;
+            var camera = UnityEngine.Object.FindFirstObjectByType<ShelterCamera>();
+            camera.Pan(Vector2.right * Mathf.Sign(spawnX - entry.x), 100f);
+            Check(Mathf.Abs(camera.transform.position.x - spawnX) <= camera.boundaryPadding + 0.001f, "Camera can pan to the outdoor spawn");
+            sim.Advance(0.5 * sim.Rules.SecondsPerTick); Advance(ctrl, 0.5f * sim.Rules.SecondsPerTick);
+            Check(Mathf.Abs(z.transform.position.x - Mathf.MoveTowards(spawnX, entry.x, speed * sim.Rules.SecondsPerTick * 0.5f)) < 0.001f, "Zombie walks smoothly between clock ticks");
+            sim.AcquirePause(checks); var pausedAt = z.transform.position; Ticks(10); Advance(ctrl, 10); sim.ReleasePause(checks);
+            Check(z.transform.position == pausedAt && z.ResolvedCombats == 0, "Pause freezes approach and attacks");
+            sim.Advance(0.5 * sim.Rules.SecondsPerTick);
+            Check(z.State == ZombieState.Approaching && z.ResolvedCombats == 0 && !guard.IsOccupied, "No early attack or breach at tick one");
+            var rolls = ScriptRolls(ctrl, 6, 1, 1, 1, 1); Ticks(1);
+            Check(rolls.Count == 0 && z.ResolvedCombats == 4 && z.Hp == z.InitialHp && actors.All(a => a.CurrentMental == 60), "Four guards fire on tick two without distant retaliation");
+            Ticks(1);
+            Check(z.ResolvedCombats == 4 && !guard.IsOccupied, "No additional volley on tick three");
+            rolls = ScriptRolls(ctrl, 1, 6, 6, 6, 6); Ticks(1);
+            Check(rolls.Count == 0 && z.State == ZombieState.Dead && ctrl.Zombies.Count == 0 && actors.All(a => a.CurrentMental == 65), "The second volley on tick four can stop the zombie before it breaches");
+            Ticks(4);
+            Check(actors.All(a => a.CurrentMental == 64), "Every guard loses one mental after eight assigned ticks");
 
-            Reset(); Move(actors[0], guard); ctrl.RollDie = Outcome(false); z = ctrl.SpawnWave(); z.ProcessTick(5);
-            ctrl.RollDie = Outcome(true); z.ProcessTick(10); z.ProcessTick(15);
-            Check(z.State == ZombieState.Dead && z.DefenseAttempts == 3 && ctrl.Zombies.Count == 0, "Kill on final allowed roll wins before breach check");
+            Reset(); Move(actors[0], guard); z = ctrl.SpawnWave(); ctrl.RollDie = Outcome(false); Ticks(travel - 1);
+            Check(z.ResolvedCombats == 2 && z.State == ZombieState.Approaching && !guard.IsOccupied, "Two volleys before tick six and no early entry");
+            rolls = ScriptRolls(ctrl, 1, 6, 6, 1); Ticks(1);
+            Check(rolls.Count == 0 && z.State == ZombieState.Defending && z.Hp == 1 && guard.IsOccupied &&
+                z.ResolvedCombats == 4 && actors[0].CurrentMental == 56 && actors.Skip(1).All(a => a.CurrentMental == 58), "At tick six the last volley hits, breach costs everyone two, then melee hits one guard immediately");
+            ctrl.RollDie = Outcome(false); Ticks(period - 1);
+            Check(z.ResolvedCombats == 4, "Melee does not repeat at the shorter ranged interval");
+            Ticks(1);
+            Check(z.ResolvedCombats == 5, "Melee repeats five ticks after the breach");
+            Ticks(2 * period);
+            Check(z.State == ZombieState.Defending && actors[0].CanAct && actors.Skip(1).All(a => a.CurrentMental == 58), "A living guard holds after three melee rounds and the same breach is charged only once");
+            actors[0].SetMental(2); Ticks(period);
+            Check(!actors[0].CanAct && z.State == ZombieState.Invading && !guard.IsOccupied && z.Hp == 1, "When the last guarding survivor faints the invader continues with its remaining HP");
+            for (int i = 0; i < sim.Rules.FaintDurationTicks; i++) actors[0].AdvanceMentalTick();
+            Check(actors[0].CurrentMental == sim.Rules.WakeMental, "Fainted guard wakes at the configured mental value");
 
-            Reset(); Move(actors[0], guard); Move(actors[1], guard); actors[0].SetMental(2); actors[1].SetMental(2);
-            ctrl.RollDie = Outcome(false); z = ctrl.SpawnWave(); z.ProcessTick(5);
-            Check(actors[0].CurrentMental == 0 && z.State == ZombieState.Defending, "One exhausted defender does not breach while another remains");
-            z.ProcessTick(10); Check(actors[1].CurrentMental == 0 && z.State != ZombieState.Defending && z.Hp == 2, "All defenders at zero breach with remaining HP");
-            Check(!actors[0].GetComponent<ShelterWalker>().MoveTo(common), "Zero mental cannot move");
-            for (int i = 0; i < 39; i++) actors[0].AdvanceMentalTick();
-            Check(!actors[0].CanAct, "Faint lasts full 40 ticks"); actors[0].AdvanceMentalTick();
-            Check(actors[0].CurrentMental == 30 && actors[0].CanAct, "Wake restores 30 mental");
-            actors[0].SetMental(999); Check(actors[0].CurrentMental == 100, "Shared mental maximum applied");
+            Reset(); Move(actors[0], guard); Ticks(7);
+            Move(actors[0], sleeping); Ticks(1); Move(actors[0], guard); Ticks(7);
+            Check(actors[0].CurrentMental == 60, "Leaving guard duty resets its personal seven-tick remainder");
+            Ticks(1);
+            Check(actors[0].CurrentMental == 59 && actors[1].CurrentMental == 60, "Guard duty drains while no zombies are present");
+            Reset(); Move(actors[0], guard); z = ctrl.SpawnWave(); ctrl.RollDie = Outcome(false); Ticks(volley);
+            ctrl.RollDie = Outcome(true); Ticks(travel - volley);
+            Check(z.State == ZombieState.Dead && actors.Skip(1).All(a => a.CurrentMental == 60) && !guard.IsOccupied, "A lethal final volley prevents both entry and shelter-wide mental loss");
 
-            Reset(); Move(actors[0], guard); ctrl.RollDie = _ => 3; z = ctrl.SpawnWave(); z.ProcessTick(5);
-            Check(z.State == ZombieState.Defending && z.DefenseAttempts == 0 && z.Hp == 2, "Tie spends no attempt or HP");
-            for (int i = 0; i < 20; i++) ctrl.AdvanceMovement(0.01f);
-            Check(z.DefenseAttempts == 0, "Always-tied RNG yields each frame without hanging");
-            ctrl.RollDie = Outcome(false); ctrl.AdvanceMovement(0.01f);
-            Check(z.DefenseAttempts == 1, "Pending tie resolves exactly once");
-            z.ProcessTick(5); Check(z.DefenseAttempts == 2 && z.State == ZombieState.Defending, "Still defending before n times three");
-            z.ProcessTick(10); Check(z.DefenseAttempts == 3 && z.State != ZombieState.Defending, "Breach immediately at n times three, no extra fourth roll");
+            Reset(); Move(actors[0], guard); Move(actors[1], guard); z = ctrl.SpawnWave();
+            rolls = ScriptRolls(ctrl, 4, 4, 6); Ticks(volley);
+            Check(rolls.Count == 0 && z.Hp == 1, "One guard can hit while a teammate ties");
+            rolls = ScriptRolls(ctrl, 6, 1); Advance(ctrl, 0.01f);
+            Check(rolls.Count == 0 && z.Hp == 1 && actors[0].CurrentMental == 60, "Only the tied shot rerolls; it cannot cause melee damage outside");
 
-            Reset(); Move(actors[0], guard); ctrl.RollDie = Outcome(true); z = ctrl.SpawnWave(); z.ProcessTick(5);
-            ctrl.RollDie = Outcome(false); z.ProcessTick(10); z.ProcessTick(15);
-            Check(z.State == ZombieState.Invading && z.Hp == 1, "Partial damage survives defense-to-invasion transition");
-            var fighter = actors[0]; fighter.SetMental(60);
-            fighter.GetComponent<ShelterWalker>().MoveTo(common);
-            fighter.GetComponent<ShelterWalker>().Tick(1.3f);
-            var existingDestination = fighter.GetComponent<ShelterWalker>().Destination;
-            for (int i = 0; i < 300 && z.State != ZombieState.Encounter; i++) ctrl.AdvanceMovement(0.05f);
-            Check(z.State == ZombieState.Encounter && z.Fighter == fighter, "Invader intercepts physical guard in its route");
-            int beforeMental = fighter.CurrentMental; z.ProcessTick(30);
-            Check(z.State == ZombieState.Invading && fighter.CurrentMental == beforeMental - 2, "Forced battle resolves once then resumes invasion");
-            Check(!fighter.GetComponent<ShelterWalker>().IsMovementLocked && fighter.GetComponent<ShelterWalker>().Destination == existingDestination, "Encounter releases actor without discarding its order");
+            Reset(); z = ctrl.SpawnWave(); Ticks(travel);
+            Check(z.State == ZombieState.Invading && actors.All(a => a.CurrentMental == 58), "An undefended room gets six ticks of warning and charges one breach");
+            foreach (var actor in actors) actor.transform.position = z.transform.position - Vector3.right * 0.3f;
+            Advance(ctrl, 0.04f);
+            Check(z.State == ZombieState.Encounter, "Invader intercepts survivors on its indoor route");
+            rolls = ScriptRolls(ctrl, 6, 1, 1, 1, 1); Ticks(period);
+            Check(rolls.Count == 0 && z.State == ZombieState.Encounter && actors.Count(a => a.CurrentMental == 56) == 1, "All four route contacts fight and one takes damage; melee continues");
+            foreach (var actor in actors) actor.SetMental(0);
+            Advance(ctrl, 0.04f);
+            Check(z.State == ZombieState.Invading, "Road movement resumes only when no active fighters remain");
 
             Reset(); foreach (var actor in actors) actor.SetMental(0);
-            z = ctrl.SpawnWave(); var target = z.TargetRoom;
+            z = ctrl.SpawnWave(); Ticks(travel); var target = z.TargetRoom;
             Check(z.State == ZombieState.Invading && target && target != guard, "Empty combat room chooses connected noncombat target");
             bool climbed = false;
             for (int i = 0; i < 1500 && z.State != ZombieState.Occupying; i++)
-            { ctrl.AdvanceMovement(0.05f); climbed |= z.GetComponent<ShelterWalker>().IsClimbing; }
-            Check(climbed && z.State == ZombieState.Occupying && target.IsOccupied && target.IsWalkable && !target.IsOperational, "Existing ladder graph reaches target and occupies without blocking entry");
+            { Advance(ctrl, 0.05f); climbed |= z.GetComponent<ShelterWalker>().IsInElevator; }
+            Check(climbed && z.State == ZombieState.Occupying && target.IsOccupied && target.IsWalkable && !target.IsOperational, "Elevator graph reaches target and occupies without blocking entry");
             actors[0].SetMental(60); Move(actors[0], target);
             Check(!actors[0].GetComponent<ShelterWalker>().CanWorkInCurrentRoom, "Occupied room stops work");
-            ctrl.RollDie = Outcome(true); ctrl.AdvanceMovement(0.05f);
+            ctrl.RollDie = Outcome(true); Advance(ctrl, 0.05f);
             Check(z.State == ZombieState.Encounter, "Entering occupied room automatically starts combat");
-            sim.AcquirePause(checks); var position = z.transform.position; int hp = z.Hp; z.ProcessTick(100); ctrl.AdvanceMovement(10);
+            sim.AcquirePause(checks); var position = z.transform.position; int hp = z.Hp; z.ProcessTick(100); Advance(ctrl, 10);
             Check(z.Hp == hp && z.transform.position == position, "Popup-style simulation pause freezes combat and movement"); sim.ReleasePause(checks);
-            z.ProcessTick(5); z.ProcessTick(10);
+            Ticks(period); Ticks(period);
             Check(z.State == ZombieState.Dead && !target.IsOccupied && target.IsOperational && actors[0].GetComponent<ShelterWalker>().CanWorkInCurrentRoom, "Clearing occupant restores room functionality");
             Check(actors[0].CurrentMental == 65, "Invasion kill rewards combat participant once");
             object a = new object(), b = new object(); target.SetOccupied(a, true); target.SetOccupied(b, true); target.SetOccupied(a, false);
             Check(target.IsOccupied, "One removal cannot clear another occupier"); target.SetOccupied(b, false);
             Check(!target.IsOccupied, "Last occupier restores room");
+
+            Reset(); await CheckSharedOccupation(ctrl, guard, plan, actors);
 
             Reset(); Move(actors[0], plan); float progress = dev.Progress.Planning;
             plan.SetOccupied(checks, true); sim.Advance(sim.Rules.SecondsPerTick);
@@ -155,12 +245,20 @@ public static class ZombieChecks
             dev.RestartDevelopment();
             Check(ctrl.Zombies.Count == 0 && ctrl.Wave == 0 && ctrl.SceneRooms().All(r => !r.IsOccupied) && actors.All(c => c.CurrentMental == 60), "Restart clears zombies, occupation, locks, wave and mental state");
 
-            Reset(); var ladder = ctrl.Navigation.Ladders.OrderByDescending(l => l.Top.y).First(); ladder.gameObject.SetActive(false); ctrl.Navigation.Refresh();
-            z = ctrl.SpawnWave(); Check(z.State == ZombieState.WaitingForRoute, "Disconnected layout waits without teleporting");
-            ladder.gameObject.SetActive(true); ctrl.Navigation.Refresh(); ctrl.AdvanceMovement(0.05f);
-            Check(z.State == ZombieState.Invading && z.TargetRoom, "Reconnecting designer ladder automatically restores route");
-            dev.FinishDevelopment(); Check(ctrl.Zombies.Count == 0 && actors.All(c => !c.GetComponent<ShelterWalker>().IsMovementLocked), "Ending clears live invasion safely");
+            Reset(); var ladder = ctrl.Navigation.Elevators.OrderByDescending(l => l.Top.y).First(); ladder.gameObject.SetActive(false); ctrl.Navigation.Refresh();
+            z = ctrl.SpawnWave(); Ticks(travel); Check(z.State == ZombieState.WaitingForRoute, "Disconnected layout waits without teleporting");
+            ladder.gameObject.SetActive(true); ctrl.Navigation.Refresh(); Advance(ctrl, 0.05f);
+            Check(z.State == ZombieState.Invading && z.TargetRoom, "Reconnecting designer elevator automatically restores route");
+            Reset();
+            sim.Advance((sim.Rules.TotalTicks - volley) * sim.Rules.SecondsPerTick);
+            ctrl.ResetRun();
+            foreach (var actor in actors) Move(actor, guard);
+            z = ctrl.SpawnWave(); var follower = ctrl.SpawnWave();
+            ScriptRolls(ctrl, 1, 6, 6, 6, 6);
+            sim.Advance(volley * sim.Rules.SecondsPerTick); await Frame();
+            Check(!z && ctrl.Zombies.SequenceEqual(new[] { follower }) && follower.isActiveAndEnabled && follower.Hp == follower.InitialHp && !ctrl.CanAdvance && actors.All(c => !c.GetComponent<ShelterWalker>().IsMovementLocked), "A kill on the final game tick freezes the surviving zombie in place");
             dev.RestartDevelopment();
+            Check(ctrl.Zombies.Count == 0 && ctrl.SceneRooms().All(r => !r.IsOccupied), "Restart clears the surviving end-of-run zombie");
             ctrl.RollDie = sides => UnityEngine.Random.Range(1, sides + 1);
             foreach (var actor in actors) Move(actor, common);
             events.enabled = true;

@@ -1,5 +1,7 @@
 # Events 데이터 명세 v2
 
+실행 시 시트 연동에서는 기존 일곱 필드의 이름과 타입으로 이벤트를 읽으며 추가 열을 허용한다. 2026-11-18 밤 조회한 시트는 38개 이벤트에 yesResult와 noResult 문자열을 추가했다. 두 열도 공용 DataRow에서 조회할 수 있다. 이벤트 선택 효과·조건은 기존 필드를 그대로 사용한다. [실행 모드](DataToolSettings.md)
+
 ## 2026-11-18 좀비 생성 소비 연결
 
 시트/CSV 수치 변경 없음. `NEXT_WAVE_HP`는 기존 BunkerSimulation의 다음 웨이브 1회 보정을 유지하며 ZombieInvasionController가 생성 시 GetCurrentWaveEnemyHp(baseHp)로 실제 좀비에 적용한다. 침입 전환은 이미 깎인 남은 HP를 유지한다. MENTAL 효과는 공용 CharacterIdentity의 BunkerRules 멘탈 상한100/탈진40틱/회복30 계약을 따른다. 이전 본문의 상한 없음/실제 적 HP 미연결 설명은 이 계약으로 대체. [좀비 명세](Zombies.md).

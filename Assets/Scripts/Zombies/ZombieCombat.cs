@@ -16,12 +16,16 @@ namespace UnityGameJam.Zombies
     }
     public static class ZombieCombat
     {
-        // One pair only. A tie leaves the encounter pending, so even an always-tied RNG cannot hang a frame.
+        public static int RollDie(ZombieData rules, Func<int, int> die)
+        {
+            int value = die(rules.DiceSides);
+            if (value < 1 || value > rules.DiceSides) throw new ArgumentOutOfRangeException(nameof(die));
+            return value;
+        }
+
         public static CombatRoll Roll(ZombieData rules, int survivorCombat, int zombieCombat, Func<int, int> die)
         {
-            int a = die(rules.DiceSides), b = die(rules.DiceSides);
-            if (a < 1 || a > rules.DiceSides || b < 1 || b > rules.DiceSides) throw new ArgumentOutOfRangeException(nameof(die));
-            return new CombatRoll(a, b, survivorCombat, zombieCombat);
+            return new CombatRoll(RollDie(rules, die), RollDie(rules, die), survivorCombat, zombieCombat);
         }
     }
 }

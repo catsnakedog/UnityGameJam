@@ -1,5 +1,21 @@
 # 벙커 틱·작업 규칙
 
+## 생존자 피곤 상태 표시
+
+`tiredMentalThreshold`는 필수 정수이며 단위는 현재 멘탈 포인트다. 사용자가 정한 초기값은 50이며 허용 범위는 0부터 `mentalMaximum`까지다. 0은 기절이 우선한다. 행동 가능한 캐릭터의 현재 멘탈이 이 값 이하일 때 피곤한 대기와 걷기를 재생한다. 이동 속도와 능력은 기존 규칙을 따른다.
+
+씬 수명의 CharacterIdentity가 이미 받은 BunkerRules와 CurrentMental로 IsTired를 계산한다. 표시 기준을 이전할 경우 이 소비자를 먼저 전환한다. 정본은 기존 `Assets/Settings/Shelter/BunkerRules.asset`, 주소는 `data/bunker-rules`다. [중복 검사와 이전 상태](../DataHistory/20261119-survivor-animation-plan.md)
+
+Windows 번들로 불러온 값 50과 6인의 51·50·0 전환을 확인했다. [원화 반영 방법](../SurvivorAnimation.md) · [검증 기록](../DataHistory/20261119-survivor-animation-verified.md)
+
+## 개발 효율과 작업 멘탈
+
+현재 SO 값과 실제 벙커 씬에서의 결과는 [작업 멘탈 검증 기록](../DataHistory/20261118-work-mental-02-verified.md)에 있다.
+
+같은 `data.bunker.rules`에서 `percentPerAbility`로 개발 효율을, `mentalCostPerWork`로 작업자 한 명의 1회 비용을 조정한다. `mentalCostPerWork`는 필수 정수(멘탈 포인트/인·회), 0 이상, 초깃값은 임시 1이다. 0이면 작업으로 멘탈을 소모하지 않는다. 기존 `workEveryTicks`가 두 효과의 주기다.
+
+`BunkerSimulation.ProcessWork`는 작업 시작 시점에 열린 미완료 분야에서 진행도를 만드는 각 작업자에게 `Rules.MentalCostPerWork`를 한 번 적용한다. 같은 틱에 분야를 완성한 작업자 모두가 그 회차 비용을 낸다. 이동·잠금·점거·탈진 중, 개발 효율이 0인 경우와 이미 100%인 분야는 작업에서 제외된다. 현재 멘탈은 `CharacterIdentity.SetMental`로 최소 0까지 차감하고 기존 기절·회복 규칙을 따른다. SO 값은 런타임에 수정하지 않는다. 필드를 이전하거나 제거할 때 시뮬레이션의 소비 지점과 설치 도구를 함께 갱신한다. [중복 조사와 변경 전 값](../DataHistory/20261118-work-mental-01-planned.md)
+
 ## 2026-11-18 엔딩 평가식 확장
 
 연결·검증 완료: [엔딩 팝업 검증](../DataHistory/20261118-ending-popup-02-verified.md). 기존 Addressables 콘텐츠를 갱신하고 실제 최종120틱 평가/표시를 확인했다.
@@ -7,6 +23,8 @@
 기존 `data.bunker.rules` SO/주소/수명에 필수 `evaluationTargetProgress:double`(진척 퍼센트포인트 합, 유한 >0, 사용자 확정 96), `evaluationReferenceTicks:int`(기준 틱 수, >0, 사용자 확정 24)을 추가한다. 암묵 기본값 없음. `BunkerRules.Validate` 검사. `BunkerSimulation`이 기존 로드된 Rules와 CurrentTick을 `GameDevScoreCalculator`에 제공한다. 평가 = 세 분야 진척 합 / (evaluationTargetProgress × CurrentTick / evaluationReferenceTicks), ×100 없음. 틱 0에서는 점수 보류, 종료 때 현재 틱 기준 확정. 기존 totalTicks/작업 속도/기절 틱은 변경하지 않는다. 상수 삭제·이전 시 계산 소비자를 함께 전환하며 새 SO/CSV/로더를 만들지 않는다. 중복 조사와 검증은 [계획](../DataHistory/20261118-ending-popup-01-planned.md) 및 후속 완료 기록 참조.
 
 ## 2026-11-18 좀비 전투용 전역 멘탈 확장
+
+벙커의 캐릭터 정보 카드는 씬 시뮬레이션이 로드한 `Rules.MentalMaximum`을 멘탈 게이지 상한으로 사용한다. 현재 포인트는 선택한 생존자에게서 읽는다. [카드 검증](../DataHistory/20261118-shelter-character-card-verified.md)
 
 기존 정본/주소/GUID/주기를 유지. 필수 int 필드 `mentalMaximum`(멘탈 포인트, >0, 최초100), `faintDurationTicks`(기본 틱, >0, 최초40), `wakeMental`(멘탈 포인트, >0 및 상한 이하, 최초30)을 추가한다. 빈 값/암묵 기본값 없음. 근거는 노션 전역 상수의 멘탈 상한100/기절1시간=40틱/깨어남30. CharacterIdentity.ConfigureMental/SetMental/AdvanceMentalTick과 BunkerSimulation.ProcessTick에서 소비. 멘탈 0은 행동 차단, 양수 회복은 탈진 해제, 기절 기간이 끝나면 wakeMental로 복원. 새 게임은 Characters의 원래 초기 멘탈로 리셋. 수치 원본은 이 SO만 소유. 기존 이벤트의 멘탈 효과도 같은 SetMental 경계에서 상한을 적용한다. [계획](../DataHistory/20261118-zombie-invasion-01-planned.md), [좀비 명세](Zombies.md). 기존 검증 기록의 멘탈 상한 미정 설명은 이 계약으로 대체한다.
 
@@ -47,3 +65,29 @@
 ## 2026-11-18 선택형 사건·다음 습격
 
 사용자 확정: 모든 시간 단위는 틱, 기존 이벤트 간격 유지. 사건으로 멈춘 틱의 작업 이후 처리는 닫힌 뒤 한 번 이어간다. 같은 틱의 ZombieInvasionDue도 이때 발생하며 PendingWaveHpModifier를 CurrentWaveHpModifier로 1회 이동/초기화한다. GetCurrentWaveEnemyHp(baseHp)는 현재 습격 보정을 더해 최소 1을 반환한다. 적 기본 HP/전투는 아직 없고 외부 생성기가 이 API를 소비해야 한다. 보정은 런타임 상태, 재시작 시 0이며 SO 수치 변경 없음. 팝업 정지 중 캐릭터 Update 이동도 정지한다. [검증](../DataHistory/20261118-event-effects-02-verified.md).
+## 캐릭터 허기와 음식 사용
+
+편집 정본은 기존 `Assets/Settings/Shelter/BunkerRules.asset`, 주소는 `data/bunker-rules`다. 허기 눈금은 10칸이며 구조한 인물마다 가득 찬 상태에서 시작한다.
+
+| 필드 | 타입 · 단위 | 필수 · 초기값 · 제약 |
+|---|---|---|
+| hungerEveryTicks | int · 벙커 틱 | 필수, 임시 5, 1 이상. 첫 감소는 해당 틱에 발생 |
+| hungerLoss | int · 한 주기에 잃는 칸 | 필수, 임시 1, 0~10 |
+| foodRestore | int · 한 입으로 채우는 칸 | 필수, 5, 1~10 |
+| servingsPerCan | int · 새 통조림 한 개의 사용 횟수 | 필수, 4, 1 이상 |
+| usableMentalSupplyIds | string[] · 벙커 물자 ID | 드래그로 멘탈을 회복할 수 있는 기존 mental 물자. 현재 choco와 caffeine. monster와 bacchus는 보관 전용 |
+
+허기와 남은 회분, 장착물은 플레이 상태다. 시뮬레이션 재시작 시 개인 허기와 파밍에서 가져온 재고로 복원한다. 포만 상태에서는 통조림을 소비하지 않는다. 허기가 0일 때 추가 페널티는 정의하지 않았다. 캐릭터의 멘탈과 초콜릿 회복은 기존 계약을 사용한다.
+
+## 좀비 접근과 보초 배치
+
+기존 벙커 시계와 전역 멘탈 규칙에 아래 필수 필드를 추가한다. 정본은 `Assets/Settings/Shelter/BunkerRules.asset`이며 `BunkerSimulation.Rules`로 조회한다.
+
+| 필드 | 타입 · 단위 | 초기값 · 제약 | 소비 |
+|---|---|---|---|
+| invasionApproachTicks | int · 선두가 막힘없이 생성 지점부터 입구까지 걷는 벙커 틱 | 6, 양수 | 공용 이동 속도 × 틱당 초 × 접근 틱으로 스폰 거리를 계산 |
+| guardVolleyEveryTicks | int · 보초의 원거리 사격 간격(벙커 틱) | 2, 필수 양수 | `BunkerRules.GuardVolleyEveryTicks`를 통해 `ZombieAgent`가 생성 후 첫 사격과 다음 사격을 예약한다. 입구 도착 틱에도 사격을 먼저 처리한다. |
+| invasionMentalLoss | int · 침입 1마리당 1인 멘탈 | 2, 0 이상 | 실내 진입 시 구조 인원 전원에 1회 |
+| guardTicksPerMental | int · 보초 멘탈 1점당 연속 배치 틱 | 8, 양수 | 행동 가능한 전투 방 인원별로 계산하고 이탈·탈진·재시작 때 잔여 시간 초기화 |
+
+빈 값이나 암묵적 대체값을 사용하지 않는다. 기존 SO 주소·GUID와 로딩 수명을 유지한다. 개체의 남은 거리와 배치 시간은 해당 플레이에서만 사용한다. 기존 좀비 시트의 주사위 피해와 전원 침입 손실은 적용 대상과 시점이 다르다. [6틱 접근·2틱 사격 검증](../DataHistory/20261119-zombie-volley-02-verified.md)

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
@@ -13,12 +14,37 @@ namespace GameJam.Data
         public const string CatalogAddress = "data/catalog";
         static GameDatabase database;
         static Task loading;
-        static AsyncOperationHandle<GameDatabase> handle;
+        static CancellationTokenSource pendingSheets;
+        static Dictionary<string, ScriptableObject> sessionAssets;
+        static Func<GameDatabase, Dictionary<string, ScriptableObject>, CancellationToken, Task> readSession;
+        static readonly HashSet<string> sessionAddresses = new HashSet<string>(StringComparer.Ordinal);
         static int generation;
         static readonly Dictionary<string, Task<UnityEngine.Object>> settings = new Dictionary<string, Task<UnityEngine.Object>>();
         static event Action ReleaseSettings;
 
+        // Project-specific CSV projections live in the gameplay assembly.
+        public static void ConfigureSessionSource(
+            Func<GameDatabase, Dictionary<string, ScriptableObject>, CancellationToken, Task> read,
+            params string[] addresses)
+        {
+            readSession = read;
+            sessionAddresses.Clear();
+            sessionAddresses.UnionWith(addresses);
+        }
+
         public static async Task<T> LoadSettingsAsync<T>(string address) where T : UnityEngine.Object
+        {
+            if (sessionAddresses.Contains(address))
+            {
+                int version = generation;
+                await InitializeAsync();
+                if (version != generation) throw new OperationCanceledException("GameData was released while loading " + address);
+                if (sessionAssets.TryGetValue(address, out var value)) return (T)(UnityEngine.Object)value;
+            }
+            return await LoadPackagedAsync<T>(address);
+        }
+
+        public static async Task<T> LoadPackagedAsync<T>(string address) where T : UnityEngine.Object
         {
             if (!settings.TryGetValue(address, out var task))
             {
@@ -61,36 +87,39 @@ namespace GameJam.Data
 
         static async Task LoadAsync(int version)
         {
-            var operation = Addressables.LoadAssetAsync<GameDatabase>(CatalogAddress);
-            handle = operation;
+            var cancellation = new CancellationTokenSource();
+            pendingSheets = cancellation;
+            var staged = new Dictionary<string, ScriptableObject>(StringComparer.Ordinal);
             try
             {
-                // Completed works on platforms where AsyncOperationHandle.Task is unavailable.
-                var completion = new TaskCompletionSource<GameDatabase>();
-                operation.Completed += completed =>
-                {
-                    if (completed.Status == AsyncOperationStatus.Succeeded) completion.TrySetResult(completed.Result);
-                    else completion.TrySetException(completed.OperationException ?? new InvalidOperationException("Cannot load " + CatalogAddress));
-                };
-                var loaded = await completion.Task;
-                if (version != generation) throw new OperationCanceledException("GameData was released while loading.");
-                loaded.Initialize();
-                database = loaded;
+                var packaged = await LoadPackagedAsync<GameDatabase>(CatalogAddress);
+                cancellation.Token.ThrowIfCancellationRequested();
+                packaged.Initialize();
+                if (readSession != null) await readSession(packaged, staged, cancellation.Token);
+                cancellation.Token.ThrowIfCancellationRequested();
+                database = staged.TryGetValue(CatalogAddress, out var live) ? (GameDatabase)live : packaged;
+                sessionAssets = staged;
             }
             catch (Exception error)
             {
-                if (version == generation)
-                {
-                    LastError = error;
-                    if (operation.IsValid()) Addressables.Release(operation);
-                    handle = default;
-                }
+                DestroySessionAssets(staged);
+                if (version == generation) LastError = error;
                 throw;
             }
             finally
             {
-                // Release during a pending operation defers releasing its handle until completion.
-                if (version != generation && operation.IsValid()) Addressables.Release(operation);
+                if (pendingSheets == cancellation) pendingSheets = null;
+                cancellation.Dispose();
+            }
+        }
+
+        static void DestroySessionAssets(Dictionary<string, ScriptableObject> assets)
+        {
+            if (assets == null) return;
+            foreach (var asset in assets.Values)
+            {
+                if (Application.isPlaying) UnityEngine.Object.Destroy(asset);
+                else UnityEngine.Object.DestroyImmediate(asset);
             }
         }
 
@@ -104,16 +133,17 @@ namespace GameJam.Data
 
         public static void Release()
         {
-            bool pending = loading != null && !loading.IsCompleted;
             generation++;
+            pendingSheets?.Cancel();
+            pendingSheets = null;
+            DestroySessionAssets(sessionAssets);
+            sessionAssets = null;
             ReleaseSettings?.Invoke();
             ReleaseSettings = null;
             settings.Clear();
             database = null;
             loading = null;
             LastError = null;
-            if (!pending && handle.IsValid()) Addressables.Release(handle);
-            handle = default;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

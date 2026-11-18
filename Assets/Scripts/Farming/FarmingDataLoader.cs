@@ -1,14 +1,14 @@
 using System;
 using System.Threading.Tasks;
+using GameJam.Data;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace ShelterRun
 {
-    // Scene-owned; all requests share one load and assets are released on scene teardown.
+    // The game session owns the selected database. The scene owns its rules handle.
     public sealed class FarmingDataLoader : IDisposable
     {
-        AsyncOperationHandle<FarmingDatabase> databaseHandle;
         AsyncOperationHandle<FarmingRules> rulesHandle;
         Task loadTask;
         bool disposed;
@@ -23,13 +23,13 @@ namespace ShelterRun
 
         async Task LoadInternal()
         {
-            databaseHandle = Addressables.LoadAssetAsync<FarmingDatabase>(FarmingDataKeys.Database);
+            var database = GameData.LoadSettingsAsync<FarmingDatabase>(FarmingDataKeys.Database);
             rulesHandle = Addressables.LoadAssetAsync<FarmingRules>(FarmingDataKeys.Rules);
-            await Task.WhenAll(databaseHandle.Task, rulesHandle.Task);
+            await Task.WhenAll(database, rulesHandle.Task);
             if (disposed) throw new ObjectDisposedException(nameof(FarmingDataLoader));
-            if (databaseHandle.Status != AsyncOperationStatus.Succeeded || rulesHandle.Status != AsyncOperationStatus.Succeeded)
+            if (rulesHandle.Status != AsyncOperationStatus.Succeeded)
                 throw new InvalidOperationException("Addressables: farming database/rules load failed.");
-            Database = databaseHandle.Result;
+            Database = await database;
             Rules = rulesHandle.Result;
             Database.Validate();
             Rules.Validate();
@@ -39,7 +39,6 @@ namespace ShelterRun
         {
             if (disposed) return;
             disposed = true;
-            if (databaseHandle.IsValid()) Addressables.Release(databaseHandle);
             if (rulesHandle.IsValid()) Addressables.Release(rulesHandle);
             Database = null;
             Rules = null;

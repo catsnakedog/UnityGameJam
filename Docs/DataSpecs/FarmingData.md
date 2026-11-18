@@ -1,5 +1,7 @@
 # FarmingData 명세
 
+실행 시 시트 연동이 켜져 있으면 같은 FarmingData 연결과 CSV 파서를 사용한다. 게임 실행용 FarmingDatabase는 공용 테이블과 함께 검증되며 파밍 씬과 벙커 물자 소비자가 동일한 인스턴스를 받는다. 꺼짐 또는 파밍 연결 비활성 시 기존 내부 CSV 기반 DB를 사용한다. 데이터 수명은 GameData.Release 또는 게임 종료까지이고 파밍 씬의 규칙 핸들은 씬에서 해제한다. [선택 설정](DataToolSettings.md)
+
 ## 전체 시트 가져오기 연결 (2026-11-18)
 
 연결은 [SpreadConfig](https://docs.google.com/spreadsheets/d/1oivFPajqTe1rILgtI4Xe1l6kPKtfSmG4UMat7keT84A/edit?gid=961703615)의 sheetName=FarmingData 행에서 관리한다. 구 farmingSheetUrl 필드는 제거했다. `Tools > Data Manager > 전체 시트 가져오기 · CSV / 클래스 갱신`에서 공용 시트와 함께 내려받되 기존 `FarmingCsvImporter`가 원래 FarmingData.csv/FarmingDatabase.asset만 갱신한다. Config에는 같이 등록하지만 공용 DB에는 중복 등록하지 않는다. 파싱 클래스는 기존 FarmingRecord를 재사용한다. 비활성/미등록 연결은 기존 파밍 데이터를 유지한다.
@@ -11,7 +13,7 @@
 - 양식: 1행 설명, 2행 타입, 3행 필드명, 4행부터 데이터. 기존 ID·필드 의미·타입·검증 제약은 유지한다.
 - 갱신: Tools > Data Manager의 전체 시트 가져오기 버튼. SpreadConfig의 id/gid를 사용해 내려받고 기존 경로에 UTF-8 BOM으로 저장하며 기존 FarmingCsvImporter가 파싱한다. 공용 CSV 폴더/DB에는 등록하지 않는다.
 - 삭제/이전: URL/탭 변경은 이 명세와 연결 설정을 함께 갱신하고 참조 검증 후 이전한다. 시트 연결 삭제만으로 CSV/DB를 지우지 않는다. 업로드용 xlsx는 편집 정본이 아니다.
-- 검증: 실제 공개 CSV 내보내기로 12행의 모든 셀/헤더를 대조했다. 게임 런타임은 원격 시트를 직접 읽지 않는다. 아래의 외부 원본 없음/CSV 정본/게시 대기 설명은 이 연결 계약으로 대체한다.
+- 검증: 실제 공개 CSV 내보내기와 현재 18행의 헤더·셀을 대조했다. 게임 런타임은 원격 시트를 직접 읽지 않는다. 아래의 외부 원본 없음/CSV 정본/게시 대기 설명은 이 연결 계약으로 대체한다.
 
 2026-11-18 시트 양식 지원: 기존 경로/ID/값/DB/Addressables/전용 임포터를 유지한다. `FarmingCsvImporter.Parse`는 기존 `id,type,weight` 헤더 외에 설명 1행, `string,string,int` 2행, `id,type,weight` 3행도 지원한다. 파밍 xlsx는 해당 양식의 게시 준비 산출물이며 별도 정본/공용 DB 테이블이 아니다. [노션/시트 계획](../DataHistory/20261118-notion-sheets-01-planned.md). 상단의 실제 시트 URL에서 내려받은 12행을 전용 임포터로 적용했다.
 
@@ -32,10 +34,10 @@
 | 가져오기 | `Tools > Farming > Import FarmingData CSV`; CSV 저장 시 전용 postprocessor도 실행 |
 | 콘텐츠 빌드 | `Tools > Farming > Build Data Content` |
 | 로드/조회 | 씬 소유 `FarmingDataLoader.LoadAsync()` → `Database.Get(recordId)` / `Records` |
-| 소비자 | FarmingSession이 FarmingPickup.RecordId를 조회해 Initialize. FarmingInventory/Player/Hud가 Type/Weight를 사용 |
+| 소비자 | FarmingSession이 FarmingPickup.RecordId를 조회해 Initialize. FarmingInventory/Player/Hud가 Type/Weight를 사용. EventPopupController는 기존 GameData 설정 로더로 같은 DB를 조회해 예정된 획득 이벤트의 파밍 경로를 검증 |
 | 수명/실패 | FarmingSession 종료 시 로더 핸들 해제. 로드/Validate 실패 시 시작 차단 |
 
-생성 SO는 직접 수정하지 않는다. 전용 검증기가 있는 기존 CSV이므로 공용 CSV 폴더에 복사하거나 Data Manager에 두 번째로 등록하지 않는다. 신규 ID는 씬/프리팹에 자동 배치되지 않는다.
+생성 SO는 직접 수정하지 않는다. 전용 검증기가 있는 기존 CSV이므로 공용 CSV 폴더에 복사하거나 Data Manager에 두 번째로 등록하지 않는다. 파밍 시작 시 전체 행에서 생성 대상을 읽는다. 신규 ID를 추가할 때 같은 recordId를 가진 프리팹을 Farming Session의 pickupPrefabs에 연결한다. Person은 Characters 행과 방별 인원 합, Item은 ShelterItems 행과 빈 책상 자리 수를 함께 확인한다.
 
 ## 필드와 관계
 
@@ -45,28 +47,13 @@
 | type | FarmingObjectType | Person(직렬화 0), Item(1) | 필수, 기본값 없음 | CSV는 정확히 Person/Item 문자열, enum 유효성 검사 |
 | weight | int | 한 개체의 운반 비용 / **칸** | 필수, 기본값 없음 | Person 2~4, Item 1~2; 정수만 허용 |
 
-검사 구현: `FarmingCsvImporter.Parse` 및 `FarmingDatabase.Validate`. `FarmingPickup.recordId`는 이 테이블 `id`의 외래키이며 `FarmingSession` 초기화 시 `Get`으로 누락을 검출한다. 같은 물자 ID를 가진 여러 씬 개체는 허용한다. 정의 행은 하나이고 각 개체의 운반 상태만 별도로 유지한다.
+검사 구현: `FarmingCsvImporter.Parse` 및 `FarmingDatabase.Validate`. `FarmingPickup.recordId`는 이 테이블 `id`의 외래키다. `FarmingSession`은 배치 전에 모든 생성 대상에 대응하는 프리팹을 확인한다. 매 회차 사람과 일반·희귀·레전드 물자는 ID당 한 번 생성한다. 통조림만 방마다 하나씩 생성하며 세 개체는 각자 운반·투입할 수 있다. [방별 규칙](FarmingRules.md)
 
 ## 현재 레코드
 
-| ID | 역할/type | weight(칸) |
-|---|---|---|
-| person_01 | 사람 1 / Person | 2 |
-| person_02 | 사람 2 / Person | 3 |
-| person_03 | 사람 3 / Person | 4 |
-| person_04 | 사람 4 / Person | 2 |
-| person_05 | 사람 5 / Person | 3 |
-| person_06 | 사람 6 / Person | 4 |
-| water | 물 / Item | 1 |
-| food | 식량 / Item | 1 |
-| medkit | 의료품 / Item | 2 |
-| radio | 라디오 / Item | 2 |
-| toolbox | 도구 / Item | 2 |
-| blanket | 담요 / Item | 1 |
+시트의 18행은 사람 6종과 물자 12종이다. 물자의 종류와 사용 효과는 [벙커 물자](ShelterItems.md)를 같은 ID로 참조한다. 운반 비용은 이 시트에서만 편집한다. 카페인 알약(`caffeine`)의 비용은 사용자가 확정한 1칸이다.
 
-표의 역할 설명은 문서상 의미이며 CSV에 표시 이름 필드가 추가된 것은 아니다. 사람 6행/물자 6행이며 씬의 물자 개체 수와 정의 행 수는 다를 수 있다. ID를 재사용/개명해 새 의미를 덮어쓰지 않는다.
-
-정렬은 CSV 순서. 활성화 필드는 없다. 기존 ID가 누락된 가져오기는 전용 임포터가 거부한다. 삭제/ID 변경은 씬/프리팹 참조와 후속 저장 계약을 검사하는 명시적 이전 작업으로 수행한다. 현재 후속 씬·세이브 연결은 없으며 미래 저장 키와의 호환성은 별도 설계한다.
+CSV 순서로 열거하며 활성화 필드는 없다. 예고 없는 ID 삭제는 임포터가 거부한다. ID를 은퇴시킬 때 씬 배치, 프리팹, 스프라이트와 가방 참조를 함께 전환한다. 투입 기록은 현재 플레이 회차에 한정된다.
 
 ## 중복 조사와 검증
 
@@ -78,3 +65,14 @@
 
 ## 2026-11-18 캐릭터 연결
 Person의 기존 id를 별도 [Characters](Characters.md)의 id에서 참조한다. 기존 CSV의 type/weight/ID는 유지한다. FarmingSession은 시작 전에 1:1 관계를 검증하며 벙커 이동 시 투입 Person ID를 전달한다. 이전 문서의 후속 연결 없음 설명은 이 계약으로 대체한다. 영구 저장은 없다.
+
+## 2026-11-18 사이드뷰 최초 배치 이력
+
+최초 사이드뷰 제작 당시 `FarmingSideViewBuilder`는 325호에 여섯 사람과 물자를 고정 배치했다. 현재 배치는 회차 시작 시 `FarmingSession`이 [방별 규칙](FarmingRules.md)으로 생성한다. `FarmingPlayer`는 같은 공간에서만 탐색하고 문 이동 시 Inventory와 개체 상태를 유지한다. [전환 계획](../DataHistory/20261118-farming-sideview-01-planned.md), [현재 맵](../Farming/Map2D.md).
+
+## 벙커 가방 연결
+
+`FarmingRunTransfer.Capture`는 벙커에 투입한 개체에서 Item 한 개당 기존 `FarmingRecord` 한 건을 `Items`에 전달한다. Person은 기존의 고유 구조 명단으로 전달한다. `ShelterSupplies.OwnedItems()`가 동일한 파밍 ID의 수량을 집계하고, 가방은 개당 한 칸을 사용한다. 툴팁의 파밍 운반 비용은 `FarmingRecord.Weight`에서 읽는다. 이 결과는 같은 파밍 회차의 벙커 재시작에도 유지되며 새 파밍 시작 시 비워진다. [실행 검증](../DataHistory/20261118-shelter-inventory-verified.md)
+## 확정 물자 적용
+
+통조림(`canfood`)은 독립적인 1칸 물자다. 세 호실에 각 한 캔을 배치한다. 한 캔의 사용 횟수와 허기 회복은 [벙커 규칙](BunkerRules.md)이 담당한다. 기존 325호 테이블 배치를 확정 아이템으로 교체하고 다른 두 호실의 배치를 유지했다. 구 물자 water, food, medkit, radio, toolbox, blanket을 씬·프리팹·DB에서 제거했다. 이후 `FarmingDatabase.Get`은 현재 행만 조회한다. [원본 대조 및 플레이 검증](../DataHistory/20261118-item-roster-02-verified.md)

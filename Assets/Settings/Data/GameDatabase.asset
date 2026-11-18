@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameDatabase
   m_EditorClassIdentifier: GameJam.Data::GameJam.Data.GameDatabase
   schemaVersion: 1
-  sourceHash: b079e3a0a9c520e2948aedf4d7b5797757a23f0c83a4b56a52beb9d63b7a2e16
+  sourceHash: fd948ee8543bf297ef4b34bffa21bcc5d76bf165000870883f46d7cd2d26d6b6
   tables:
   - name: Characters
     source: Characters.csv
@@ -304,6 +304,16 @@ MonoBehaviour:
     - name: sourceEvent
       type: string
       description: "\uD68D\uB4DD \uC774\uBCA4\uD2B8 ID"
+    - name: rank
+      type: string
+      description: "\uB4F1\uAE09"
+    - name: plusAttack
+      type: int
+      description: "\uC99D\uAC15 \uC804\uD22C\uB825"
+    - name: plusSkill
+      type: int
+      description: "\uC99D\uAC15 \uAC1C\uBC1C\uB825(\uAE30\uD68D/\uD50C\uBC0D/\uC544\uD2B8
+        \uC804\uCCB4)"
     rows:
     - cells:
       - choco
@@ -311,15 +321,149 @@ MonoBehaviour:
       - mental
       - 10
       - ev_door
+      - normal
+      - 0
+      - 0
     - cells:
       - monster
       - "\uBAAC\uC2A4\uD130"
       - mental
       - 10
       - ev_vending
+      - normal
+      - 0
+      - 0
     - cells:
       - bacchus
       - "\uBC15\uCE74\uC2A4"
       - mental
       - 10
       - ev_bacchus
+      - normal
+      - 0
+      - 0
+    - cells:
+      - mop
+      - "\uB300\uAC78\uB808"
+      - attack
+      - 0
+      - ev_mop
+      - normal
+      - 1
+      - 0
+    - cells:
+      - bat
+      - "\uC54C\uB8E8\uBBF8\uB284 \uBC30\uD2B8"
+      - attack
+      - 0
+      - ev_bat
+      - normal
+      - 2
+      - 0
+    - cells:
+      - pan
+      - "\uD6C4\uB77C\uC774\uD32C"
+      - attack
+      - 0
+      - ev_pan
+      - normal
+      - 2
+      - 0
+    - cells:
+      - axe
+      - "\uC18C\uBC29 \uB3C4\uB07C"
+      - attack
+      - 0
+      - ev_axe
+      - rare
+      - 3
+      - 0
+    - cells:
+      - laptop
+      - "\uB178\uD2B8\uBD81"
+      - buff
+      - 0
+      - ev_laptop
+      - rare
+      - 0
+      - 1
+    - cells:
+      - caffeine
+      - "\uCE74\uD398\uC778 \uC54C\uC57D"
+      - mental
+      - 20
+      - ev_caffeine
+      - rare
+      - 0
+      - 0
+    - cells:
+      - nailbat
+      - "\uBABB \uBC15\uD78C \uBC30\uD2B8"
+      - attack
+      - 0
+      - ev_nailbat
+      - legend
+      - 3
+      - 0
+    - cells:
+      - gaming
+      - "\uAC8C\uC774\uBC0D \uB178\uD2B8\uBD81"
+      - buff
+      - 0
+      - ev_gaming
+      - legend
+      - 0
+      - 2
+    - cells:
+      - canfood
+      - "\uD1B5\uC870\uB9BC"
+      - hunger
+      - 0
+      - ev_canfood
+      - normal
+      - 0
+      - 0
+  - name: ZombieData
+    source: ZombieData.csv
+    keyIndex: 0
+    columns:
+    - name: id
+      type: string
+      description: "\uC880\uBE44 \uACE0\uC720 ID"
+    - name: displayName
+      type: string
+      description: "\uC880\uBE44 \uD45C\uC2DC \uC774\uB984"
+    - name: firstWave
+      type: int
+      description: "\uB4F1\uC7A5 \uC2DC\uC791 \uC6E8\uC774\uBE0C (1\uBD80\uD130)"
+    - name: combat
+      type: int
+      description: "\uC804\uD22C\uB825 (1~\uC8FC\uC0AC\uC704 \uBA74 \uC218)"
+    - name: hp
+      type: int
+      description: "\uAE30\uBCF8 \uCCB4\uB825 (HP)"
+    rows:
+    - cells:
+      - zombie_1
+      - "\uC880\uBE44"
+      - 1
+      - 1
+      - 2
+    - cells:
+      - zombie_2
+      - "\uB369\uCE58 \uC880\uBE44"
+      - 4
+      - 2
+      - 4
+    - cells:
+      - zombie_3
+      - "\uC131\uB09C \uC880\uBE44"
+      - 7
+      - 3
+      - 5
+    - cells:
+      - zombie_4
+      - "\uAC70\uB300 \uC880\uBE44"
+      - 10
+      - 4
+      - 6

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ShelterRun
@@ -6,6 +7,15 @@ namespace ShelterRun
     [CreateAssetMenu(menuName = "Shelter Run/Farming Rules")]
     public sealed class FarmingRules : ScriptableObject
     {
+        [Serializable]
+        public struct RoomSpawnRule
+        {
+            [SerializeField, Min(0)] int people;
+            [SerializeField, Min(1)] int legendWeight;
+            public int People => people;
+            public int LegendWeight => legendWeight;
+        }
+
         [SerializeField] float duration;
         [SerializeField] int capacity;
         [SerializeField] float moveSpeed;
@@ -17,6 +27,8 @@ namespace ShelterRun
         [SerializeField] float warningSeconds;
         [SerializeField] Vector2 mapHalfExtents;
         [SerializeField] float roomRevealDuration;
+        [Tooltip("Nearest corridor door to the bunker first.")]
+        [SerializeField] RoomSpawnRule[] roomSpawns;
         public float Duration => duration;
         public int Capacity => capacity;
         public float MoveSpeed => moveSpeed;
@@ -28,6 +40,7 @@ namespace ShelterRun
         public float WarningSeconds => warningSeconds;
         public Vector2 MapHalfExtents => mapHalfExtents;
         public float RoomRevealDuration => roomRevealDuration;
+        public IReadOnlyList<RoomSpawnRule> RoomSpawns => roomSpawns;
 
         public void Validate()
         {
@@ -36,6 +49,17 @@ namespace ShelterRun
                     throw new InvalidOperationException("FarmingRules requires positive finite values.");
             if (capacity < 1 || warningSeconds > duration)
                 throw new InvalidOperationException("Invalid FarmingRules capacity/warningSeconds.");
+            if (roomSpawns == null || roomSpawns.Length == 0)
+                throw new InvalidOperationException("Missing FarmingRules room spawn settings.");
+            int previousWeight = 0;
+            long totalWeight = 0;
+            foreach (var room in roomSpawns)
+            {
+                totalWeight += room.LegendWeight;
+                if (room.People < 0 || room.LegendWeight <= previousWeight || totalWeight > int.MaxValue)
+                    throw new InvalidOperationException("Invalid person quota or legend weight in FarmingRules.");
+                previousWeight = room.LegendWeight;
+            }
         }
     }
 }

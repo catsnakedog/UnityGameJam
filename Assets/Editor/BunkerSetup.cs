@@ -27,10 +27,23 @@ public static class BunkerSetup
             data.FindProperty("secondsPerTick").floatValue = 1;
             data.FindProperty("randomEventEveryTicks").intValue = 10;
             data.FindProperty("invasionEveryTicks").intValue = 30;
+            data.FindProperty("invasionApproachTicks").intValue = 6;
+            data.FindProperty("guardVolleyEveryTicks").intValue = 2;
+            data.FindProperty("invasionMentalLoss").intValue = 2;
+            data.FindProperty("guardTicksPerMental").intValue = 8;
             data.FindProperty("workEveryTicks").intValue = 1;
             data.FindProperty("percentPerAbility").floatValue = 0.1f;
+            data.FindProperty("mentalCostPerWork").intValue = 1;
             data.FindProperty("planningUnlockPercent").floatValue = 50;
             data.FindProperty("mentalMaximum").intValue = 100;
+            data.FindProperty("tiredMentalThreshold").intValue = 50;
+            data.FindProperty("hungerEveryTicks").intValue = 5;
+            data.FindProperty("hungerLoss").intValue = 1;
+            data.FindProperty("foodRestore").intValue = 5;
+            data.FindProperty("servingsPerCan").intValue = 4;
+            var mentalItems = data.FindProperty("usableMentalSupplyIds");
+            mentalItems.arraySize = 1;
+            mentalItems.GetArrayElementAtIndex(0).stringValue = "choco";
             data.FindProperty("faintDurationTicks").intValue = 40;
             data.FindProperty("wakeMental").intValue = 30;
             // Initial authoring only; the existing SO remains the editable source of truth.

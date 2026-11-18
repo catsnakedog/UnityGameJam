@@ -28,6 +28,7 @@ namespace GameJam.Data.Editor
         public const string DatabasePath = "Assets/Settings/Data/GameDatabase.asset";
         public const string HistoryFolder = "Docs/DataHistory";
         public const string GroupName = "Game Data Local";
+        public static Action ValidateProjectContent;
 
         public static Dictionary<string, string> ReadSources(string folder)
         {
@@ -187,6 +188,7 @@ namespace GameJam.Data.Editor
         public static void BuildContent()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Exit Play Mode before building content.");
+            ValidateProjectContent?.Invoke();
             var plan = Preview(DataToolSettings.instance.csvFolder);
             var database = AssetDatabase.LoadAssetAtPath<GameDatabase>(DatabasePath);
             if (!database || database.SourceHash != plan.SourceHash) throw new InvalidOperationException("Import the current CSV files before building content.");

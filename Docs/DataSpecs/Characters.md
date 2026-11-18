@@ -1,8 +1,14 @@
 # 캐릭터 능력 명세
 
+벙커에서 생존자를 클릭하면 정보 카드가 기본 정의의 ID·이름·직군과 장비를 반영한 CharacterIdentity.Planning, Programming, Art, Combat을 읽는다. [장비 보정](ShelterItems.md) 초상 Sprite는 기존 파밍 Person ID로 연결한다. 멘탈 표시는 `CharacterIdentity.CurrentMental`을 사용한다. [UI와 재현 결과](../UI/ShelterCharacterCard.md)
+
+## 2026-11-18 벙커 카메라 번호 참조
+
+`ShelterCamera.GetCharacterSlot(1~6)`은 기존 `ShelterRoster.Characters`의 `Id == person_01~06`을 조회한다. 구조 순서와 무관하며 없는 캐릭터/비활성 캐릭터는 빈 슬롯이다. 캐릭터 목록·이름·능력·정본·스키마·로더·저장 키 변경 없음. 추적 대상은 씬 수명의 런타임 참조이며 캐릭터 데이터에 저장하지 않는다. [카메라 설정](../ShelterCamera.md), [검증 이력](../DataHistory/20261118-shelter-camera-verified.md).
+
 ## 2026-11-18 좀비 전투 소비 연결
 
-기존 시트/CSV/DB/ID/초기값은 유지한다. ZombieAgent가 Definition.Combat 및 CurrentMental/SetMental을 사용한다. BunkerRules(data.bunker.rules)의 mentalMaximum=100, faintDurationTicks=40, wakeMental=30을 공용 CharacterIdentity에 연결했다. SetMental은 0 하한 계약을 유지하고 상한을 적용하며, 0인 동안 이동·작업·전투를 차단한다. 양수 회복 또는 40틱 경과 시 다시 행동 가능. ResetMental은 기존 Definition.Mental로 복원. 이전 본문의 전투/상한/기절 미연결 설명은 이 계약으로 대체한다. [좀비 명세](Zombies.md).
+기존 시트/CSV/DB/ID/초기값은 유지한다. ZombieAgent가 장비를 반영한 CharacterIdentity.Combat 및 CurrentMental/SetMental을 사용한다. BunkerRules(data.bunker.rules)의 mentalMaximum=100, faintDurationTicks=40, wakeMental=30을 공용 CharacterIdentity에 연결했다. SetMental은 0 하한 계약을 유지하고 상한을 적용하며, 0인 동안 이동·작업·전투를 차단한다. 양수 회복 또는 40틱 경과 시 다시 행동 가능. ResetMental은 기존 Definition.Mental로 복원. 이전 본문의 전투/상한/기절 미연결 설명은 이 계약으로 대체한다. [좀비 명세](Zombies.md).
 
 ## 현재 편집 원본 — Google Sheets (2026-11-18)
 

@@ -16,11 +16,24 @@ MonoBehaviour:
   secondsPerTick: 1
   randomEventEveryTicks: 10
   invasionEveryTicks: 30
+  invasionApproachTicks: 6
+  guardVolleyEveryTicks: 2
+  invasionMentalLoss: 2
+  guardTicksPerMental: 8
   workEveryTicks: 1
   percentPerAbility: 0.1
+  mentalCostPerWork: 1
   planningUnlockPercent: 50
   mentalMaximum: 100
+  tiredMentalThreshold: 50
   faintDurationTicks: 40
   wakeMental: 30
+  hungerEveryTicks: 5
+  hungerLoss: 1
+  foodRestore: 5
+  servingsPerCan: 4
+  usableMentalSupplyIds:
+  - choco
+  - caffeine
   evaluationTargetProgress: 96
   evaluationReferenceTicks: 24

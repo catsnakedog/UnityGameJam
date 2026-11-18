@@ -8,6 +8,7 @@ namespace UnityGameJam.Shelter
         double elapsed;
         bool advancing;
         public int CurrentTick { get; private set; }
+        public double FractionalTick => CurrentTick + Math.Min(1, elapsed / rules.SecondsPerTick);
         public bool IsComplete => CurrentTick >= rules.TotalTicks;
         public bool Paused { get; set; }
         public event Action<int> Tick;

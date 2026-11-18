@@ -1,0 +1,109 @@
+2026-11-18T23:59:11.2785358+09:00
+Passed
+PASS: Starts in corridor
+PASS: Three rooms with paired entrance/exit doors
+PASS: Door targets and arrival points are reciprocal and valid
+PASS: True orthographic side view
+PASS: No isometric tilemaps in scene
+PASS: No 3D collision geometry
+PASS: All world sprites use side-view artwork
+PASS: Six people and four carry slots
+PASS: Every roster ID spawns once, with one can per room
+PASS: 325호 person quota and aisle placement
+PASS: 325호 can and items on tabletops
+PASS: 325호 unique reachable positions
+PASS: 324호 person quota and aisle placement
+PASS: 324호 can and items on tabletops
+PASS: 324호 unique reachable positions
+PASS: 323호 person quota and aisle placement
+PASS: 323호 can and items on tabletops
+PASS: 323호 unique reachable positions
+PASS: Ready timer matches the saved FarmingRules duration (30s)
+PASS: Room contents hidden from corridor
+PASS: Keyboard D moves horizontally
+PASS: Keyboard A moves horizontally
+PASS: W/S cannot leave horizontal walk line
+PASS: Large step stops before right boundary
+PASS: Can leave right wall immediately
+PASS: Large step stops before left boundary
+PASS: Invalid overlap/position recovers onto safe walk line
+PASS: Walking to door does not auto-enter 325호
+PASS: E enters 325호
+PASS: Timer continues through door
+PASS: Only current room is visible
+PASS: W/S cannot leave horizontal walk line
+PASS: Large step stops before right boundary
+PASS: Can leave right wall immediately
+PASS: Large step stops before left boundary
+PASS: Invalid overlap/position recovers onto safe walk line
+PASS: Door reaches 복도
+PASS: Room exit returns to corridor
+PASS: Walking to door does not auto-enter 324호
+PASS: E enters 324호
+PASS: Timer continues through door
+PASS: Only current room is visible
+PASS: W/S cannot leave horizontal walk line
+PASS: Large step stops before right boundary
+PASS: Can leave right wall immediately
+PASS: Large step stops before left boundary
+PASS: Invalid overlap/position recovers onto safe walk line
+PASS: Door reaches 복도
+PASS: Room exit returns to corridor
+PASS: Walking to door does not auto-enter 323호
+PASS: E enters 323호
+PASS: Timer continues through door
+PASS: Only current room is visible
+PASS: W/S cannot leave horizontal walk line
+PASS: Large step stops before right boundary
+PASS: Can leave right wall immediately
+PASS: Large step stops before left boundary
+PASS: Invalid overlap/position recovers onto safe walk line
+PASS: Door reaches 복도
+PASS: Room exit returns to corridor
+PASS: Door reaches 325호
+PASS: Focus person_01
+PASS: Two-slot person carried
+PASS: Person carried horizontally
+PASS: Actual keyboard movement while carrying
+PASS: Walks in front of all tables without getting trapped
+PASS: Door reaches 복도
+PASS: Door preserves held person and visibility
+PASS: Door reaches 325호
+PASS: Focus person_05
+PASS: Capacity overflow still rejected
+PASS: Door reaches 복도
+PASS: Door reaches 324호
+PASS: Focus person_04
+PASS: Two people fill four slots
+PASS: Door reaches 복도
+PASS: Bunker takes all carried people
+PASS: Deposit fades out
+PASS: Deposited people disappear
+PASS: Door reaches 325호
+PASS: Focus person_03
+PASS: Four-slot person can be carried
+PASS: Door reaches 복도
+PASS: Empty corridor interaction throws held target
+PASS: Door reaches 324호
+PASS: Thrown target stays in source area when player changes rooms
+PASS: Cannot interact with another area
+PASS: Door reaches 복도
+PASS: Focus person_03
+PASS: Dropped person can be retrieved and deposited
+PASS: Door reaches 325호
+PASS: Focus canfood
+PASS: Door reaches 복도
+PASS: Door reaches 324호
+PASS: Focus canfood
+PASS: Focus nailbat
+PASS: Item combination fills four slots
+PASS: Door reaches 복도
+PASS: Door preserves full item inventory
+PASS: Items reach bunker
+PASS: Door reaches 325호
+PASS: Re-entering room does not respawn looted targets
+PASS: Focus person_05
+PASS: Configured 30s flow finishes at zero after 30.00s
+PASS: Deadline freezes movement/interactions and excludes unbanked carry
+PASS: Doors disabled after deadline
+PASS: Authoritative farming data unchanged

@@ -1,0 +1,17 @@
+PASS Existing scene consumer initializes from data/zombies
+PASS Shared GameData cache reused
+PASS Every sheet value matches the loaded Addressable
+PASS Wave 1 spawns sheet-backed ID and HP
+PASS Wave 2 spawns sheet-backed ID and HP
+PASS Wave 3 spawns sheet-backed ID and HP
+PASS Wave 4 spawns sheet-backed ID and HP
+PASS Wave 5 spawns sheet-backed ID and HP
+PASS Wave 6 spawns sheet-backed ID and HP
+PASS Wave 7 spawns sheet-backed ID and HP
+PASS Wave 8 spawns sheet-backed ID and HP
+PASS Wave 9 spawns sheet-backed ID and HP
+PASS Wave 10 spawns sheet-backed ID and HP
+PASS Wave 11 spawns sheet-backed ID and HP
+PASS Wave 12 spawns sheet-backed ID and HP
+PASS Restart clears runtime wave and zombies
+PASS Runtime leaves generated shared data untouched

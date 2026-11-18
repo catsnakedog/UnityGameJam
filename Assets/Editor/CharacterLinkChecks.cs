@@ -77,7 +77,7 @@ public static class CharacterLinkChecks
         Check(File.ReadAllBytes("Assets/Settings/Data/Csv/Characters.csv").Take(3).SequenceEqual(new byte[] {239,187,191}), "CSV UTF-8 BOM");
         var source = DataImporter.ReadSources("Assets/Settings/Data/Csv");
         var negativeAbility = System.Text.RegularExpressions.Regex.Replace(source["Characters.csv"], @"(?m)^(person_01,[^,\r\n]*,)[^,]+", "${1}-1");
-        foreach (var variant in new[] { negativeAbility, source["Characters.csv"].Replace("person_06", "water"), source["Characters.csv"].Replace("person_06", "unknown_person"), source["Characters.csv"].Replace("person_06", "person_01") })
+        foreach (var variant in new[] { negativeAbility, source["Characters.csv"].Replace("person_06", FarmingDataKeys.SpaghettiCan), source["Characters.csv"].Replace("person_06", "unknown_person"), source["Characters.csv"].Replace("person_06", "person_01") })
         {
             bool rejected = false;
             try { var fixture = new Dictionary<string,string>(source); fixture["Characters.csv"] = variant; CharacterSetup.Validate(DataImporter.PreviewSources("Assets/Settings/Data/Csv", fixture).Tables.Single(t => t.Name == CharacterKeys.Table)); }

@@ -1,0 +1,6 @@
+PASS Horizontal sweep clips before another zombie
+PASS Vertical sweep keeps clearance
+PASS Touching zombie may move away
+PASS Large step cannot tunnel through touching blocker
+PASS Unrelated lane does not block
+PASS Zero spacing data rejected

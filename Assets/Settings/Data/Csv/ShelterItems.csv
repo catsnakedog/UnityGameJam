@@ -1,6 +1,15 @@
-﻿물자 ID,표시 이름,소비 분류 (정의만),멘탈 회복량,획득 이벤트 ID
-string,string,string,int,string
-id,displayName,useKind,mentalRestore,sourceEvent
-choco,초콜렛,mental,10,ev_door
-monster,몬스터,mental,10,ev_vending
-bacchus,박카스,mental,10,ev_bacchus
+﻿물자 ID,표시 이름,소비 분류 (정의만),멘탈 회복량,획득 이벤트 ID,등급,증강 전투력,증강 개발력(기획/플밍/아트 전체)
+string,string,string,int,string,string,int,int
+id,displayName,useKind,mentalRestore,sourceEvent,rank,plusAttack,plusSkill
+choco,초콜렛,mental,10,ev_door,normal,0,0
+monster,몬스터,mental,10,ev_vending,normal,0,0
+bacchus,박카스,mental,10,ev_bacchus,normal,0,0
+mop,대걸레,attack,0,ev_mop,normal,1,0
+bat,알루미늄 배트,attack,0,ev_bat,normal,2,0
+pan,후라이팬,attack,0,ev_pan,normal,2,0
+axe,소방 도끼,attack,0,ev_axe,rare,3,0
+laptop,노트북,buff,0,ev_laptop,rare,0,1
+caffeine,카페인 알약,mental,20,ev_caffeine,rare,0,0
+nailbat,못 박힌 배트,attack,0,ev_nailbat,legend,3,0
+gaming,게이밍 노트북,buff,0,ev_gaming,legend,0,2
+canfood,통조림,hunger,0,ev_canfood,normal,0,0

@@ -1,0 +1,54 @@
+PASS Three floors auto-discovered from area placement
+PASS Room command needs selected character
+PASS Character selection precedes room selection
+PASS Click room creates automatic elevator route
+PASS An actor without a request cannot board
+PASS Opposite-floor callers queue behind first owner
+PASS Owner boards cabin and begins trip
+PASS Two waiters from the same side take separate seats
+PASS Serve the on-board intermediate stop before an outside call
+PASS Passenger carried inside cabin without climb state
+PASS Passenger cannot perform room work
+PASS Companion gets off at the intermediate floor
+PASS First rider continues to own floor while other callers wait
+PASS Oldest outstanding caller gets the next pickup
+PASS Previous owner exits before next passenger boards
+PASS All concurrent routes finish without call ping-pong
+PASS Independent destination rooms retained
+PASS Three same-floor requests start a shared trip
+PASS Third waiter keeps their place for the next trip
+PASS All three same-floor callers reach the upper room
+PASS Waiters on opposite sides can share the cabin
+PASS Same-floor passer has no elevator reservation
+PASS Passer walks across the occupied shaft
+PASS Horizontal passage is independent of cabin travel
+PASS Removing one rider in transit still delivers the other
+PASS Opposite destinations can share a pickup floor
+PASS Opposite-direction pair visits first caller's floor first
+PASS Opposite-direction pair reaches both floors
+PASS Direction change preserves each rider's destination
+PASS A distant reservation never holds a solo departure
+PASS Wrong-floor cabin cannot be boarded
+PASS Empty cabin arrives at caller floor before boarding
+PASS Recalled cabin completes downward trip
+PASS Start destination-change fixture
+PASS Midride command does not teleport or reverse cabin
+PASS New destination applied after original unloading
+PASS Start stop fixture
+PASS Stop command safely completes current ride
+PASS Stopped passenger released at destination floor
+PASS Locked waiting owner releases control to next caller
+PASS Disabled caller cannot hold elevator forever
+PASS Start in-flight lock fixture
+PASS In-flight lock still permits safe unloading
+PASS Start disconnected lift fixture
+PASS Disabled cabin releases passenger onto connected floor
+PASS No remaining ladder fallback across disconnected floors
+PASS Re-enabled elevator reconnects automatically
+PASS Route works after reconnect
+PASS Disconnected room rejected
+PASS Moved floor changes stops automatically
+PASS Walking speed at 30 FPS
+PASS Walking speed at 60 FPS
+PASS Walking speed at 144 FPS
+PASS Zero elevator speed rejected

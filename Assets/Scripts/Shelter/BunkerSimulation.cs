@@ -27,6 +27,7 @@ namespace UnityGameJam.Shelter
         public BunkerRules Rules { get; private set; }
         public bool IsReady => clock != null;
         public int CurrentTick => clock?.CurrentTick ?? 0;
+        public double FractionalTick => clock?.FractionalTick ?? 0;
         public int RemainingTicks => Rules ? Mathf.Max(0, Rules.TotalTicks - CurrentTick) : 0;
         public bool Paused { get; set; }
         readonly HashSet<object> pauseOwners = new HashSet<object>();
@@ -63,7 +64,7 @@ namespace UnityGameJam.Shelter
         }
         void ResetClock()
         {
-            foreach (var actor in roster.Characters) if (actor) { actor.ConfigureMental(Rules); actor.ResetMental(); }
+            foreach (var actor in roster.Characters) if (actor) { actor.ConfigureMental(Rules); actor.ResetMental(); actor.ResetSupplies(); }
             pendingPostEventTick=0;
             PendingWaveHpModifier=CurrentWaveHpModifier=LastWaveTick=0;
             clock = new BunkerTickClock(Rules);
@@ -86,7 +87,8 @@ namespace UnityGameJam.Shelter
         }
         void ProcessTick(int tick)
         {
-            foreach (var actor in roster.Characters) if (actor) actor.AdvanceMentalTick();
+            foreach (var actor in roster.Characters)
+                if (actor) { actor.AdvanceMentalTick(); actor.AdvanceGuardDutyTick(); actor.AdvanceHungerTick(tick); }
             // All due work on the last tick precedes submission of the final progress snapshot.
             if (tick % Rules.WorkEveryTicks == 0) { ProcessWork(); WorkProcessed?.Invoke(tick); }
             if (tick % Rules.RandomEventEveryTicks == 0) RandomEventDue?.Invoke(tick);
@@ -104,21 +106,45 @@ namespace UnityGameJam.Shelter
             if (tick == Rules.TotalTicks) { development.FinishDevelopment(); DurationEnded?.Invoke(); }
             clock.Paused = IsPaused || development.Phase != GameDevPhase.Developing || !isActiveAndEnabled;
         }
+        internal bool CanDevelopIn(ShelterRoomType room)
+        {
+            if (!Rules || !development || development.Phase != GameDevPhase.Developing || Rules.PercentPerAbility == 0) return false;
+            var progress = development.Progress;
+            bool unlocked = progress.Planning > Rules.PlanningUnlockPercent;
+            switch (room)
+            {
+                case ShelterRoomType.Planning: return progress.Planning < GameDevProgress.MaximumPercent;
+                case ShelterRoomType.Graphics: return unlocked && progress.Graphics < GameDevProgress.MaximumPercent;
+                case ShelterRoomType.Programming: return unlocked && progress.Programming < GameDevProgress.MaximumPercent;
+                default: return false;
+            }
+        }
+
         void ProcessWork()
         {
+            if (Rules.PercentPerAbility == 0) return;
             double programming = 0, graphics = 0, planning = 0;
-            bool productionUnlocked = development.Progress.Planning > Rules.PlanningUnlockPercent;
             foreach (var actor in roster.Characters)
             {
                 if (!actor || !actor.isActiveAndEnabled || actor.Definition == null) continue;
                 var walker = actor.GetComponent<ShelterWalker>();
-                if (!walker || !walker.CanWorkInCurrentRoom) continue;
+                if (!walker || !walker.CanWorkInCurrentRoom || !CanDevelopIn(walker.CurrentRoom.roomType)) continue;
                 switch (walker.CurrentRoom.roomType)
                 {
-                    case ShelterRoomType.Programming: if(productionUnlocked) programming += actor.Definition.Programming; break;
-                    case ShelterRoomType.Graphics: if(productionUnlocked) graphics += actor.Definition.Art; break;
-                    case ShelterRoomType.Planning: planning += actor.Definition.Planning; break;
+                    case ShelterRoomType.Programming:
+                        programming += actor.Programming;
+                        break;
+                    case ShelterRoomType.Graphics:
+                        graphics += actor.Art;
+                        break;
+                    case ShelterRoomType.Planning:
+                        planning += actor.Planning;
+                        break;
+                    default:
+                        continue;
                 }
+                if (Rules.MentalCostPerWork > 0)
+                    actor.SetMental(Math.Max(0, actor.CurrentMental - Rules.MentalCostPerWork));
             }
             development.AddProgress(GameDevField.Programming, (float)Math.Min(100, programming * Rules.PercentPerAbility));
             development.AddProgress(GameDevField.Graphics, (float)Math.Min(100, graphics * Rules.PercentPerAbility));

@@ -1,21 +1,31 @@
 PASS Addressables settings, character catalog and scene wiring loaded
 PASS Common loader shares settings instance
 PASS Moving order clears membership immediately
-PASS Destination alone produces no work
+PASS Moving produces no work or mental cost
 PASS Arrival establishes work membership
 PASS Development restart resets clock
+PASS Locked programming costs no mental
 PASS Programming ability contributes proportional percentage
+PASS Programming charges its worker once
+PASS No cost before the next work interval
 PASS Graphics uses art ability
+PASS Art charges the same flat cost
+PASS Completed field costs no mental
 PASS Planning uses planning ability
 PASS Multiple members sum once per actor
+PASS Only the two workers pay
+PASS Occupied room suspends work and cost
 PASS Closed room excluded
 PASS Inactive actors excluded
 PASS Non-work room excluded: Common
 PASS Non-work room excluded: Sleeping
 PASS Non-work room excluded: ZombieInvasion
-PASS Simulation pause
+PASS Last work interval can exhaust a worker
+PASS Fainted worker contributes no progress
+PASS Restart restores initial mental
+PASS Pause suspends cost and ticks
 PASS Ends at N exactly once
 PASS Independent event/work periods including final tick
-PASS Final tick work submitted and clamped through existing manager
+PASS Final tick work submitted, evaluated and clamped through existing manager
 PASS No progress after end
 PASS Runtime preserves settings

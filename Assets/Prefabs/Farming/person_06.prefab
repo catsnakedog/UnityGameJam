@@ -62,6 +62,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46b81d0bd7ec14b45828e340ed700785, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShelterRun.FarmingDepth2D
+  worldOrder: 100
 --- !u!114 &8827824890827994584
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -79,8 +80,8 @@ MonoBehaviour:
   focusMarker: {fileID: 8034432650317439063}
   weightLabel: {fileID: 2540905177819616910}
   sprite: {fileID: 6364255226873843739}
-  standingSprite: {fileID: 21300000, guid: 86aecb0f19190df4280123a7a2390243, type: 3}
-  lyingSprite: {fileID: 21300000, guid: 3bbb17c432d3d844ba63b1750c14b0dc, type: 3}
+  standingSprite: {fileID: 21300000, guid: 40b5044a9009fe04ebdda88393119eac, type: 3}
+  lyingSprite: {fileID: 21300000, guid: ba2dc75f630c40a438ac5f3228d66a56, type: 3}
   displayHeight: 0
 --- !u!1 &1166312639813612796
 GameObject:
@@ -117,7 +118,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 1.55}
-  m_SizeDelta: {x: 4, y: 1}
+  m_SizeDelta: {x: 5, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &311709120865331497
 MeshRenderer:
@@ -344,12 +345,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: a6a01d2ef2f642d449455be1dc850d37, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b01b6d1c375b7d14f94e1086a5575200, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 2, y: 1}
+  m_Size: {x: 2, y: 0.5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -435,7 +436,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 86aecb0f19190df4280123a7a2390243, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 40b5044a9009fe04ebdda88393119eac, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

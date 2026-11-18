@@ -1,0 +1,65 @@
+PASS: Direct shelter entry has no invented characters
+PASS: Fixture uses non-slot rescue order
+PASS: 16:9 and inspector view size applied
+PASS: Close zoom can frame part of the bunker on both axes
+PASS: Digit 1 centres existing person ID without locking
+PASS: Digit 1 double tap locks correct character
+PASS: Y unlocks slot 1
+PASS: Numpad 1 centres correct character
+PASS: Digit 2 centres existing person ID without locking
+PASS: Digit 2 double tap locks correct character
+PASS: Y unlocks slot 2
+PASS: Numpad 2 centres correct character
+PASS: Digit 3 centres existing person ID without locking
+PASS: Digit 3 double tap locks correct character
+PASS: Y unlocks slot 3
+PASS: Numpad 3 centres correct character
+PASS: Digit 4 centres existing person ID without locking
+PASS: Digit 4 double tap locks correct character
+PASS: Y unlocks slot 4
+PASS: Numpad 4 centres correct character
+PASS: Digit 5 centres existing person ID without locking
+PASS: Digit 5 double tap locks correct character
+PASS: Y unlocks slot 5
+PASS: Numpad 5 centres correct character
+PASS: Digit 6 centres existing person ID without locking
+PASS: Digit 6 double tap locks correct character
+PASS: Y unlocks slot 6
+PASS: Numpad 6 centres correct character
+PASS: Camera shortcuts leave movement selection unchanged
+PASS: Different digits do not count as a double tap
+PASS: Slow repeated digit stays unlocked even at timeScale zero
+PASS: Fast second press locks at timeScale zero
+PASS: Locked camera tracks target on both axes
+PASS: Wheel up zooms in while keeping the followed survivor centred
+PASS: Wheel down reverses a wheel-up step
+PASS: Arrow panning cannot break follow lock
+PASS: Y keeps current view when character moves away
+PASS: Arrow input moves free camera
+PASS: Diagonal pan speed is normalized
+PASS: (1920, 1080) maintains 16:9
+PASS: (1920, 1080) pans at rendered viewport edges
+PASS: (1920, 1080) ignores centre/outside/letterbox pointer
+PASS: (1280, 1024) maintains 16:9
+PASS: (1280, 1024) pans at rendered viewport edges
+PASS: (1280, 1024) ignores centre/outside/letterbox pointer
+PASS: (2560, 1080) maintains 16:9
+PASS: (2560, 1080) pans at rendered viewport edges
+PASS: (2560, 1080) ignores centre/outside/letterbox pointer
+PASS: Mouse input pans left at viewport edge
+PASS: Modal input block suppresses wheel zoom
+PASS: Modal input block suppresses shortcuts and panning
+PASS: Text field focus suppresses camera input
+PASS: Inactive follow target releases lock
+PASS: Unavailable slot preserves camera and existing lock
+PASS: Camera cannot escape upper map bounds
+PASS: Camera cannot escape lower map bounds
+PASS: Inspector size change updates the view live
+PASS: Wheel outside the viewport is ignored
+PASS: Zoom in stops at the configured minimum
+PASS: Zoom out stops at the configured maximum
+PASS: Sparse rescue roster keeps stable slots 2 and 6
+PASS: Reload clears follow state and missing slot is harmless
+PASS: Fresh scene starts in free camera mode
+PASS: A new approaching zombie is inside the playable view on its spawn frame
+PASS: Incoming waves respect an explicit follow lock

@@ -1,0 +1,36 @@
+PASS: Every original SO field preserved by CSV export and parse
+PASS: Notion wave boundaries 1/4/7/10
+PASS: Final tier continues
+PASS: Both CSV snapshots have UTF-8 BOM
+PASS: Existing SO GUID preserved
+PASS: Duplicate IDs rejected
+PASS: Duplicate IDs rejected leaves asset untouched
+PASS: Zero HP rejected
+PASS: Zero HP rejected leaves asset untouched
+PASS: Combat above dice range rejected
+PASS: Combat above dice range rejected leaves asset untouched
+PASS: Missing first wave rejected
+PASS: Missing first wave rejected leaves asset untouched
+PASS: Duplicate wave boundaries rejected
+PASS: Duplicate wave boundaries rejected leaves asset untouched
+PASS: Blank display name rejected
+PASS: Blank display name rejected leaves asset untouched
+PASS: ID whitespace rejected
+PASS: ID whitespace rejected leaves asset untouched
+PASS: Missing/renamed schema field rejected
+PASS: Missing/renamed schema field rejected leaves asset untouched
+PASS: Wrong singleton ID rejected
+PASS: Wrong singleton ID rejected leaves asset untouched
+PASS: Zero spacing rejected
+PASS: Zero spacing rejected leaves asset untouched
+PASS: Nonfinite spacing rejected
+PASS: Nonfinite spacing rejected leaves asset untouched
+PASS: Changed CSV flows through existing ForWave API without mutating original asset
+PASS: Deleting existing zombie ID requires migration
+PASS: Paired config accepted
+PASS: Partial or misspelled config rejected: Zombies
+PASS: Partial or misspelled config rejected: ZombieRules
+PASS: Partial or misspelled config rejected: zombies,ZombieRules
+PASS: Special SO imports excluded from common GameDatabase
+PASS: Content build validates generated zombie data
+PASS: Source asset unchanged after all checks

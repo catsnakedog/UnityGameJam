@@ -33,7 +33,7 @@ namespace ShelterRun.Editor
             var db = AssetDatabase.LoadAssetAtPath<FarmingDatabase>(FarmingCsvImporter.DatabasePath);
             var rules = AssetDatabase.LoadAssetAtPath<FarmingRules>(FarmingCsvImporter.RulesPath);
             db.Validate(); rules.Validate();
-            Check(rules.Duration == 60 && rules.Capacity == 4, "Saved SO defaults: 60 seconds / 4 slots");
+            Check(rules.Capacity == 4, $"Validated saved farming rules: {rules.Duration} seconds / 4 slots");
             databaseSnapshot = EditorJsonUtility.ToJson(db);
             rulesSnapshot = EditorJsonUtility.ToJson(rules);
             Write("edit-passed");

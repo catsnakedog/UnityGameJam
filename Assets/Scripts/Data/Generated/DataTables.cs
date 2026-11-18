@@ -94,6 +94,31 @@ namespace GameJam.Data.Generated
             public string @useKind => _dataRow.Get<string>("useKind");
             public int @mentalRestore => _dataRow.Get<int>("mentalRestore");
             public string @sourceEvent => _dataRow.Get<string>("sourceEvent");
+            public string @rank => _dataRow.Get<string>("rank");
+            public int @plusAttack => _dataRow.Get<int>("plusAttack");
+            public int @plusSkill => _dataRow.Get<int>("plusSkill");
+        }
+    }
+    namespace @ZombieData
+    {
+        public static class Table
+        {
+            public static global::GameJam.Data.DataTable Data => global::GameJam.Data.GameData.GetTable("ZombieData");
+            public static Row Get(string id) => new Row(Data.Get(id));
+            public static global::System.Collections.Generic.IEnumerable<Row> All
+            {
+                get { foreach (var item in Data.Rows) yield return new Row(item); }
+            }
+        }
+        public readonly struct Row
+        {
+            readonly global::GameJam.Data.DataRow _dataRow;
+            internal Row(global::GameJam.Data.DataRow row) { _dataRow = row; }
+            public string @id => _dataRow.Get<string>("id");
+            public string @displayName => _dataRow.Get<string>("displayName");
+            public int @firstWave => _dataRow.Get<int>("firstWave");
+            public int @combat => _dataRow.Get<int>("combat");
+            public int @hp => _dataRow.Get<int>("hp");
         }
     }
 }

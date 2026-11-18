@@ -1,0 +1,7 @@
+﻿좀비 고유 ID,좀비 표시 이름,등장 시작 웨이브 (1부터),전투력 (1~주사위 면 수),기본 체력 (HP)
+string,string,int,int,int
+id,displayName,firstWave,combat,hp
+zombie_1,좀비,1,1,2
+zombie_2,덩치 좀비,4,2,4
+zombie_3,성난 좀비,7,3,5
+zombie_4,거대 좀비,10,4,6

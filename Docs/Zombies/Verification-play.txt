@@ -1,30 +1,33 @@
-PASS Built Addressables + rescued roster + scene wiring
+PASS Built Addressables + four rescued survivors + scene wiring
 PASS Shared settings loader cache
-PASS Two guards snapshot six resolved battles
-PASS Current fighter movement locked
-PASS No combat before fifth tick
-PASS Human win deals one HP
-PASS Zombie death ends event
-PASS Defense reward +5 only current guard room occupants
-PASS Death releases locks
-PASS Kill on final allowed roll wins before breach check
-PASS One exhausted defender does not breach while another remains
-PASS All defenders at zero breach with remaining HP
-PASS Zero mental cannot move
-PASS Faint lasts full 40 ticks
-PASS Wake restores 30 mental
-PASS Shared mental maximum applied
-PASS Tie spends no attempt or HP
-PASS Always-tied RNG yields each frame without hanging
-PASS Pending tie resolves exactly once
-PASS Still defending before n times three
-PASS Breach immediately at n times three, no extra fourth roll
-PASS Partial damage survives defense-to-invasion transition
-PASS Invader intercepts physical guard in its route
-PASS Forced battle resolves once then resumes invasion
-PASS Encounter releases actor without discarding its order
+PASS Clicking the shared landing and guard-room area assigns the guard room
+PASS Spawn distance is six walking ticks, ranged interval two, melee interval five
+PASS Camera can pan to the outdoor spawn
+PASS Zombie walks smoothly between clock ticks
+PASS Pause freezes approach and attacks
+PASS No early attack or breach at tick one
+PASS Four guards fire on tick two without distant retaliation
+PASS No additional volley on tick three
+PASS The second volley on tick four can stop the zombie before it breaches
+PASS Every guard loses one mental after eight assigned ticks
+PASS Two volleys before tick six and no early entry
+PASS At tick six the last volley hits, breach costs everyone two, then melee hits one guard immediately
+PASS Melee does not repeat at the shorter ranged interval
+PASS Melee repeats five ticks after the breach
+PASS A living guard holds after three melee rounds and the same breach is charged only once
+PASS When the last guarding survivor faints the invader continues with its remaining HP
+PASS Fainted guard wakes at the configured mental value
+PASS Leaving guard duty resets its personal seven-tick remainder
+PASS Guard duty drains while no zombies are present
+PASS A lethal final volley prevents both entry and shelter-wide mental loss
+PASS One guard can hit while a teammate ties
+PASS Only the tied shot rerolls; it cannot cause melee damage outside
+PASS An undefended room gets six ticks of warning and charges one breach
+PASS Invader intercepts survivors on its indoor route
+PASS All four route contacts fight and one takes damage; melee continues
+PASS Road movement resumes only when no active fighters remain
 PASS Empty combat room chooses connected noncombat target
-PASS Existing ladder graph reaches target and occupies without blocking entry
+PASS Elevator graph reaches target and occupies without blocking entry
 PASS Occupied room stops work
 PASS Entering occupied room automatically starts combat
 PASS Popup-style simulation pause freezes combat and movement
@@ -32,11 +35,16 @@ PASS Clearing occupant restores room functionality
 PASS Invasion kill rewards combat participant once
 PASS One removal cannot clear another occupier
 PASS Last occupier restores room
+PASS Two live invaders occupy the same room
+PASS Four attacks kill only the engaged occupant; the other remains visible with its own HP and no attack spillover
+PASS The surviving invader retains its occupation
+PASS The group can fight the second invader on the next round and liberate the room
 PASS Real work tick produces no progress in occupied planning room
 PASS Real work tick resumes after liberation
 PASS Scheduled wave consumes existing NEXT_WAVE_HP exactly once
 PASS Next wave returns to catalog HP and independent agents coexist
 PASS Restart clears zombies, occupation, locks, wave and mental state
 PASS Disconnected layout waits without teleporting
-PASS Reconnecting designer ladder automatically restores route
-PASS Ending clears live invasion safely
+PASS Reconnecting designer elevator automatically restores route
+PASS A kill on the final game tick freezes the surviving zombie in place
+PASS Restart clears the surviving end-of-run zombie

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -19,82 +18,10 @@ namespace ShelterRun.Editor
         public const string DatabasePath = "Assets/Settings/Farming/FarmingDatabase.asset";
         public const string RulesPath = "Assets/Settings/Farming/FarmingRules.asset";
 
-        public static List<FarmingRecord> Parse(string text)
-        {
-            var rows = ReadRows(text.TrimStart('\uFEFF'));
-            // The shared spreadsheet template has description / type / name rows.
-            // Keep FarmingData on its existing importer and database, never the common catalog.
-            if (rows.Count >= 4 && rows[0].Count == 3 &&
-                rows[1].SequenceEqual(new[] { "string", "string", "int" }) &&
-                rows[2].SequenceEqual(new[] { "id", "type", "weight" }))
-                rows.RemoveRange(0, 2);
-            if (rows.Count < 2 || !rows[0].SequenceEqual(new[] { "id", "type", "weight" }))
-                throw new FormatException("FarmingData: header must be id,type,weight with at least one row.");
-            var result = new List<FarmingRecord>();
-            var ids = new HashSet<string>(StringComparer.Ordinal);
-            for (int i = 1; i < rows.Count; i++)
-            {
-                var row = rows[i];
-                if (row.Count == 1 && string.IsNullOrWhiteSpace(row[0])) continue;
-                if (row.Count != 3) throw new FormatException($"FarmingData row {i + 1}: expected 3 columns.");
-                string id = row[0];
-                if (string.IsNullOrWhiteSpace(id) || id.Any(char.IsWhiteSpace) || !ids.Add(id))
-                    throw new FormatException($"FarmingData row {i + 1}: invalid/duplicate id {id}.");
-                if (row[1] != "Person" && row[1] != "Item") throw new FormatException($"Invalid type at {id}: {row[1]}");
-                var type = row[1] == "Person" ? FarmingObjectType.Person : FarmingObjectType.Item;
-                if (!int.TryParse(row[2], NumberStyles.None, CultureInfo.InvariantCulture, out int weight))
-                    throw new FormatException($"Invalid integer weight at {id}: {row[2]}");
-                if (weight < (type == FarmingObjectType.Person ? 2 : 1) || weight > (type == FarmingObjectType.Person ? 4 : 2))
-                    throw new FormatException($"Weight outside supported range at {id}: {weight}");
-                result.Add(new FarmingRecord(id, type, weight));
-            }
-            if (result.Count == 0) throw new FormatException("FarmingData contains no records.");
-            return result;
-        }
+        public static void ValidateRemovals(IEnumerable<FarmingRecord> previous, List<FarmingRecord> next) =>
+            FarmingCsv.ValidateRemovals(previous, next);
 
-        static List<List<string>> ReadRows(string input)
-        {
-            var rows = new List<List<string>>();
-            var row = new List<string>();
-            var cell = new StringBuilder();
-            bool quoted = false, closed = false;
-            for (int i = 0; i < input.Length; i++)
-            {
-                char c = input[i];
-                if (quoted)
-                {
-                    if (c == '"')
-                    {
-                        if (i + 1 < input.Length && input[i + 1] == '"') { cell.Append('"'); i++; }
-                        else { quoted = false; closed = true; }
-                    }
-                    else cell.Append(c);
-                    continue;
-                }
-                if (c == '"')
-                {
-                    if (cell.Length > 0 || closed) throw new FormatException("Unexpected CSV quote.");
-                    quoted = true;
-                }
-                else if (c == ',' || c == '\r' || c == '\n')
-                {
-                    row.Add(cell.ToString()); cell.Clear(); closed = false;
-                    if (c != ',')
-                    {
-                        rows.Add(row); row = new List<string>();
-                        if (c == '\r' && i + 1 < input.Length && input[i + 1] == '\n') i++;
-                    }
-                }
-                else
-                {
-                    if (closed) throw new FormatException("Unexpected character after CSV closing quote.");
-                    cell.Append(c);
-                }
-            }
-            if (quoted) throw new FormatException("Unterminated quoted CSV field.");
-            if (cell.Length > 0 || row.Count > 0 || closed) { row.Add(cell.ToString()); rows.Add(row); }
-            return rows;
-        }
+        public static List<FarmingRecord> Parse(string text) => FarmingCsv.Parse(text);
 
         [MenuItem("Tools/Farming/Import FarmingData CSV")]
         public static void Import()
@@ -103,8 +30,7 @@ namespace ShelterRun.Editor
             var rows = Parse(csv); // No mutation before every row and deletion policy is checked.
             var database = AssetDatabase.LoadAssetAtPath<FarmingDatabase>(DatabasePath);
             var oldRows = database ? database.Records.ToList() : new List<FarmingRecord>();
-            var missing = oldRows.Where(x => rows.All(y => y.Id != x.Id)).Select(x => x.Id).ToArray();
-            if (missing.Length > 0) throw new InvalidOperationException("CSV missing existing IDs; deletion requires an explicit data migration: " + string.Join(", ", missing));
+            ValidateRemovals(oldRows, rows);
             string hash;
             using (var sha = SHA256.Create()) hash = BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(csv))).Replace("-", "").ToLowerInvariant();
             if (database && database.SourceHash == hash) return;
@@ -173,7 +99,7 @@ namespace ShelterRun.Editor
         {
             Directory.CreateDirectory("Docs/DataHistory");
             string stamp = DateTimeOffset.Now.ToString("yyyyMMdd-HHmmss-fffffff");
-            var sb = new StringBuilder($"# Farming · {phase}\n\nTimestamp: {DateTimeOffset.Now:O}\nProject: UnityGameJam\nPrevious: 20261118-01-planned.md / prior timestamped record\nReason: Farming CSV authoring and 60-second prototype.\n\n{detail}\n\n");
+            var sb = new StringBuilder($"# Farming · {phase}\n\nTimestamp: {DateTimeOffset.Now:O}\nProject: UnityGameJam\nPrevious: 20261118-01-planned.md / prior timestamped record\nReason: Farming data and content build workflow.\n\n{detail}\n\n");
             foreach (var asset in new UnityEngine.Object[] { database, rules ? rules : AssetDatabase.LoadAssetAtPath<FarmingRules>(RulesPath) })
             {
                 if (!asset) continue;

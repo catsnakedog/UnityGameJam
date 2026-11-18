@@ -42,12 +42,15 @@ namespace UnityGameJam.Events
             popup.ChoiceRequested+=Choose;
             try
             {
-                await GameData.InitializeAsync();
+                await simulation.InitializeAsync();
+                if(!this || version!=generation || !isActiveAndEnabled) return;
+                var farming = await GameData.LoadSettingsAsync<ShelterRun.FarmingDatabase>(ShelterRun.FarmingDataKeys.Database);
                 if(!this || version!=generation || !isActiveAndEnabled) return;
                 var items=new ShelterItemCatalog(GameData.GetTable(ShelterItemCatalog.TableName));
-                items.ValidateSources(GameData.GetTable(EventCatalog.TableName));
-                supplies.Initialize(items);
-                catalog=EventCatalog.FromTable(GameData.GetTable(EventCatalog.TableName),items);
+                var eventTable = GameData.GetTable(EventCatalog.TableName);
+                items.ValidateSources(eventTable, farming.Records);
+                supplies.Initialize(items, simulation.Rules);
+                catalog=EventCatalog.FromTable(eventTable,items);
                 LastError=null;
             }
             catch(Exception e) { if(this && version==generation) { LastError=e.Message; Debug.LogException(e,this); } }

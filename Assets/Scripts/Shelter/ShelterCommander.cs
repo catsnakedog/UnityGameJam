@@ -11,10 +11,12 @@ namespace UnityGameJam.Shelter
         public Camera view;
         public TextMesh statusLabel;
         public ShelterWalker Selected { get; private set; }
+        public event System.Action<ShelterWalker> SurvivorClicked;
         public string Message { get; private set; } = "CLICK A SURVIVOR, THEN CLICK A ROOM";
         private ShelterArea rejected;
         private float rejectedUntil;
         readonly HashSet<object> inputBlocks = new HashSet<object>();
+        readonly List<RaycastResult> pointerHits = new List<RaycastResult>();
         int inputReleasedFrame = -1;
         public bool InputBlocked => inputBlocks.Count > 0 || inputReleasedFrame == Time.frameCount;
         public void AcquireInputBlock(object owner) { if (owner != null) inputBlocks.Add(owner); }
@@ -29,8 +31,7 @@ namespace UnityGameJam.Shelter
 
         private void Update()
         {
-            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame &&
-                (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject()))
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
                 ClickScreen(Mouse.current.position.ReadValue());
             if (rejected != null && Time.unscaledTime >= rejectedUntil) ClearRejected();
             if (rejected == null && Selected != null && Selected.Destination != null)
@@ -43,19 +44,33 @@ namespace UnityGameJam.Shelter
                     area == rejected && Time.unscaledTime < rejectedUntil);
         }
 
+        internal bool IsPointerOverUI(Vector2 screen)
+        {
+            var events = EventSystem.current;
+            if (!events) return false;
+            events.RaycastAll(new PointerEventData(events) { position = screen }, pointerHits);
+            foreach (var hit in pointerHits)
+                if (hit.module is UnityEngine.UI.GraphicRaycaster) return true;
+            return false;
+        }
+
         public bool ClickScreen(Vector2 screen)
         {
             if (view == null) view = Camera.main;
-            if (view == null || !view.pixelRect.Contains(screen)) return false;
+            if (view == null || !view.pixelRect.Contains(screen) || IsPointerOverUI(screen)) return false;
             var ray = view.ScreenPointToRay(screen);
             if (Mathf.Abs(ray.direction.z) < 0.001f) return false;
             return ClickWorld(ray.GetPoint(-ray.origin.z / ray.direction.z));
         }
 
-        // Same dispatch is used by mouse input and automated scene checks.
-        public bool ClickWorld(Vector2 point)
+        public ShelterWalker SurvivorAtScreen(Vector2 screen)
         {
-            if (InputBlocked) return false;
+            if (!view || !view.pixelRect.Contains(screen)) return null;
+            var ray = view.ScreenPointToRay(screen);
+            return Mathf.Abs(ray.direction.z) < .001f ? null : SurvivorAt(ray.GetPoint(-ray.origin.z / ray.direction.z));
+        }
+        ShelterWalker SurvivorAt(Vector2 point)
+        {
             ShelterWalker hit = null;
             float nearest = float.PositiveInfinity;
             foreach (var actor in FindObjectsByType<ShelterWalker>(FindObjectsSortMode.None))
@@ -64,6 +79,13 @@ namespace UnityGameJam.Shelter
                 float distance = Vector2.Distance(point, (Vector2)actor.transform.position + Vector2.up);
                 if (distance < nearest) { hit = actor; nearest = distance; }
             }
+            return hit;
+        }
+        // Same dispatch is used by mouse input and automated scene checks.
+        public bool ClickWorld(Vector2 point)
+        {
+            if (InputBlocked) return false;
+            var hit = SurvivorAt(point);
             if (hit != null)
             {
                 ClearRejected();
@@ -71,28 +93,31 @@ namespace UnityGameJam.Shelter
                 Selected = hit;
                 Selected.SetSelected(true);
                 Message = hit.characterName + " SELECTED - CLICK A ROOM";
+                SurvivorClicked?.Invoke(hit);
                 return true;
             }
             if (navigation == null) return false;
             navigation.Refresh();
+            ShelterArea destination = null;
             foreach (var area in FindObjectsByType<ShelterArea>(FindObjectsSortMode.InstanceID))
             {
                 if (area.gameObject.scene != gameObject.scene || !area.isActiveAndEnabled || !area.ContainsClick(point)) continue;
-                if (Selected == null) { Message = "SELECT A SURVIVOR FIRST"; return false; }
-                if (!Selected.MoveTo(area))
-                {
-                    ClearRejected();
-                    rejected = area;
-                    rejectedUntil = Time.unscaledTime + 2f;
-                    area.ShowHighlight(true, true);
-                    Message = Selected.IsMovementLocked ? "전투 중이거나 탈진하여 이동할 수 없습니다" : "NO ROUTE TO " + area.displayName;
-                    return false;
-                }
-                ClearRejected();
-                Message = Selected.characterName + "  >  " + area.displayName;
-                return true;
+                if (area.kind == ShelterArea.AreaKind.Room) { destination = area; break; }
+                if (!destination) destination = area;
             }
-            return false;
+            if (!destination) return false;
+            if (!Selected) { Message = "SELECT A SURVIVOR FIRST"; return false; }
+            ClearRejected();
+            if (!Selected.MoveTo(destination))
+            {
+                rejected = destination;
+                rejectedUntil = Time.unscaledTime + 2f;
+                destination.ShowHighlight(true, true);
+                Message = Selected.IsMovementLocked ? "전투 중이거나 탈진하여 이동할 수 없습니다" : "NO ROUTE TO " + destination.displayName;
+                return false;
+            }
+            Message = Selected.characterName + "  >  " + destination.displayName;
+            return true;
         }
 
         private void ClearRejected()

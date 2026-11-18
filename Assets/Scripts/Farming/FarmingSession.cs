@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -12,7 +13,8 @@ namespace ShelterRun
         [SerializeField] FarmingPlayer player;
         [SerializeField] FarmingBunker bunker;
         [SerializeField] FarmingHud hud;
-        [SerializeField] FarmingPickup[] pickups;
+        [SerializeField] FarmingPickup[] pickupPrefabs;
+        readonly List<FarmingPickup> pickups = new List<FarmingPickup>();
         readonly List<string> depositedIds = new List<string>();
         readonly HashSet<FarmingPickup> depositedObjects = new HashSet<FarmingPickup>();
         FarmingDataLoader loader;
@@ -22,7 +24,7 @@ namespace ShelterRun
         public FarmingRules Rules => loader?.Rules;
         public FarmingPlayer Player => player;
         public FarmingBunker Bunker => bunker;
-        public IReadOnlyList<FarmingPickup> Pickups => Array.AsReadOnly(pickups);
+        public IReadOnlyList<FarmingPickup> Pickups => pickups;
         public IReadOnlyList<string> DepositedIds => depositedIds.AsReadOnly();
         public float Remaining { get; private set; }
         public int PeopleSaved { get; private set; }
@@ -43,15 +45,11 @@ namespace ShelterRun
                 await GameJam.Data.GameData.InitializeAsync();
                 if (this == null) return;
                 new UnityGameJam.Characters.CharacterCatalog(GameJam.Data.GameData.GetTable(UnityGameJam.Characters.CharacterKeys.Table)).ValidateFarming(loader.Database);
-                foreach (var item in pickups)
-                {
-                    item.Initialize(loader.Database.Get(item.RecordId));
-                    if (item.Record.Type == FarmingObjectType.Person) PeopleTotal++;
-                }
+                SpawnPickups();
                 player.Initialize(this);
                 Remaining = Rules.Duration;
                 Phase = FarmingPhase.Ready;
-                hud.PrepareSlots(Rules.Capacity);
+                hud.Prepare(Rules);
             }
             catch (Exception exception)
             {
@@ -60,6 +58,25 @@ namespace ShelterRun
                 hud.ShowFailure(exception.Message);
                 Debug.LogException(exception, this);
                 loader.Dispose();
+            }
+        }
+
+        void SpawnPickups()
+        {
+            var prefabs = pickupPrefabs.ToDictionary(prefab => prefab.RecordId, StringComparer.Ordinal);
+            var placements = FarmingSpawnLayout.Create(FarmingMap2D.Instance, bunker, Rules, loader.Database);
+            foreach (var placement in placements)
+                if (!prefabs.ContainsKey(placement.Record.Id))
+                    throw new InvalidOperationException($"Missing farming pickup prefab for {placement.Record.Id}.");
+
+            foreach (var placement in placements)
+            {
+                var slot = placement.Tabletop;
+                var parent = slot ? slot.parent : placement.Room.transform;
+                var item = Instantiate(prefabs[placement.Record.Id], placement.Ground, Quaternion.identity, parent);
+                item.Initialize(placement.Record, slot);
+                pickups.Add(item);
+                if (placement.Record.Type == FarmingObjectType.Person) PeopleTotal++;
             }
         }
 

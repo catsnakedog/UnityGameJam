@@ -31,22 +31,40 @@ MonoBehaviour:
   - id: person_06
     type: 0
     weight: 4
-  - id: water
+  - id: mop
     type: 1
     weight: 1
-  - id: food
+  - id: bat
     type: 1
     weight: 1
-  - id: medkit
+  - id: pan
     type: 1
     weight: 2
-  - id: radio
+  - id: monster
     type: 1
     weight: 2
-  - id: toolbox
-    type: 1
-    weight: 2
-  - id: blanket
+  - id: choco
     type: 1
     weight: 1
-  sourceHash: 06a54cb5f6f84b982b05637c08b787306252df9de01691ac9eafd452b40b8571
+  - id: bacchus
+    type: 1
+    weight: 1
+  - id: axe
+    type: 1
+    weight: 2
+  - id: laptop
+    type: 1
+    weight: 2
+  - id: nailbat
+    type: 1
+    weight: 2
+  - id: gaming
+    type: 1
+    weight: 2
+  - id: canfood
+    type: 1
+    weight: 1
+  - id: caffeine
+    type: 1
+    weight: 1
+  sourceHash: 920eeef9f41284bdb262c1cef8f8cd5f30fdbea5d37c953d4e6f41a8aae9505c

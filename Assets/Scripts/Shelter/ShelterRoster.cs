@@ -39,6 +39,7 @@ namespace UnityGameJam.Shelter
                     var identity = walker.GetComponent<CharacterIdentity>();
                     if (!identity) identity = walker.gameObject.AddComponent<CharacterIdentity>();
                     identity.Initialize(definitions[i]);
+                    walker.GetComponent<SurvivorAnimation>()?.Bind(identity, walker);
                     characters.Add(identity);
                 }
                 IsReady = true;

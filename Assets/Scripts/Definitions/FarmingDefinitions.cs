@@ -6,6 +6,7 @@ namespace ShelterRun
 
     public static class FarmingDataKeys
     {
+        public const string SpaghettiCan = "canfood";
         public const string Database = "data/farming/database";
         public const string Rules = "data/farming/rules";
     }

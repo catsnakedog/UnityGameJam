@@ -1,0 +1,5 @@
+Actual Update elapsed=15.8089447 seconds
+한지우 -> 프로그래밍 at (1.55, 0.00, 0.00)
+강태산 -> 전투 장소 at (-5.15, 17.50, 0.00)
+윤새벽 -> 전투 장소 at (-5.15, 17.50, 0.00)
+All cabin ownership released=True

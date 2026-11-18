@@ -1,5 +1,7 @@
 # GameDatabase 컨테이너 명세
 
+실행 시 시트 연동이 켜져 있으면 기존 `GameData.InitializeAsync()`가 연결된 시트 값을 검증해 해당 실행의 메모리 DB를 제공한다. 내부 모드는 기존 CSV 기반 `data/catalog`를 사용한다. 두 모드 모두 기존 조회 API와 생성 접근자를 사용한다. 현재 내부 공용 DB에는 기존 4개 테이블에 더해 `ZombieData` 호환 테이블이 있다. 시트 연동에서는 같은 종류 행을 전투용 SO와 기존 접근자에 제공한다. [실행 모드 명세](DataToolSettings.md)
+
 2026-11-18 노션 콘텐츠 확장: 예제 제거 후 공용 4개 테이블을 유지하며 Characters/ShelterItems의 v2 필드를 기존 CSV에서 생성했다. 공용 CSV 파서는 제공 스프레드시트의 설명/타입/변수명 3행을 추가 지원한다. DataTables.cs와 DB는 계속 생성물이며 편집 정본은 연결된 Google Sheets이며 CSV는 단방향 가져오기 스냅샷이다. [대조 및 연결 상태](../NotionDevelopmentCheck.md).
 
 벙커 설정 확장 (2026-11-18): 공용 `GameData.LoadSettingsAsync<T>(address)`가 SO를 주소별 공유 로드/캐시하며 Release/Play 초기화/종료 시 해제한다. 진행 중 해제는 완료 후 결과 폐기/핸들 해제. 실패 캐시는 제거하여 재요청 가능. CSV DB 스키마/정본 변경 없음. [BunkerRules](BunkerRules.md), [변경 이력](../DataHistory/20261118-bunker-ticks-02-verified.md). 캐시 공유/실제 콘텐츠 로드 검증 완료; 의도적인 실패 복구 미검증.

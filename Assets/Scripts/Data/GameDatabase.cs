@@ -110,6 +110,13 @@ namespace GameJam.Data
             if (byName == null) throw new InvalidOperationException("Call GameData.InitializeAsync before querying data.");
             return byName.TryGetValue(name, out var table) ? table : throw new KeyNotFoundException("Unknown data table: " + name);
         }
+        public static GameDatabase CreateSession(List<DataTable> value)
+        {
+            var result = CreateInstance<GameDatabase>();
+            result.tables = value;
+            try { result.Initialize(); return result; }
+            catch { Destroy(result); throw; }
+        }
 #if UNITY_EDITOR
         public void ApplyValidated(List<DataTable> value, string hash)
         {

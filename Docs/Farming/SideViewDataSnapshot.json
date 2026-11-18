@@ -1,0 +1,26 @@
+{
+  "time": "2026-11-18T19:04:20.9531255+09:00",
+  "playModeBuilder": "Use Existing Build (requires built groups)",
+  "values": [
+    {
+      "path": "Assets/Settings/Farming/FarmingRules.asset",
+      "guid": "22168f09c24cbfb49aeb55b136dd0298",
+      "address": "data/farming/rules",
+      "group": "Farming Local",
+      "labels": [
+        "farming"
+      ],
+      "snapshot": "{\"MonoBehaviour\":{\"m_Enabled\":true,\"m_EditorHideFlags\":0,\"m_Name\":\"FarmingRules\",\"m_EditorClassIdentifier\":\"Assembly-CSharp::ShelterRun.FarmingRules\",\"duration\":60.0,\"capacity\":4,\"moveSpeed\":5.800000190734863,\"interactionRadius\":2.0,\"dropDistance\":1.600000023841858,\"throwDuration\":0.44999998807907107,\"fadeDuration\":0.5,\"throwArc\":1.5,\"warningSeconds\":10.0,\"mapHalfExtents\":{\"x\":11.0,\"y\":8.0},\"roomRevealDuration\":0.5}}"
+    },
+    {
+      "path": "Assets/Settings/Farming/FarmingDatabase.asset",
+      "guid": "117bb726d48c1a0439f32806bea7df2d",
+      "address": "data/farming/database",
+      "group": "Farming Local",
+      "labels": [
+        "farming"
+      ],
+      "snapshot": "{\"MonoBehaviour\":{\"m_Enabled\":true,\"m_EditorHideFlags\":0,\"m_Name\":\"FarmingDatabase\",\"m_EditorClassIdentifier\":\"Assembly-CSharp::ShelterRun.FarmingDatabase\",\"records\":[{\"id\":\"person_01\",\"type\":0,\"weight\":2},{\"id\":\"person_02\",\"type\":0,\"weight\":3},{\"id\":\"person_03\",\"type\":0,\"weight\":4},{\"id\":\"person_04\",\"type\":0,\"weight\":2},{\"id\":\"person_05\",\"type\":0,\"weight\":3},{\"id\":\"person_06\",\"type\":0,\"weight\":4},{\"id\":\"water\",\"type\":1,\"weight\":1},{\"id\":\"food\",\"type\":1,\"weight\":1},{\"id\":\"medkit\",\"type\":1,\"weight\":2},{\"id\":\"radio\",\"type\":1,\"weight\":2},{\"id\":\"toolbox\",\"type\":1,\"weight\":2},{\"id\":\"blanket\",\"type\":1,\"weight\":1}],\"sourceHash\":\"06a54cb5f6f84b982b05637c08b787306252df9de01691ac9eafd452b40b8571\"}}"
+    }
+  ]
+}

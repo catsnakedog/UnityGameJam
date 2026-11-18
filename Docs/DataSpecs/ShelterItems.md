@@ -1,34 +1,23 @@
 # 벙커 물자 정의
 
-## 현재 편집 원본 — Google Sheets (2026-11-18)
+`data.shelter.items`는 벙커에서 표시하고 사용하거나 장착할 물자를 정의한다. 편집 정본은 [ShelterItems 시트](https://docs.google.com/spreadsheets/d/158_0ouUqo0t8b6hI9U_r-ilHkHkzPqoQ_tOVGc4wjp4/edit?gid=1351218376#gid=1351218376)다. 설명·타입·필드명 3행 뒤에 물자 12행이 있다.
 
-- 데이터 ID: `data.shelter.items`. 편집 정본: [ShelterItems](https://docs.google.com/spreadsheets/d/158_0ouUqo0t8b6hI9U_r-ilHkHkzPqoQ_tOVGc4wjp4/edit?gid=1351218376#gid=1351218376).
-- 로컬 스냅샷: `Assets/Settings/Data/Csv/ShelterItems.csv` (UTF-8 BOM). 시트 → CSV → 기존 생성 DB/소비자 방향으로만 갱신한다. 로컬 CSV와 xlsx를 병행 편집하지 않는다.
-- 양식: 1행 설명, 2행 타입, 3행 필드명, 4행부터 데이터. 기존 ID·필드 의미·타입·검증 제약은 유지한다.
-- 갱신: Tools > Data Manager에서 전체 시트 가져오기 · CSV / 클래스 갱신을 누른다. 고급 변경은 미리보기 후 적용한다. 연결 목록은 SpreadConfig의 sheetName/id/gid/enabled에서 관리하며 Unity에는 Config URL만 저장한다. [연결 명세](DataToolSettings.md).
-- 삭제/이전: URL/탭 변경은 이 명세와 연결 설정을 함께 갱신하고 참조 검증 후 이전한다. 시트 연결 삭제만으로 CSV/DB를 지우지 않는다. 업로드용 xlsx는 편집 정본이 아니다.
-- 검증: 실제 공개 CSV 내보내기로 3행의 모든 셀/헤더를 대조했다. 게임 런타임은 원격 시트를 직접 읽지 않는다. 아래의 외부 원본 없음/CSV 정본/게시 대기 설명은 이 연결 계약으로 대체한다.
-
-## 현재 계약 v2 — 노션 소비 정의 (2026-11-18)
-
-기존 CSV/DB/ID/수명을 유지하며 다음 필드를 확장한다. 아래 v1의 "소비 효과를 정의하지 않음"은 이번 계약으로 대체된다.
-
-| 필드 | 타입 | 필수/빈 값/기본값/단위/제약 |
+| 필드 | 타입 | 의미 · 제약 |
 |---|---|---|
-| useKind | string | 필수, 기본값 없음. 현재 닫힌 소비 분류 mental |
-| mentalRestore | int | 필수, 기본값 없음, 0 이상의 회복 포인트. 노션 3종 모두 10 |
-| sourceEvent | string | 선택, 빈 값=획득 이벤트 미정, 기본값 빈 문자열. 값이 있으면 Events.id 참조 |
+| id | string | 필수, 소문자로 시작하고 소문자·숫자·밑줄 사용. 테이블 내 고유, 기본값 없음 |
+| displayName | string | 필수 표시명. 빈 값과 공백만 있는 이름은 거부 |
+| useKind | string | 필수. mental은 멘탈 물자, hunger는 통조림, attack과 buff는 장비 |
+| mentalRestore | int | 필수, 0 이상, 사용 1회당 멘탈 포인트. 실제 사용 대상은 [벙커 규칙](BunkerRules.md)의 usableMentalSupplyIds에서 지정 |
+| sourceEvent | string | 선택, 빈 값은 미정. 게시된 Events.id 또는 같은 ID의 파밍 물자가 있는 경우 예정된 사건 ID를 허용 |
+| rank | string | 등급 표기. 현재 normal, rare, legend. FarmingSpawnLayout이 같은 파밍 ID의 rank를 조회하며 legend에 [거리순 방 가중치](FarmingRules.md)를 적용한다. |
+| plusAttack | int | 필수, 0 이상. 장착자의 전투에 더하는 포인트. 소비 물자는 0 |
+| plusSkill | int | 필수, 0 이상. 장착자의 기획·프로그래밍·아트 각각에 더하는 포인트. 소비 물자는 0 |
 
-기존 id/displayName 제약은 유지한다. ShelterItemCatalog.Definition(id)에서 전체 정의를 조회하며 Name/Contains API는 유지한다. sourceEvent 관계는 콘텐츠 임포트 검사에서 확인한다. 소비 드래그 UI와 기절 해제는 미구현이며 데이터 추가만으로 완료 처리하지 않는다. AED는 노션 ID/획득처 미정과 기절 해제 문구 충돌을 대조 보고서에 남기고 임의 행을 만들지 않는다. 이벤트가 참조하는 기존 세 물자와 FarmingData의 운반 비용은 같은 데이터가 아니다.
+수치에 빈 값 또는 암묵적 기본값은 없다. 초콜렛과 카페인 알약은 각각 멘탈 10·20을 회복한다. 몬스터와 박카스는 가방에 보관하고 이벤트가 수량을 참조할 수 있다. 통조림의 허기 회복량과 회분은 벙커 규칙에서 읽는다. 카페인 알약은 파밍으로 얻으며 `ev_caffeine`은 이벤트 기획용 참조다.
 
-출처: [노션 개발 요구사항](https://app.notion.com/p/41caca30f5dc80239e4dd03a4d451a46). [계획 이력](../DataHistory/20261118-notion-sheets-02-content-plan.md), [실제 로드·관계·이벤트 회귀 검증](../DataHistory/20261118-notion-sheets-03-local-verified.md). 편집 원본은 상단 Google Sheets, 기존 CSV는 내려받은 스냅샷으로 유지.
+## 조회와 수명
 
-- ID `data.shelter.items`, active / Codex event-effects-20261118, v1, 2026-11-18.
-- 소유: 벙커 소비 물자 ID와 표시명. 정본 `Assets/Settings/Data/Csv/ShelterItems.csv`. 기존 공용 GameDatabase/Generated DataTables 및 GameData, data/catalog 사용. 별도 로더/주소 없음. CSV GUID `0e9e62a0321a0c845b15da3e342d2b28`.
-- id:string: 필수, 영문 소문자 식별자, 테이블 내 고유, 기본값 없음. displayName:string: 필수 일반 텍스트, 공백만 불가, 기본값 없음. 단위 없음. ShelterItemCatalog에서 검증.
-- 행: choco=초콜렛, monster=몬스터, bacchus=박카스. 사용자 명시 물자. 무게/가격/소비 효과를 여기서 정의하지 않음.
-- 현재 수량은 ShelterSupplies의 런타임 상태(개, 정수 >=0). 시작/개발 재시작 시 0개. 편집 정본에 런타임 재고를 쓰지 않는다. Changed/GetCount/SetCounts/Add로 소비, 씬 수명. 영구 저장 없음.
-- Events의 ITEM 대상 및 requiredItem은 이 ID를 참조. 삭제 시 Events 전체 참조 검증 필수. id 변경 시 모든 참조를 함께 이전하고 기존 ID 재사용 금지.
-- 중복 조사: DataRegistry의 planned 포함, Assets/ProjectSettings/Docs의 choco/monster/bacchus/inventory/Item 검색. FarmingData는 water/food/medkit/radio/toolbox/blanket의 운반 비용 정본이며 동일 물자 아님. 기존 FarmingInventory는 운반 중 슬롯 상태로 벙커 재고와 다름. ExampleItems는 도구 예제. 자동 food→choco 매핑 및 FarmingData 복제 없음.
-- 갱신: 기존 Data Manager/Events Import 메뉴. 임포트 전 참조 검증, UTF-8 BOM. GameData 앱 캐시/해제 소유, UI에서 Release하지 않음.
-- 검증: 공용 임포트·콘텐츠 빌드·실제 Play 증감·재고 부족·참조 검증·재시작 초기화 완료. [이력](../DataHistory/20261118-event-effects-02-verified.md).
+- [CSV 스냅샷](../../Assets/Settings/Data/Csv/ShelterItems.csv)은 UTF-8 BOM이며 GUID는 `0e9e62a0321a0c845b15da3e342d2b28`이다. 기존 Data Manager가 GameDatabase와 DataTables를 생성한다. 런타임은 `data/catalog`의 `GameData.GetTable("ShelterItems")` 및 `ShelterItemCatalog.Definition(id)`를 사용한다. [가져오기](../DataManager.md)
+- 기존 이벤트 효과와 requiredItem은 동일한 ID를 참조한다. 원격 시트와 로컬 스냅샷 갱신 시 Events와 [FarmingData](FarmingData.md)를 대조한다. 항목 삭제나 ID 변경 시 모든 이벤트·파밍·가방·장착 참조를 먼저 전환한다. 표시명만 변경하면 ID를 보존한다.
+- `ShelterSupplies`가 파밍 투입 및 이벤트 보상의 회차 재고를 관리한다. 인물 한 명이 장비 하나를 장착하며 교체·해제 시 기존 개체가 가방에 돌아간다. 캐릭터 카드, 개발 틱, 전투 판정은 기본 능력과 현재 장비 보정을 합산한다. 장비 해제 시 기본 능력을 사용한다.
+- 사용 횟수·현재 재고·장착 상태는 런타임 값이다. 재시작하면 파밍 투입분에서 복구한다. 파밍 무게와 벙커 사용 효과를 각각 기존 시트 한 곳에서 편집한다. 중복 조사와 검증 범위는 [확정 목록 이력](../DataHistory/20261118-item-roster-02-verified.md)에 기록한다.

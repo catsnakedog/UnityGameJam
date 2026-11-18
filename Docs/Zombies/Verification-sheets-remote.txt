@@ -1,0 +1,4 @@
+완료: SpreadConfig의 활성 7개 시트 → CSV 저장 / 클래스 파싱 / DB 갱신. 배포용 데이터는 Addressables 콘텐츠 빌드를 누르세요.
+PASS Remote CSV -> same ZombieData/GUID/values
+PASS Common DB remains 4 tables without special SO copies
+PASS BOM present in both snapshots

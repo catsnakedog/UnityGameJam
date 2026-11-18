@@ -11,7 +11,9 @@ namespace UnityGameJam.Shelter
         [Tooltip("Maximum gap/height mismatch accepted between touching pieces, in world units.")]
         [Range(0.001f, 0.2f)] public float connectionTolerance = 0.06f;
         public ShelterArea[] Areas { get; private set; } = Array.Empty<ShelterArea>();
-        public ShelterLadder[] Ladders { get; private set; } = Array.Empty<ShelterLadder>();
+        public ShelterElevator[] Elevators { get; private set; } = Array.Empty<ShelterElevator>();
+        // Legacy editor checks can still compile; ladders no longer contribute traversal edges.
+        public ShelterLadder[] Ladders => Array.Empty<ShelterLadder>();
         public int Version { get; private set; }
         private int signature;
         private float nextRefresh;
@@ -19,8 +21,12 @@ namespace UnityGameJam.Shelter
         public struct Waypoint
         {
             public Vector2 position;
-            public ShelterLadder ladder;
-            public Waypoint(Vector2 point, ShelterLadder climb = null) { position = point; ladder = climb; }
+            public ShelterElevator elevator;
+            public float fromFloor;
+            public int side;
+            public ShelterLadder ladder => null;
+            public Waypoint(Vector2 point, ShelterElevator lift = null, float from = 0, int boardingSide = 0)
+            { position = point; elevator = lift; fromFloor = from; side = boardingSide; }
         }
         private sealed class Node
         {
@@ -32,8 +38,11 @@ namespace UnityGameJam.Shelter
         private struct Edge
         {
             public int to;
-            public ShelterLadder ladder;
-            public Edge(int to, ShelterLadder ladder) { this.to = to; this.ladder = ladder; }
+            public ShelterElevator elevator;
+            public float fromFloor;
+            public int side;
+            public Edge(int to, ShelterElevator lift = null, float from = 0, int boardingSide = 0)
+            { this.to = to; elevator = lift; fromFloor = from; side = boardingSide; }
         }
 
         private void Awake() => Refresh();
@@ -48,8 +57,9 @@ namespace UnityGameJam.Shelter
         {
             Areas = FindObjectsByType<ShelterArea>(FindObjectsSortMode.InstanceID)
                 .Where(a => a.gameObject.scene == gameObject.scene && a.IsWalkable).ToArray();
-            Ladders = FindObjectsByType<ShelterLadder>(FindObjectsSortMode.InstanceID)
-                .Where(l => l.gameObject.scene == gameObject.scene && l.IsUsable).ToArray();
+            var lifts = FindObjectsByType<ShelterElevator>(FindObjectsSortMode.InstanceID).Where(l => l.gameObject.scene == gameObject.scene).ToArray();
+            foreach (var lift in lifts) lift.RefreshStops(Areas);
+            Elevators = lifts.Where(l => l.IsUsable).ToArray();
             unchecked
             {
                 int hash = connectionTolerance.GetHashCode();
@@ -60,11 +70,12 @@ namespace UnityGameJam.Shelter
                     hash = hash * 31 + a.Right.GetHashCode();
                     hash = hash * 31 + a.FloorY.GetHashCode();
                 }
-                foreach (var l in Ladders)
+                foreach (var l in Elevators)
                 {
                     hash = hash * 31 + l.GetInstanceID();
                     hash = hash * 31 + l.Bottom.GetHashCode();
                     hash = hash * 31 + l.Top.GetHashCode();
+                    foreach (float stop in l.Stops) hash = hash * 31 + stop.GetHashCode();
                 }
                 if (hash != signature || Version == 0) { signature = hash; Version++; }
             }
@@ -73,8 +84,30 @@ namespace UnityGameJam.Shelter
         public ShelterArea AreaAt(Vector2 feet, float heightTolerance = 0.08f) => Areas.FirstOrDefault(a =>
             Mathf.Abs(feet.y - a.FloorY) <= heightTolerance && feet.x >= a.Left - connectionTolerance && feet.x <= a.Right + connectionTolerance);
 
+        public void GetConnectedFloorBounds(Vector2 feet, out float left, out float right)
+        {
+            left = right = feet.x;
+            float previousLeft, previousRight;
+            do
+            {
+                previousLeft = left;
+                previousRight = right;
+                foreach (var area in Areas)
+                {
+                    if (Mathf.Abs(feet.y - area.FloorY) > connectionTolerance ||
+                        area.Left > right + connectionTolerance || area.Right < left - connectionTolerance) continue;
+                    left = Mathf.Min(left, area.Left);
+                    right = Mathf.Max(right, area.Right);
+                }
+            } while (left < previousLeft || right > previousRight);
+        }
+
         public bool TryFindPath(Vector2 start, ShelterLadder currentLadder, ShelterArea destination,
             float arrivalOffset, float walkSpeed, float climbSpeed, out List<Waypoint> path)
+            => TryFindElevatorPath(start, destination, arrivalOffset, walkSpeed, out path);
+
+        public bool TryFindElevatorPath(Vector2 start, ShelterArea destination,
+            float arrivalOffset, float walkSpeed, out List<Waypoint> path)
         {
             Refresh();
             path = null;
@@ -98,21 +131,22 @@ namespace UnityGameJam.Shelter
                     Link(nodes, n1, n2);
                 }
             }
-            foreach (var ladder in Ladders)
+            foreach (var lift in Elevators)
             {
-                var bottomAreas = AtEndpoint(ladder.Bottom);
-                var topAreas = AtEndpoint(ladder.Top);
-                if (bottomAreas.Length == 0 || topAreas.Length == 0) continue;
-                int lower = Add(nodes, ladder.Bottom);
-                int upper = Add(nodes, ladder.Top);
-                Link(nodes, lower, upper, ladder);
-                AttachEndpoint(nodes, lower, bottomAreas);
-                AttachEndpoint(nodes, upper, topAreas);
-                if (currentLadder == ladder && Mathf.Abs(start.x - ladder.Bottom.x) <= connectionTolerance &&
-                    start.y >= ladder.Bottom.y && start.y <= ladder.Top.y)
+                foreach (float from in lift.Stops) foreach (int side in new[] { -1, 1 })
                 {
-                    Link(nodes, 0, lower, ladder);
-                    Link(nodes, 0, upper, ladder);
+                    Vector2 call = lift.CallPoint(from, side);
+                    var entrances = AtEndpoint(call);
+                    if (entrances.Length == 0) continue;
+                    int boarding = Add(nodes, call); AttachEndpoint(nodes, boarding, entrances);
+                    foreach (float to in lift.Stops)
+                    {
+                        if (Mathf.Abs(to - from) < connectionTolerance) continue;
+                        Vector2 exit = lift.ExitPoint(to, side); var exits = AtEndpoint(exit);
+                        if (exits.Length == 0) continue;
+                        int arrival = Add(nodes, exit); AttachEndpoint(nodes, arrival, exits);
+                        nodes[boarding].edges.Add(new Edge(arrival, lift, from, side));
+                    }
                 }
             }
             for (int i = 1; i < nodes.Count; i++)
@@ -121,7 +155,7 @@ namespace UnityGameJam.Shelter
 
             var distance = Enumerable.Repeat(float.PositiveInfinity, nodes.Count).ToArray();
             var previous = Enumerable.Repeat(-1, nodes.Count).ToArray();
-            var viaLadder = new ShelterLadder[nodes.Count];
+            var viaElevator = new Edge[nodes.Count];
             var visited = new bool[nodes.Count];
             distance[0] = 0f;
             for (int iteration = 0; iteration < nodes.Count; iteration++)
@@ -133,17 +167,19 @@ namespace UnityGameJam.Shelter
                 visited[best] = true;
                 foreach (var edge in nodes[best].edges)
                 {
-                    float speed = Mathf.Max(0.1f, edge.ladder != null ? climbSpeed : walkSpeed);
-                    float cost = distance[best] + Vector2.Distance(nodes[best].point, nodes[edge.to].point) / speed;
+                    float cost = distance[best] + (edge.elevator
+                        ? Mathf.Abs(nodes[edge.to].point.y - edge.fromFloor) / edge.elevator.Rules.TravelSpeed +
+                          (edge.elevator.Rules.BoardingOffset + edge.elevator.Rules.ExitOffset) / Mathf.Max(0.1f, walkSpeed)
+                        : Vector2.Distance(nodes[best].point, nodes[edge.to].point) / Mathf.Max(0.1f, walkSpeed));
                     if (cost >= distance[edge.to]) continue;
                     distance[edge.to] = cost;
                     previous[edge.to] = best;
-                    viaLadder[edge.to] = edge.ladder;
+                    viaElevator[edge.to] = edge;
                 }
             }
             if (previous[1] < 0) return false;
             path = new List<Waypoint>();
-            for (int at = 1; at != 0; at = previous[at]) path.Add(new Waypoint(nodes[at].point, viaLadder[at]));
+            for (int at = 1; at != 0; at = previous[at]) path.Add(new Waypoint(nodes[at].point, viaElevator[at].elevator, viaElevator[at].fromFloor, viaElevator[at].side));
             path.Reverse();
             return true;
         }
@@ -152,8 +188,8 @@ namespace UnityGameJam.Shelter
             Mathf.Abs(point.y - a.FloorY) <= connectionTolerance && point.x >= a.Left - connectionTolerance && point.x <= a.Right + connectionTolerance).ToArray();
         private static int Add(List<Node> nodes, Vector2 point, ShelterArea area = null)
         { nodes.Add(new Node(point, area)); return nodes.Count - 1; }
-        private static void Link(List<Node> nodes, int a, int b, ShelterLadder ladder = null)
-        { nodes[a].edges.Add(new Edge(b, ladder)); nodes[b].edges.Add(new Edge(a, ladder)); }
+        private static void Link(List<Node> nodes, int a, int b)
+        { nodes[a].edges.Add(new Edge(b)); nodes[b].edges.Add(new Edge(a)); }
         private static void AttachEndpoint(List<Node> nodes, int endpoint, ShelterArea[] areas)
         {
             foreach (var area in areas)

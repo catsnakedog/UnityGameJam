@@ -1,6 +1,6 @@
 # 벙커 진행 사용법
 
-`Assets/Settings/Shelter/BunkerRules.asset`에서 총 틱, 초/틱, 랜덤 이벤트·침공·작업 간격과 능력당 증가량을 편집한다. 변경 후 기존 Data Manager의 Addressables 콘텐츠 빌드를 실행한다. 현재 Play는 Use Existing Build 모드이므로 빌드 갱신이 필요하다.
+`Assets/Settings/Shelter/BunkerRules.asset`에서 총 틱, 초/틱, 랜덤 이벤트·침공·작업 간격과 능력당 증가량을 편집한다. 같은 SO의 **Mental Cost Per Work**는 작업자 한 명이 한 번 일할 때 쓰는 멘탈 포인트다. 기본 설정에서는 1초마다 1점씩 소모한다. 변경 후 기존 Data Manager의 Addressables 콘텐츠 빌드를 실행한다. 현재 Play는 Use Existing Build 모드이므로 빌드 갱신이 필요하다.
 
 씬 `ShelterPrototype`의 각 방 `ShelterArea > Room Type`에서 6종을 선택한다. 프로그래밍/그래픽/기획만 작업하며 기존 캐릭터 클릭 → 방 클릭 이동을 사용한다. 도착 후 소속이 생기고, 새 이동 명령 수락 시 소속이 해제된다. 단순히 목표 방을 선택하거나 다른 방을 통과하는 동안은 작업하지 않는다. 처음부터 방 바닥에 생성된 캐릭터는 해당 방에 소속된다.
 

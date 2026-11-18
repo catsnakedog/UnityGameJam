@@ -17,7 +17,7 @@ namespace GameJam.Data.Editor
         CancellationTokenSource cancellation;
         Vector2 scroll;
         Vector2 tableScroll;
-        string message = "Google Sheets에서 데이터를 편집하고 전체 시트 가져오기를 누르세요.";
+        string message = "내부 CSV를 갱신하려면 전체 시트 가져오기를 누르세요.";
         string search = "";
         int selectedTable;
         int page;
@@ -48,6 +48,10 @@ namespace GameJam.Data.Editor
             using (new EditorGUI.DisabledScope(busy || EditorApplication.isPlayingOrWillChangePlaymode))
             {
                 EditorGUI.BeginChangeCheck();
+                settings.useLiveSheets = EditorGUILayout.ToggleLeft("실행 시 스프레드시트 실시간 연동", settings.useLiveSheets);
+                EditorGUILayout.HelpBox(settings.useLiveSheets
+                    ? "게임을 시작할 때 활성 시트의 최신 값을 읽습니다. Editor와 빌드 모두 실행할 때 한 번 읽습니다."
+                    : "게임은 내부 CSV에서 생성한 데이터를 사용합니다.", MessageType.Info);
                 settings.spreadConfigUrl = EditorGUILayout.TextField("SpreadConfig URL (탭 포함)", settings.spreadConfigUrl);
                 if (EditorGUI.EndChangeCheck()) { settings.SaveSettings(); configSources = Array.Empty<SpreadsheetSource>(); ClearPreview(); }
                 EditorGUILayout.HelpBox("버튼을 누를 때 SpreadConfig의 sheetName / id / gid / enabled를 다시 읽습니다. 파일명과 연결 대상은 SpreadConfig에서 관리하고, 게임 내용은 각 데이터 시트에서 편집하세요.", MessageType.Info);
@@ -79,7 +83,7 @@ namespace GameJam.Data.Editor
                 if (configSources.Length > 0) EditorGUILayout.LabelField("마지막 연결 확인 결과", EditorStyles.miniLabel);
                 foreach (var source in configSources)
                 {
-                    EditorGUILayout.LabelField(source.tableName + ".csv", source.enabled ? (source.tableName == "FarmingData" ? "활성 · 파밍 전용" : "활성 · 공용") : "비활성 · 기존 데이터 유지");
+                    EditorGUILayout.LabelField(source.tableName + ".csv", source.enabled ? (SpreadConfigReader.UsesProjectImporter(source.tableName) ? "활성 · 전용 SO" : "활성 · 공용") : "비활성 · 기존 데이터 유지");
                     if (source.enabled) EditorGUILayout.SelectableLabel(source.url, EditorStyles.miniLabel, GUILayout.Height(18));
                 }
                 using (new EditorGUILayout.HorizontalScope())
@@ -88,7 +92,7 @@ namespace GameJam.Data.Editor
                     {
                         ClearPreview(); preview = DataImporter.Preview(settings.csvFolder); ShowPreviewMessage();
                     });
-                    if (GUILayout.Button("공용 시트 가져오기 / 미리보기 (파밍 제외)", GUILayout.Height(30))) FetchSheets();
+                    if (GUILayout.Button("공용 시트 미리보기 (파밍·좀비 제외)", GUILayout.Height(30))) FetchSheets();
                 }
                 using (new EditorGUI.DisabledScope(preview == null))
                 {
@@ -153,7 +157,7 @@ namespace GameJam.Data.Editor
                 var settings = DataToolSettings.instance;
                 string configUrl = settings.spreadConfigUrl, folder = settings.csvFolder;
                 configSources = (await SpreadConfigReader.DownloadAsync(configUrl, cancellation.Token)).ToArray();
-                var common = configSources.Where(s => !string.Equals(s.tableName, "FarmingData", StringComparison.OrdinalIgnoreCase)).ToArray();
+                var common = configSources.Where(s => !SpreadConfigReader.UsesProjectImporter(s.tableName)).ToArray();
                 remotePreview = await SpreadsheetImporter.DownloadAsync(folder, common, cancellation.Token);
                 if (settings.spreadConfigUrl != configUrl || settings.csvFolder != folder) throw new InvalidOperationException("연결 설정이 변경되었습니다. 다시 가져오세요.");
                 preview = remotePreview.Plan; ShowPreviewMessage();

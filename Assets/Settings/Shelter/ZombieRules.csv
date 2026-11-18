@@ -1,0 +1,4 @@
+﻿공통 규칙 ID (default),주사위 면 수,전투 판정 간격 (틱),방어 시작 인원당 판정 횟수,승리당 좀비 HP 감소,패배당 캐릭터 멘탈 감소,처치당 참가자 멘탈 회복,"수평 속도 (월드 단위/초, 임시)","사다리 속도 (월드 단위/초, 임시)","접촉 반경 (월드 단위, 임시)","생성 거리 (월드 단위, 임시)","좀비 최소 간격 (월드 단위, 임시)"
+string,int,int,int,int,int,int,float,float,float,float,float
+id,diceSides,combatEveryTicks,attemptsPerDefender,damageToZombie,mentalDamage,mentalRecovery,walkSpeed,climbSpeed,encounterDistance,spawnOffset,minimumSpacing
+default,6,5,3,1,2,5,2.00,1.60,0.65,1.20,2.40

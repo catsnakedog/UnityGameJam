@@ -1,0 +1,18 @@
+PASS Three separate instances with independent HP
+PASS Three approaching zombies spawn in a spaced queue
+PASS Every approaching zombie walks at the same speed
+PASS Every approaching zombie walks at the same speed
+PASS Every approaching zombie walks at the same speed
+PASS A guard shoots only the front target, and waiting zombies do not retaliate
+PASS Killing the front never spills that shot into the queue
+PASS First invader calls elevator before boarding
+PASS Locked front blocks followers at call pad without overtaking
+PASS Six zombies maintain minimum spacing through spawn and elevator call pad
+PASS All six enter elevator shaft in original spawn order
+PASS Six independent zombies persist after navigation
+PASS Occupied rooms and ground queues remain separated; minimum=2.4
+PASS Large frame catch-up cannot merge agents
+PASS Pause freezes entire queue
+PASS Killing one occupant leaves five separate intact zombies
+PASS Queue resumes safely when a blocker dies
+PASS Restart removes old queue and traffic blockers

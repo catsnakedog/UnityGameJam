@@ -46,9 +46,19 @@ namespace ShelterRun
                     throw new InvalidOperationException($"Invalid type/weight: {row.Id}");
             }
         }
+        public static FarmingDatabase CreateSession(List<FarmingRecord> rows)
+        {
+            var result = CreateInstance<FarmingDatabase>();
+            result.records = rows;
+            try { result.Validate(); return result; }
+            catch { Destroy(result); throw; }
+        }
 #if UNITY_EDITOR
         public void ApplyValidated(List<FarmingRecord> rows, string hash)
-        { records = new List<FarmingRecord>(rows); sourceHash = hash; }
+        {
+            records = new List<FarmingRecord>(rows);
+            sourceHash = hash;
+        }
 #endif
     }
 }

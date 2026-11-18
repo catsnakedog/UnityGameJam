@@ -1,46 +1,41 @@
-# 파밍 2D 아이소메트릭 복도
+﻿# 파밍 2D 사이드뷰 맵
 
-## 편집 위치
+2026-11-18 사용자 결정으로 아이소메트릭 맵을 사이드뷰로 전환했다.
 
-- 씬: `Assets/Scenes/Farming.unity`. `Isometric 2D Grid`의 Floor와 방별 Wall/Ceiling Tilemap을 편집한다.
-- 복도는 화면 왼쪽 아래에서 오른쪽 위로 올라간다. 호실은 복도의 왼쪽 위에 325 / 324 / 323호 순서로 붙는다. 기존 6명·12개 물자·6개 테이블은 325호에 배치하며 나머지 호실은 같은 형식의 집기를 가진 확장 공간이다.
-- 시작: 복도 첫 문 앞. 복도 시작점의 민트색 BUNKER가 투입 구역이다.
-- 이동/파밍 규칙은 기존 Session/Inventory/Addressables를 사용한다. 결과에서 기존 벙커 씬으로 넘어가는 연결을 유지한다.
+## 씬과 조작
 
-## 타일 교체 계약
+- 씬: `Assets/Scenes/Farming.unity`. Editor에서 복도·문·호실·책상을 편집할 수 있다. Farming Session의 Pickup Prefabs가 각 생성 대상의 외형을 연결한다.
+- 복도에서 시작한다. A/D로 좌우 이동하고 325·324·323호 문 앞에서 E를 누르면 해당 방으로 이동한다. 방의 왼쪽 출구 문에서 E를 누르면 대응하는 복도 문으로 돌아온다.
+- 문에 닿는 것만으로는 이동하지 않는다. E 한 번에 한 번만 전환되며 운반 상태·남은 시간·방의 파밍 상태는 유지한다.
+- 새 회차마다 벙커 가까운 325호부터 324호, 323호 순으로 사람 3·2·1명을 배정한다. 사람은 이웃한 책상 사이의 통로에 서고 물자는 책상 프리팹의 빈 상판 위치에 놓인다. 통조림은 방마다 한 개, 다른 물자는 각각 한 개다. 레전드 두 종은 각각 방 가중치 1·2·3으로 독립 추첨한다.
+- 복도 왼쪽 BUNKER에서 E로 운반 중인 대상을 모두 투입한다. 4칸 제한, 사람 2~4칸, 물자 1~2칸, 포물선 던지기·투입 페이드·60초 종료·벙커 씬 연결은 기존 시스템을 사용한다.
+- E 우선순위: 운반 중 벙커 투입 → 가까운 문 → 가까운 파밍 대상 → 마지막 운반 대상 내려놓기. 문 근처에서는 HUD에 목적지가 표시된다.
 
-참조: [Unity 2D IsoTilemaps](https://github.com/UnityTechnologies/2D_IsoTilemaps), commit `31e3ea7aaa3968236166f4c58089e2487efba92b`. README의 아트 크레딧: [castpixel](https://twitter.com/castpixel). Basic의 base01/cube01 형태를 재사용하고 프로젝트 팔레트로 색상만 조정했다.
+## 공간과 이동
 
-| 항목 | 공통 규격 |
-|---|---|
-| 바닥·벽·입구·가림 타일 | PNG RGBA, 64×64 px |
-| Sprite | Single / Full Rect / PPU 64 |
-| 필터 | Point, mipmap OFF, 압축 None |
-| Pivot | (0.5, 0.25): 하단 32px의 다이아몬드 중심이 바닥 기준점 |
-| Grid | Isometric, cellSize (1, 0.5, 1), XY 평면 |
-| Tilemap anchor | (0.5, 0.5, 0) |
-| 투영 | x=(u+v)/2, y=(v-u)/4; 정수 u/v는 셀 경계. 논리 셀 (u,v)는 Grid 셀 (v,-u-1)에 저장 |
-| 벽 높이 | 같은 64px cube 타일을 위로 쌓아 표현 |
-| 인물·집기 | 동일 PPU64/Point/팔레트. 캔버스는 실루엣 크기에 맞추되 발/바닥 pivot 유지 |
+`Side View Map`의 FarmingMap2D가 corridor/rooms/doors 참조를 가진다. 각 FarmingRoom2D의 `Walk left`, `Walk right`가 수평 이동선의 끝점이며 `Camera height`가 카메라 높이를 정한다. footprint는 해당 공간의 월드 영역이다. 문은 FarmingDoor2D의 Area, Target, Arrival을 직렬화해 연결한다.
 
-아트: `Assets/Art/Farming/Isometric`; Tile 에셋: 그 아래 `Tiles`. 원본 PNG 참조는 `Reference`에 보관한다. 인물·물체도 SpriteRenderer이며 런타임 3D 메시를 사용하지 않는다. 새 타일은 위 규격으로 기존 Tile.sprite를 교체한다. 새 맵 DB나 CSV를 만들 필요가 없다.
+동일 씬의 분리된 공간으로 위치를 옮기므로 입퇴실 때 게임 상태를 다시 생성하지 않는다. 출입은 문을 통해서만 하며 다른 공간의 대상을 상호작용 대상으로 잡지 않는다. 카메라는 현재 공간의 끝에서 멈추고 좌우로 따라간다. 기존 16:9 FixedAspectCamera와 HUD를 사용한다.
 
-## 문과 시야
+캐릭터는 가구 앞의 수평 이동선을 걷는다. 배경 가구에는 통행을 막는 충돌체를 두지 않는다. 매 이동에서 X를 이동선 안으로 제한하고 Y를 바닥에 고정하므로 큰 프레임 간격이나 잘못된 초기 위치에도 벽 밖으로 나가거나 가구에 끼지 않는다. W/S 및 점프는 현재 조작에 포함하지 않는다.
 
-- Collider2D가 벽과 테이블의 통행을 막고, 전면 벽의 3셀 문만 방과 복도를 연결한다.
-- `FarmingMap2D`는 실제 플레이어 바닥 위치로 현재 방을 판정한다. `FarmingRoom2D`는 선택된 방의 천장/벽을 1→0, 집기/사람/물자를 0→1로 페이드한다. 복귀 시 반대로 전환한다.
-- 닫힌 방의 물건은 상호작용 대상에서 제외한다. 들고 나온 개체는 방 가림과 독립적으로 표시하며 내려놓은 위치에 맞춰 다시 판정한다.
-- 월드 Sprite/SortingGroup과 벽 타일은 같은 Order=0을 사용한다. 카메라 Custom Axis=(0,1,-1)은 Y-Z로 바닥 깊이를 비교한다. Z는 화면상 추가 높이를 상쇄하는 렌더링 메타데이터이며 충돌은 계속 XY Collider2D다. 숫자로 계산한 개체별 sortingOrder와 타일별 네이티브 정렬을 혼용하지 않는다.
-- 벽은 Individual Tilemap 모드로 캐릭터·집기 사이에 끼어 정렬된다. 각 벽 단의 Y 높이만큼 Z를 보정하고, 동일 바닥점의 단들에는 1/1024 단위의 작은 순서 보정을 사용한다. 스프라이트는 Pivot 기준이며 SortingGroup 위치는 발/바닥점이다.
-- 테이블 위 물건은 테이블 SortingGroup의 자식(내부 Order 10/11), 운반 개체는 플레이어 SortingGroup의 자식으로 렌더한다. 던질 때는 독립 월드 그룹으로 복귀하며 손 높이와 포물선 높이를 함께 상쇄한다. 바닥·벙커 마커는 지면 순서, 닫힌 방의 불투명 천장은 가림 전용 순서를 사용한다.
-- 카메라는 회전 없는 정투영 XY 카메라로 플레이어를 따라간다. 공용 16:9 FixedAspectCamera/HUD 설정을 유지한다.
+## 아트·소팅·교체
 
-## 데이터와 수명
+- 현재 월드 이미지: `Assets/Art/Farming/SideView/`. 정면 벽·문·가구와 측면 캐릭터를 같은 픽셀 스타일로 제작했다. 모든 이미지 Sprite Single, PPU64, Point, mipmap off, 무압축, Full Rect.
+- 실제 임포트한 30개 이미지의 GUID/local ID/크기/PPU는 [SideViewArtManifest.json](SideViewArtManifest.json)에 기록한다.
+- 벽: 192×256, 바닥: 128×64. Rectangle SpriteRenderer의 Tiled 모드이며 다이아몬드 투영/Isometric Tilemap은 사용하지 않는다.
+- 문/문 강조: 96×192, 테이블: 192×96, 의자: 64×96, 창: 192×128, 벙커 문: 192×192, 포커스: 128×32.
+- 서 있는 인물/플레이어: 64×96, 누운 인물: 128×64, 물자: 64×64. 일반 오브젝트 Pivot은 하단 중앙, 누운 인물은 중앙이다. 벽/바닥은 좌하단.
+- 배경 벽 -100, 바닥 -90, 창 -50, 문 0, 의자 5, 테이블 SortingGroup 10, 인물/월드 물자 100, 플레이어 200. 테이블 위 물건은 테이블 그룹 내부 20/21, 운반물은 플레이어 그룹 내부 10부터다. Z는 모두 0이며 Y-Z 아이소메트릭 깊이 계산을 하지 않는다.
+- PNG 바이트만 같은 경로에 덮어쓰고 `.meta`는 유지한다. 새 이미지 규격은 위 크기/PPU/Pivot을 유지한다. 인물 프리팹의 standingSprite/lyingSprite, Player의 idleSprite/carrySprite 참조는 저장되어 있다.
+- HUD 이미지는 기존 `Assets/Art/UI/Farming/`와 `FarmingHud.prefab`을 재사용한다. 안내 문구만 사이드뷰 조작으로 갱신했다.
 
-새 정본 없음. `data.farming.pickups`는 기존 시트/CSV/DB, `data.farming.rules`는 기존 SO다. [FarmingRules 명세](../DataSpecs/FarmingRules.md)에서 방 페이드와 기본 호실 크기를 관리한다. 씬 Tilemap/Collider2D는 배치의 정본이며 런타임 경계를 별도 상수로 복제하지 않는다.
+## 데이터·제작 도구
 
-`Tools > Farming > Rebuild 2D Corridor Scene`은 생성된 씬/Prefab/아트를 재작성하는 제작 도구다. 평소 편집은 저장된 씬/타일에서 수행한다. 최초 3D 씬/Prefab 스냅샷은 프로젝트 밖이 아닌 Unity 미임포트 경로 `Temp/FarmingBefore2D`에 보관했으며 배포 의존성이 아니다.
+`data.farming.pickups`의 기존 FarmingData 시트/CSV/DB와 `data.farming.rules`의 기존 FarmingRules.asset을 그대로 사용한다. 새 맵 CSV/SO/로더는 만들지 않았다. [규칙 명세](../DataSpecs/FarmingRules.md), [개체 명세](../DataSpecs/FarmingData.md), [전환 계획](../DataHistory/20261118-farming-sideview-01-planned.md).
 
-검증: [최종 검증 기록](../DataHistory/20261118-farming-map2d-04-verified.md), [69개 Play 검사](Verification-2D.txt). [전체 배치](../../outputs/Farming/map-overview.png), [325호 실내](../../outputs/Farming/room-final.png).
+`Tools > Farming > Rebuild Side View Scene`은 파밍 맵/해당 프리팹/아트를 다시 작성하는 제작 도구다. 평상시 배치 편집은 저장된 씬에서 수행한다. 기존 FarmingIsoSceneBuilder.Build 호출도 현재 사이드뷰 제작으로 연결된다. 이전 맵 스냅샷은 Git 이력과 `Temp/FarmingBeforeSideView`에 보존되며 게임에서는 사용하지 않는다.
 
-소팅 근거: [Unity Tilemap Renderer Modes](https://docs.unity.cn/Manual/Tilemap-Isometric-RenderModes.html), [Unity 2D Sorting](https://docs.unity.cn/Manual/2DSorting.html). 이 프로젝트는 높이 1을 Z 1로 표현하므로 표준 Isometric Z as Y 예제의 -0.26 대신 -1을 사용한다.
+검증: `Tools > Farming > Verify Side View Play`를 새 파밍 Ready 상태에서 실행한다. 결과는 `Docs/Farming/Verification-SideView.txt`에 기록한다. 이전 Verification-2D/Movement는 아이소메트릭 당시의 기록이다.
+
+현재 무작위 배치의 [Play 검사·재시작·추첨 결과](../DataHistory/20261119-farming-spawns-02-verified.md). 초기 사이드뷰의 [조작·아트 검증](../DataHistory/20261118-farming-sideview-02-verified.md), [복도 화면](../../outputs/Farming/sideview-corridor.png), [325호 화면](../../outputs/Farming/sideview-room.png).

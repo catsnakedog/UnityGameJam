@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "60\uCD08, \uCC59\uAE30\uACE0 \uAD6C\uD558\uB77C"
+  m_text: "\uC900\uBE44 \uC911"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
   m_sharedMaterial: {fileID: -5733948556709897978, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
@@ -280,7 +280,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "W A S D  \uC774\uB3D9   \xB7   E  \uC0C1\uD638\uC791\uC6A9"
+  m_text: "A / D  \uC88C\uC6B0 \uC774\uB3D9   \xB7   E  \uBB38 / \uB4E4\uAE30 / \uB0B4\uB824\uB193\uAE30"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
   m_sharedMaterial: {fileID: -5733948556709897978, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
@@ -554,7 +554,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 60
+  m_text: --
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
   m_sharedMaterial: {fileID: -5733948556709897978, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
@@ -1057,7 +1057,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "60\uCD08\uC758 \uAD6C\uC870"
+  m_text: "\uAD6C\uC870 \uC791\uC804"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
   m_sharedMaterial: {fileID: -5733948556709897978, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
@@ -1273,7 +1273,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "W A S D   \uC774\uB3D9       E   \uB4E4\uAE30 / \uB358\uC9C0\uAE30"
+  m_text: "A / D  \uC88C\uC6B0 \uC774\uB3D9   \xB7   E  \uBB38 / \uB4E4\uAE30 / \uB0B4\uB824\uB193\uAE30"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
   m_sharedMaterial: {fileID: -5733948556709897978, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
@@ -2828,6 +2828,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98a5fb901380b8b48849bce70ebbcc68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShelterRun.FarmingHud
+  missionTitle: {fileID: 2824970782050928397}
   timerText: {fileID: 1669007457588693281}
   timeFill: {fileID: 4644934306165255122}
   capacityText: {fileID: 2390083653159401725}

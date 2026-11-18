@@ -28,7 +28,8 @@ public static class EventPopupSetup
     {
         var plan = DataImporter.Preview(DataToolSettings.instance.csvFolder);
         var items=new ShelterItemCatalog(plan.Tables.Single(t=>t.Name==ShelterItemCatalog.TableName));
-        items.ValidateSources(plan.Tables.Single(t => t.Name == EventCatalog.TableName));
+        items.ValidateSources(plan.Tables.Single(t => t.Name == EventCatalog.TableName),
+            ShelterRun.Editor.FarmingCsvImporter.Parse(File.ReadAllText(ShelterRun.Editor.FarmingCsvImporter.CsvPath)));
         EventCatalog.FromTable(plan.Tables.Single(t => t.Name == EventCatalog.TableName),items);
         if(allowSchemaChange && plan.Changes.Any(c=>(c.StartsWith("Remove",StringComparison.Ordinal)||c.StartsWith("Change key",StringComparison.Ordinal)) &&
             !c.StartsWith("Remove row Events[",StringComparison.Ordinal) && !c.StartsWith("Remove/change column Events.",StringComparison.Ordinal) && !c.StartsWith("Change key Events:",StringComparison.Ordinal)))

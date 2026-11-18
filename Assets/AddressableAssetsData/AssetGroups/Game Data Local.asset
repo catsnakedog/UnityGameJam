@@ -33,6 +33,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
     m_FolderGuid: 
+  - m_GUID: 6facc373492cc584ca04ebc3968d1007
+    m_Address: data/elevators
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 4a649a900fce4d44baa73fa8893a88f3, type: 2}
   m_SchemaSet:
