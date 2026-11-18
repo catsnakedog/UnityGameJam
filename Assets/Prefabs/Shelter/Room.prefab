@@ -188,10 +188,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnityGameJam.Shelter.ShelterArea
   kind: 0
+  roomType: 0
   displayName: ROOM
   width: 8
   height: 4
   accessible: 1
+  roomArtwork: {fileID: 0}
   backgroundVisual: {fileID: 2116295687596737721}
   floorVisual: {fileID: 8684349339291909433}
   nameLabel: {fileID: 1505707161368530990}
@@ -2802,7 +2804,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10100, guid: 0000000000000000e000000000000000, type: 0}
+  - {fileID: 2100000, guid: 420cde58c72b43a4fb5761bbceca2927, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2844,10 +2846,10 @@ TextMesh:
   m_FontSize: 64
   m_FontStyle: 0
   m_RichText: 1
-  m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Font: {fileID: 12800000, guid: 420cde58c72b43a4fb5761bbceca2927, type: 3}
   m_Color:
     serializedVersion: 2
-    rgba: 4288718493
+    rgba: 4290956479
 --- !u!1 &6001218208979304428
 GameObject:
   m_ObjectHideFlags: 0

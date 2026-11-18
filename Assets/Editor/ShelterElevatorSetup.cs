@@ -84,7 +84,7 @@ public static class ShelterElevatorSetup
         Rect("Left frame", car, new Vector2(-1.06f, 1.2f), new Vector2(0.07f, 2.5f), new Color(0.63f, 0.76f, 0.73f), 33);
         Rect("Right frame", car, new Vector2(1.06f, 1.2f), new Vector2(0.07f, 2.5f), new Color(0.63f, 0.76f, 0.73f), 33);
         var label = new GameObject("Elevator ownership").AddComponent<TextMesh>(); label.transform.SetParent(root.transform, false);
-        var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NotoSansCJKkr-Regular.otf"); label.font = font; label.GetComponent<MeshRenderer>().sharedMaterial = font.material;
+        var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NeoDunggeunmo.ttf"); label.font = font; label.GetComponent<MeshRenderer>().sharedMaterial = font.material;
         label.anchor = TextAnchor.LowerCenter; label.alignment = TextAlignment.Center; label.fontSize = 48; label.characterSize = 0.05f; label.color = new Color(0.65f, 0.88f, 0.86f);
         label.GetComponent<MeshRenderer>().sortingOrder = 50; lift.statusLabel = label; lift.RefreshVisuals(); return root;
     }

@@ -127,9 +127,20 @@ namespace UnityGameJam.Zombies
         internal void ReportBreach(ZombieAgent zombie)
         {
             int loss = simulation.Rules.InvasionMentalLoss;
+            CharacterIdentity witness = null;
+            float nearest = float.PositiveInfinity;
             foreach (var actor in roster.Characters)
-                if (actor) actor.ApplyMentalChange(-loss);
-            Report($"{zombie.Definition.DisplayName} 전투 방 침입 · 전원 기본 멘탈 −{loss}");
+            {
+                if (!actor) continue;
+                actor.ApplyMentalChange(-loss);
+                if (!actor.isActiveAndEnabled || !actor.CanAct) continue;
+                float distance = (actor.transform.position - zombie.transform.position).sqrMagnitude;
+                if (distance >= nearest) continue;
+                nearest = distance;
+                witness = actor;
+            }
+            if (witness) ShelterSpeech.Say(witness.transform, witness.Definition.Role, "invasion");
+            Report($"{zombie.Definition.DisplayName} 전투 방 침입 · 전원 기본 멘탈 -{loss}");
         }
         public bool CanStartDefense(ZombieAgent candidate)
         {

@@ -70,6 +70,7 @@ namespace UnityGameJam.Shelter
         }
         void ResetClock()
         {
+            if (TryGetComponent<ShelterSpeech>(out var speech)) speech.Clear();
             foreach (var actor in roster.Characters)
             {
                 if (!actor) continue;
@@ -154,7 +155,12 @@ namespace UnityGameJam.Shelter
                 var actor = characters[i];
                 if (!actor || !actor.isActiveAndEnabled || actor.Definition == null) continue;
                 var walker = actor.GetComponent<ShelterWalker>();
-                if (!walker || !walker.CanWorkInCurrentRoom || !CanDevelopIn(walker.CurrentRoom.roomType)) continue;
+                if (!walker || !walker.CanWorkInCurrentRoom) continue;
+                var room = walker.CurrentRoom.roomType;
+                if (room == ShelterRoomType.ZombieInvasion) actor.Speak("guard");
+                if ((room == ShelterRoomType.Programming || room == ShelterRoomType.Graphics) &&
+                    development.Progress.Planning <= Rules.PlanningUnlockPercent) actor.Speak("wait_plan");
+                if (!CanDevelopIn(room)) continue;
                 GameDevField field;
                 int ability;
                 switch (walker.CurrentRoom.roomType)
@@ -188,6 +194,7 @@ namespace UnityGameJam.Shelter
                 if (appliedProgress[index] <= 0 || worker.ability == 0) continue;
                 float share = (float)(appliedProgress[index] * (double)worker.ability / totalAbility[index]);
                 if (worker.actor.TryGetComponent<WorkProgressFeedback>(out var feedback)) feedback.Show(worker.field, share);
+                if (worker.actor.CanAct) worker.actor.Speak("work");
             }
         }
 

@@ -130,11 +130,6 @@ namespace UnityGameJam.Shelter
             SetSelection(survivor, survivor.characterName + " SELECTED - CLICK A ROOM");
         }
 
-        internal void DeselectSurvivor()
-        {
-            if (Selected) SetSelection(null, "CLICK A SURVIVOR, THEN CLICK A ROOM");
-        }
-
         void SetSelection(ShelterWalker survivor, string message)
         {
             ClearRejected();

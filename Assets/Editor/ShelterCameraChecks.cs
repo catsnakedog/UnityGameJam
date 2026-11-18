@@ -142,8 +142,9 @@ public static class ShelterCameraChecks
             camera.SendMessage("LateUpdate");
             Check(Near(camera.transform.position, lockedPosition), "Y keeps current view when character moves away");
             KeyPress(Key.RightArrow);
-            Check(camera.transform.position.x > lockedPosition.x && !camera.commander.Selected && !card.SelectedCharacter,
-                "Arrow input moves free camera, deselects the survivor and closes the card");
+            var selectedWalker = target.GetComponent<ShelterWalker>();
+            Check(camera.transform.position.x > lockedPosition.x && camera.commander.Selected == selectedWalker && card.SelectedCharacter == target,
+                "Arrow input moves free camera while keeping the survivor and card selected");
             foreach (var input in new[] { (Key.W, Vector2.up), (Key.A, Vector2.left), (Key.S, Vector2.down), (Key.D, Vector2.right) })
             {
                 camera.transform.position = new Vector3(0, 9, -10);
@@ -181,7 +182,7 @@ public static class ShelterCameraChecks
             Wheel(1, view.pixelRect.center);
             Check(view.orthographicSize == blockedSize, "Modal input block suppresses wheel zoom");
             KeyPress(Key.Digit3); KeyPress(Key.RightArrow);
-            Check(Near(camera.transform.position, blockedPosition) && !camera.IsFollowing && !camera.commander.Selected,
+            Check(Near(camera.transform.position, blockedPosition) && !camera.IsFollowing && camera.commander.Selected == selectedWalker,
                 "Modal input block suppresses shortcuts, selection and panning");
             camera.commander.ReleaseInputBlock(block);
             await Task.Delay(60);

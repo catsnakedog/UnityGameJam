@@ -76,6 +76,27 @@ namespace GameJam.Data.Generated
             public bool @enabled => _dataRow.Get<bool>("enabled");
         }
     }
+    namespace @ShelterDialogue
+    {
+        public static class Table
+        {
+            public static global::GameJam.Data.DataTable Data => global::GameJam.Data.GameData.GetTable("ShelterDialogue");
+            public static Row Get(string id) => new Row(Data.Get(id));
+            public static global::System.Collections.Generic.IEnumerable<Row> All
+            {
+                get { foreach (var item in Data.Rows) yield return new Row(item); }
+            }
+        }
+        public readonly struct Row
+        {
+            readonly global::GameJam.Data.DataRow _dataRow;
+            internal Row(global::GameJam.Data.DataRow row) { _dataRow = row; }
+            public string @id => _dataRow.Get<string>("id");
+            public string @role => _dataRow.Get<string>("role");
+            public string @situation => _dataRow.Get<string>("situation");
+            public string @line => _dataRow.Get<string>("line");
+        }
+    }
     namespace @ShelterItems
     {
         public static class Table

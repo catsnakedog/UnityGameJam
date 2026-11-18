@@ -232,7 +232,7 @@ public static class ShelterNavigationSetup
         var go = new GameObject(name);
         go.transform.SetParent(parent, false);
         var label = go.AddComponent<TextMesh>();
-        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        label.font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NeoDunggeunmo.ttf");
         label.text = text;
         label.fontSize = 64;
         label.characterSize = 0.04f;

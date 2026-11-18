@@ -30,7 +30,7 @@ public static class WorkProgressFeedbackSetup
                 canvas.renderMode = RenderMode.WorldSpace;
                 canvas.sortingOrder = actor.transform.Find("Mental gauge").GetComponent<Canvas>().sortingOrder + 1;
                 rect.localScale = Vector3.one * 0.01f;
-                rect.localPosition = new Vector3(0.50f, 2.86f, 0f);
+                rect.localPosition = new Vector3(0f, 2.86f, 0f);
                 var bubble = rect.gameObject.AddComponent<CanvasGroup>();
                 bubble.interactable = bubble.blocksRaycasts = false;
                 var picture = Child("Field icon", rect, -50, 40, 40).gameObject.AddComponent<Image>();
@@ -90,6 +90,9 @@ public static class WorkProgressFeedbackSetup
         var icon = bubble.GetComponentInChildren<Image>();
         var label = bubble.GetComponentInChildren<TMP_Text>();
         if (!icon || icon.sprite != Load<Sprite>(path) || !label) return false;
+        float left = icon.rectTransform.anchoredPosition.x + icon.rectTransform.rect.xMin;
+        float right = label.rectTransform.anchoredPosition.x + label.textBounds.max.x;
+        if (Mathf.Abs(bubble.localPosition.x) > 0.001f || Mathf.Abs(left + right) > 0.1f) return false;
         string text = label.text;
         return text.StartsWith("+", StringComparison.Ordinal) && text.EndsWith("%", StringComparison.Ordinal) &&
             float.TryParse(text.Substring(1, text.Length - 2), NumberStyles.Float, CultureInfo.InvariantCulture, out var number) &&

@@ -407,6 +407,7 @@ GameObject:
   - component: {fileID: 3638123925107270037}
   - component: {fileID: 6381104985350385855}
   - component: {fileID: 3304848654683087024}
+  - component: {fileID: 5245711476526821914}
   m_Layer: 0
   m_Name: Zombie
   m_TagString: Untagged
@@ -472,6 +473,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnityGameJam.Zombies.ZombieAgent
   healthLabel: {fileID: 2858359533209378584}
+--- !u!114 &5245711476526821914
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2632923391012609788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05c2aed4e01d6d54da6cb85c6a896ba4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UnityGameJam.Shelter.ShelterSpeechAnchor
+  head: {fileID: 3667915296875959381}
+  nameplate: {fileID: 4139590253487018623}
+  gauge: {fileID: 0}
+  gap: 0.07
 --- !u!1 &2897522577293046441
 GameObject:
   m_ObjectHideFlags: 0
@@ -1199,7 +1216,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3fabfd2673199334ba8524d121db135a, type: 3}
+  - {fileID: 2100000, guid: 420cde58c72b43a4fb5761bbceca2927, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1241,7 +1258,7 @@ TextMesh:
   m_FontSize: 48
   m_FontStyle: 0
   m_RichText: 1
-  m_Font: {fileID: 12800000, guid: 3fabfd2673199334ba8524d121db135a, type: 3}
+  m_Font: {fileID: 12800000, guid: 420cde58c72b43a4fb5761bbceca2927, type: 3}
   m_Color:
     serializedVersion: 2
     rgba: 4284907775

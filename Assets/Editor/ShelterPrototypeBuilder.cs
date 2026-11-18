@@ -117,7 +117,7 @@ public static class ShelterPrototypeBuilder
             spriteMaterial = new Material(Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default"));
             AssetDatabase.CreateAsset(spriteMaterial, materialPath);
         }
-        font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NeoDunggeunmo.ttf");
     }
 
     private static Sprite MakeSprite(string name, int size, Func<float, float, Color> pixel)

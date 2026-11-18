@@ -14,6 +14,8 @@ namespace UnityGameJam.Shelter
         [Min(0.5f)] public float height = 3.8f;
         [Tooltip("Disable to close this room/corridor to navigation.")]
         public bool accessible = true;
+        [Tooltip("Native-size room sprite. Its pivot marks the walkable floor.")]
+        public SpriteRenderer roomArtwork;
         public Transform backgroundVisual;
         public Transform floorVisual;
         public TextMesh nameLabel;
@@ -31,6 +33,7 @@ namespace UnityGameJam.Shelter
         public float Left => transform.TransformPoint(new Vector3(-width * 0.5f, 0f)).x;
         public float Right => transform.TransformPoint(new Vector3(width * 0.5f, 0f)).x;
         public float FloorY => transform.position.y;
+        public float LocalBottom => roomArtwork && roomArtwork.sprite ? roomArtwork.sprite.bounds.min.y : 0f;
         public bool IsWalkable => isActiveAndEnabled && accessible && transform.lossyScale.x > 0f &&
             transform.lossyScale.y > 0f && Vector3.Dot(transform.right, Vector3.right) > 0.999f;
         public Vector2 Centre => new Vector2((Left + Right) * 0.5f, FloorY);
@@ -41,7 +44,8 @@ namespace UnityGameJam.Shelter
         public bool ContainsClick(Vector2 worldPoint)
         {
             Vector3 local = transform.InverseTransformPoint(worldPoint);
-            return Mathf.Abs(local.x) <= width * 0.5f && local.y >= 0f && local.y <= height;
+            float bottom = LocalBottom;
+            return Mathf.Abs(local.x) <= width * 0.5f && local.y >= bottom && local.y <= bottom + height;
         }
 
         public bool ContainsFeet(Vector2 feet) =>
@@ -89,8 +93,17 @@ namespace UnityGameJam.Shelter
 
         public void RefreshVisuals()
         {
-            width = Mathf.Max(0.5f, width);
-            height = Mathf.Max(0.5f, height);
+            if (roomArtwork && roomArtwork.sprite)
+            {
+                var size = roomArtwork.sprite.bounds.size;
+                width = size.x;
+                height = size.y;
+            }
+            else
+            {
+                width = Mathf.Max(0.5f, width);
+                height = Mathf.Max(0.5f, height);
+            }
             if (backgroundVisual != null)
             {
                 backgroundVisual.localPosition = new Vector3(0f, height * 0.5f, 0f);
@@ -105,7 +118,8 @@ namespace UnityGameJam.Shelter
             {
                 nameLabel.text = IsOccupied ? displayName + " [점거 / 기능 정지]" : displayName;
                 nameLabel.color = IsOccupied ? new Color(1f, 0.35f, 0.28f) : new Color(0.75f, 0.8f, 0.76f);
-                nameLabel.transform.localPosition = new Vector3(-width * 0.5f + 0.4f, height - 0.62f, 0f);
+                float inset = roomArtwork ? 0.34f : 0.62f;
+                nameLabel.transform.localPosition = new Vector3(-width * 0.5f + 0.4f, LocalBottom + height - inset, 0f);
             }
             if (highlight != null)
             {

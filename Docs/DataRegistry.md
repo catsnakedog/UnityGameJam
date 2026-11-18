@@ -6,6 +6,8 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 ## 등록된 데이터
 
+- `data.shelter.dialogue` · active · Codex dialogue-20261119 · 벙커 상황별 발화 후보 · 정본 [ShelterDialogue.csv](../Assets/Settings/Data/Csv/ShelterDialogue.csv) · [명세](DataSpecs/ShelterDialogue.md) · [적용 이력](DataHistory/20261119-shelter-dialogue.md)
+
 벙커 작업 완료 표시는 `data.bunker.rules`의 작업 주기·효율과 `data.characters`의 장비 보정 후 능력을 거쳐 실제로 더해진 분야별 진척을 읽는다. [작업 표시](UI/WorkProgressFeedback.md) · [소비 연결 이력](DataHistory/20261119-work-progress-feedback.md)
 
 파밍을 시작하면 `data.farming.rules.preparationDuration` 동안 방을 둘러볼 수 있다. 물자·사람 획득과 구조 제한시간은 준비 종료 시 시작한다. [파밍 규칙](DataSpecs/FarmingRules.md) · [중복 조사](DataHistory/20261119-farming-preparation-plan.md)

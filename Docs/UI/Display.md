@@ -10,6 +10,10 @@
 | 2560×1080 | 1920×1080 | 좌·우 각 320px |
 | 1920×1200 | 1920×1080 | 위·아래 각 60px |
 
+## 공용 글꼴
+
+게임 화면의 공용 글꼴은 Neo둥근모다. 캐릭터와 방의 월드 이름표는 `Assets/Fonts/NeoDunggeunmo.ttf`를 직접 사용한다. 말풍선, 파밍 HUD, 사건·엔딩 팝업은 같은 TTF로 만든 동적 TextMeshPro 에셋 `Assets/Fonts/FarmingKorean.asset`을 사용한다. 이 에셋은 새 TMP 텍스트의 프로젝트 기본값이기도 하다. 원본과 함께 배포하는 이용 조건은 `Assets/Fonts/NeoDunggeunmo-OFL.txt`에 있다. [공식 배포본](https://github.com/neodgm/neodgm/releases/tag/v1.601)
+
 ## 적용 위치
 
 - `Assets/Scripts/Common/FixedAspectCamera.cs`: 화면 크기에 맞춰 카메라 Viewport Rect를 중앙 16:9로 유지하고 검은 여백을 그린다. 렌더 텍스처용 카메라는 제외한다.

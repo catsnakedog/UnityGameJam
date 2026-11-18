@@ -30,8 +30,12 @@ namespace UnityGameJam.Characters
         }
         internal void AdvanceHungerTick(int tick)
         {
-            if (tick % rules.HungerEveryTicks == 0) Hunger = Mathf.Max(0, Hunger - rules.HungerLoss);
+            if (tick % rules.HungerEveryTicks != 0) return;
+            int before = Hunger;
+            Hunger = Mathf.Max(0, Hunger - rules.HungerLoss);
+            if (before > 0 && Hunger == 0 && CanAct) Speak("hungry");
         }
+        internal void Speak(string situation) => ShelterSpeech.Say(transform, Definition?.Role, situation);
         internal bool Eat()
         {
             if (!rules || Hunger == BunkerRules.HungerCapacity) return false;
@@ -46,6 +50,7 @@ namespace UnityGameJam.Characters
         public bool CanAct => !IsFainted && CurrentMental > 0;
         public bool IsTired => rules && CanAct && CurrentMental <= rules.TiredMentalThreshold;
         BunkerRules rules;
+        bool sleeping;
         internal BunkerRules Rules => rules;
         public void ConfigureMental(BunkerRules value) { rules = value; SetMental(CurrentMental); }
         public void ResetMental()
@@ -53,7 +58,9 @@ namespace UnityGameJam.Characters
             GetComponent<ShelterWalker>().ResetRescue();
             IsFainted = false;
             IsRestingAfterRescue = false;
+            sleeping = false;
             SetMental(Definition.Mental);
+            if (TryGetComponent<SurvivorEmotion>(out var emotion)) emotion.Hide();
         }
         internal void BeginBedRest()
         {
@@ -65,9 +72,12 @@ namespace UnityGameJam.Characters
             if (!rules || !isActiveAndEnabled) return;
             var walker = GetComponent<ShelterWalker>();
             var room = walker.CurrentRoom;
-            if (!room || !room.IsWalkable || walker.IsMoving || walker.IsInElevator ||
-                !room.ContainsFeet(transform.position)) return;
-            if (room.roomType == ShelterRoomType.Sleeping && room.IsOperational && (CanAct || IsRestingAfterRescue))
+            bool settled = room && room.IsWalkable && !walker.IsMoving && !walker.IsInElevator && room.ContainsFeet(transform.position);
+            bool inBed = settled && room.roomType == ShelterRoomType.Sleeping && room.IsOperational;
+            if (inBed && !sleeping && CanAct) Speak("sleep");
+            sleeping = inBed;
+            if (!settled) return;
+            if (inBed && (CanAct || IsRestingAfterRescue))
                 ApplyMentalChange(rules.SleepMentalPerTick);
             else if (room.roomType == ShelterRoomType.ZombieInvasion && CanAct)
                 ApplyMentalChange(-rules.GuardMentalLossPerTick);
@@ -106,10 +116,13 @@ namespace UnityGameJam.Characters
         public void SetMental(int value)
         {
             if (value < 0) throw new System.ArgumentOutOfRangeException(nameof(value));
+            bool wasTired = IsTired;
             CurrentMental = ClampMental(value);
             if (CurrentMental == 0 && !IsFainted)
             {
                 IsFainted = true;
+                if (TryGetComponent<SurvivorEmotion>(out var emotion)) emotion.Hide();
+                Speak("faint");
                 GetComponent<ShelterWalker>().OnFainted();
             }
             else if (IsRestingAfterRescue && CurrentMental >= rules.WakeMental)
@@ -120,6 +133,11 @@ namespace UnityGameJam.Characters
                     IsFainted = false;
                     IsRestingAfterRescue = false;
                 }
+            }
+            else if (!wasTired && IsTired)
+            {
+                Speak("low_mental");
+                if (TryGetComponent<SurvivorEmotion>(out var emotion)) emotion.ShowGloom();
             }
             RefreshStatusLabel();
         }

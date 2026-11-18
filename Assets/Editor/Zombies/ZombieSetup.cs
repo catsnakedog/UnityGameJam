@@ -87,15 +87,17 @@ public static class ZombieSetup
             var walker = instance.GetComponent<ShelterWalker>(); walker.playerSelectable = false; walker.externallyDriven = true;
             walker.characterName = "좀비"; walker.walkSpeed = walker.climbSpeed = 0; // Runtime catalog provides speeds.
             if (walker.selectionMarker) walker.selectionMarker.enabled = false;
+            var speechAnchor = instance.GetComponent<ShelterSpeechAnchor>();
             foreach (var sprite in instance.GetComponentsInChildren<SpriteRenderer>())
             {
+                if (speechAnchor && sprite.name == "Hair") Set(speechAnchor, "head", sprite);
                 if (sprite.name == "Head" || sprite.name == "Neck" || sprite.name == "Nose") sprite.color = new Color(0.43f, 0.59f, 0.37f);
                 if (sprite.name.Contains("Coat") || sprite.name.Contains("arm")) sprite.color = new Color(0.38f, 0.27f, 0.23f);
                 if (sprite.name == "Backpack") sprite.gameObject.SetActive(false);
             }
             var agent = instance.AddComponent<ZombieAgent>();
             var label = walker.nameLabel; walker.nameLabel = null;
-            var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NotoSansCJKkr-Regular.otf");
+            var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NeoDunggeunmo.ttf");
             if (!font) throw new InvalidOperationException("Shared Korean font missing.");
             label.font = font; label.GetComponent<MeshRenderer>().sharedMaterial = font.material;
             label.fontSize = 48; label.characterSize = 0.055f; label.color = new Color(1, 0.5f, 0.4f);
@@ -113,7 +115,7 @@ public static class ZombieSetup
         try
         {
             var label = root.GetComponent<ShelterWalker>().nameLabel;
-            var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NotoSansCJKkr-Regular.otf");
+            var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NeoDunggeunmo.ttf");
             if (!label || !font) throw new InvalidOperationException("Survivor label/font missing.");
             label.font = font; label.GetComponent<MeshRenderer>().sharedMaterial = font.material;
             label.anchor = TextAnchor.LowerCenter; label.alignment = TextAlignment.Center;

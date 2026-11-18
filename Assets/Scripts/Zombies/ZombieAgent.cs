@@ -24,6 +24,7 @@ namespace UnityGameJam.Zombies
         int nextCombatTick, nextVolleyTick, earliestEntryTick, turn;
         double lastApproachTick;
         bool pendingReroll;
+        bool knockedAtDoor;
         int lastNavigationVersion = -1;
         public ZombieDefinition Definition { get; private set; }
         public ZombieState State { get; private set; }
@@ -51,6 +52,8 @@ namespace UnityGameJam.Zombies
             lastApproachTick = tick;
             earliestEntryTick = tick + owner.Simulation.Rules.InvasionApproachTicks;
             nextVolleyTick = tick + owner.Simulation.Rules.GuardVolleyEveryTicks;
+            knockedAtDoor = false;
+            ShelterSpeech.Say(transform, "좀비", "approach");
             RefreshLabel();
         }
         void WalkApproach(double time)
@@ -82,12 +85,19 @@ namespace UnityGameJam.Zombies
         }
         void TryEnterRoom(int tick)
         {
-            if (State != ZombieState.Approaching || tick < earliestEntryTick || !entryRoom || !entryRoom.IsWalkable ||
-                Vector2.Distance(transform.position, Doorway) > 0.001f || !owner.CanStartDefense(this)) return;
+            if (State != ZombieState.Approaching || !entryRoom || !entryRoom.IsWalkable ||
+                Vector2.Distance(transform.position, Doorway) > 0.001f) return;
+            if (!knockedAtDoor)
+            {
+                knockedAtDoor = true;
+                ShelterSpeech.Say(transform, "좀비", "knock");
+            }
+            if (tick < earliestEntryTick || !owner.CanStartDefense(this)) return;
             // Physical arrival ends the ranged window, including any still-contested shots.
             Unlock();
             State = ZombieState.Defending;
             entryRoom.SetOccupied(this, true);
+            ShelterSpeech.Say(transform, "좀비", "invade");
             owner.ReportBreach(this);
             foreach (var actor in owner.InRoom(entryRoom))
                 if (owner.CanAttack(actor, this, tick)) Enlist(actor, tick);
@@ -180,19 +190,25 @@ namespace UnityGameJam.Zombies
             // All attacks in this exchange land together. Only the zombie's chosen opponent can lose mental.
             int zombieDie = pendingRolls.Count > 0 ? ZombieCombat.RollDie(Rules, owner.RollDie) : 0;
             int ties = 0;
+            int hpBeforeExchange = Hp;
             rollMessages.Clear();
             for (int i = 0; i < pendingRolls.Count; i++)
             {
                 var actor = pendingRolls[i];
                 owner.RecordAttack(actor, this, tick);
-                if (ranged) actor.GetComponent<SurvivorAnimation>()?.PlayRangedAttack(transform.position.x);
+                if (ranged)
+                {
+                    if (!pendingReroll) ShelterSpeech.Say(actor.transform, actor.Definition.Role, "can_throw");
+                    actor.GetComponent<SurvivorAnimation>()?.PlayRangedAttack(transform.position.x);
+                }
                 participants.Add(actor);
                 LastRoll = new CombatRoll(ZombieCombat.RollDie(Rules, owner.RollDie), zombieDie, actor.Combat, Definition.Combat);
                 if (LastRoll.Outcome == CombatOutcome.Tie) pendingRolls[ties++] = actor;
-                string result = ApplyRoll(actor, LastRoll.Outcome);
+                string result = ApplyRoll(actor, LastRoll.Outcome, ranged);
                 rollMessages.Add($"{actor.Definition.DisplayName} {LastRoll.SurvivorTotal} 대 {LastRoll.ZombieTotal} · {result}");
             }
             pendingRolls.RemoveRange(ties, pendingRolls.Count - ties);
+            if (Hp < hpBeforeExchange) ShelterSpeech.Say(transform, "좀비", ranged ? "can_hit" : "melee_hit");
             if (Hp == 0) { Die(ranged || State == ZombieState.Defending); return; }
             if (rollMessages.Count > 0) owner.Report($"{Definition.DisplayName} HP {Hp}\n" + string.Join("\n", rollMessages));
             pendingReroll = ties > 0;
@@ -205,16 +221,22 @@ namespace UnityGameJam.Zombies
             }
             RefreshLabel();
         }
-        string ApplyRoll(CharacterIdentity actor, CombatOutcome outcome)
+        string ApplyRoll(CharacterIdentity actor, CombatOutcome outcome, bool ranged)
         {
             if (outcome == CombatOutcome.Tie) return "재굴림";
             ResolvedCombats++;
             if (outcome == CombatOutcome.SurvivorWins)
             {
+                int before = Hp;
                 Hp = Mathf.Max(0, Hp - Rules.DamageToZombie);
+                ShelterSpeech.Say(actor.transform, actor.Definition.Role, ranged ? "can_hit" : "melee_win");
+                if (before > 0 && Hp == 0) ShelterSpeech.Say(actor.transform, actor.Definition.Role, "kill");
                 return $"좀비 HP -{Rules.DamageToZombie}";
             }
+            ShelterSpeech.Say(actor.transform, actor.Definition.Role, ranged ? "can_miss" : "melee_loss");
             if (actor != attackTarget) return "공격 실패";
+            if (!ranged && Rules.MentalDamage > 0 && actor.TryGetComponent<SurvivorEmotion>(out var emotion))
+                emotion.ShowAnger();
             int change = actor.ApplyMentalChange(-Rules.MentalDamage);
             return $"멘탈 {change}";
         }
@@ -246,7 +268,7 @@ namespace UnityGameJam.Zombies
         {
             afterEncounter = resume; State = ZombieState.Encounter;
             walker.AcquireMovementLock(this);
-            owner.Report($"강제 전투 · {fighters.Count}명 ↔ {Definition.DisplayName}");
+            owner.Report($"강제 전투 · {fighters.Count}명 vs {Definition.DisplayName}");
             RefreshLabel();
         }
         public void AdvanceMovement(float seconds)
@@ -321,6 +343,7 @@ namespace UnityGameJam.Zombies
         {
             var rewarded = defense ? owner.InRoom(entryRoom).ToArray() : participants.Where(a => a).ToArray();
             State = ZombieState.Dead;
+            ShelterSpeech.Say(transform, "좀비", "death");
             foreach (var actor in rewarded) actor.SetMental((int)System.Math.Min(int.MaxValue, (long)actor.CurrentMental + Rules.MentalRecovery));
             owner.NotifyKilled(this, string.Join("\n", rollMessages));
             gameObject.SetActive(false); Destroy(gameObject);

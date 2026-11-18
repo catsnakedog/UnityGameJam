@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameDatabase
   m_EditorClassIdentifier: GameJam.Data::GameJam.Data.GameDatabase
   schemaVersion: 1
-  sourceHash: 9b20991491cbfca08212c535333f5515438bf61e55ad2bf481508a81cc41d48a
+  sourceHash: 6289c5a86c80315082650ae33b9076fb17751a2943fde0d4b7f60a799f7b0e5f
   tables:
   - name: Characters
     source: Characters.csv
@@ -658,6 +658,343 @@ MonoBehaviour:
         \uC5F4\uC5C8\uC2B5\uB2C8\uB2E4."
       - 0.5
       - TRUE
+  - name: ShelterDialogue
+    source: ShelterDialogue.csv
+    keyIndex: 0
+    columns:
+    - name: id
+      type: string
+      description: "\uB300\uC0AC ID"
+    - name: role
+      type: string
+      description: "\uC9C1\uAD70 \uB610\uB294 \uC880\uBE44"
+    - name: situation
+      type: string
+      description: "\uC0C1\uD669 \uD0A4"
+    - name: line
+      type: string
+      description: "\uB9D0\uD48D\uC120 \uBB38\uAD6C"
+    rows:
+    - cells:
+      - zombie_approach_1
+      - "\uC880\uBE44"
+      - approach
+      - "\uB370\uBAA8\u2026 \uB370\uBAA8\u2026"
+    - cells:
+      - zombie_approach_2
+      - "\uC880\uBE44"
+      - approach
+      - "\uC7AC\uBC0C\uB294 \uAC70\u2026?"
+    - cells:
+      - zombie_approach_3
+      - "\uC880\uBE44"
+      - approach
+      - "\uAC8C\uC784\u2026 \uB0C4\uC0C8\u2026"
+    - cells:
+      - zombie_approach_4
+      - "\uC880\uBE44"
+      - approach
+      - "\uCEF7\uC52C\u2026 \uC2A4\uD0B5\u2026"
+    - cells:
+      - zombie_knock_1
+      - "\uC880\uBE44"
+      - knock
+      - "\uBB38 \uC5F4\uC5B4\u2026 \uD50C\uB808\uC774\uD14C\uC2A4\uD2B8\u2026"
+    - cells:
+      - zombie_knock_2
+      - "\uC880\uBE44"
+      - knock
+      - "\uBCA0\uD0C0\u2026 \uD0A4\u2026"
+    - cells:
+      - zombie_knock_3
+      - "\uC880\uBE44"
+      - knock
+      - "\uB3C4\uD30C\uBBFC \uB0B4\uB194\u2026"
+    - cells:
+      - zombie_knock_4
+      - "\uC880\uBE44"
+      - knock
+      - "\uB85C\uB529\u2026 \uAE38\uB2E4\u2026"
+    - cells:
+      - zombie_can_hit_1
+      - "\uC880\uBE44"
+      - can_hit
+      - "\uC544\uC57C\u2026 \uD53C\uACA9 \uD310\uC815\u2026"
+    - cells:
+      - zombie_can_hit_2
+      - "\uC880\uBE44"
+      - can_hit
+      - "\uD788\uD2B8\uBC15\uC2A4\u2026 \uC774\uC0C1\uD574\u2026"
+    - cells:
+      - zombie_can_hit_3
+      - "\uC880\uBE44"
+      - can_hit
+      - "\uBC38\uB7F0\uC2A4\u2026 \uD328\uCE58\u2026"
+    - cells:
+      - zombie_invade_1
+      - "\uC880\uBE44"
+      - invade
+      - "\uB4DC\uB514\uC5B4\u2026 \uBE4C\uB4DC\uB2E4\u2026"
+    - cells:
+      - zombie_invade_2
+      - "\uC880\uBE44"
+      - invade
+      - "\uC5BC\uB9AC \uC561\uC138\uC2A4\u2026!"
+    - cells:
+      - zombie_invade_3
+      - "\uC880\uBE44"
+      - invade
+      - "\uBB34\uB8CC\u2026 \uCCB4\uD5D8\u2026"
+    - cells:
+      - zombie_melee_hit_1
+      - "\uC880\uBE44"
+      - melee_hit
+      - "\uD0C0\uACA9\uAC10\u2026 \uC88B\uC544\u2026"
+    - cells:
+      - zombie_melee_hit_2
+      - "\uC880\uBE44"
+      - melee_hit
+      - "\uC190\uB9DB\u2026!"
+    - cells:
+      - zombie_death_1
+      - "\uC880\uBE44"
+      - death
+      - "\uC5D4\uB529\u2026 \uC778\uAC00\u2026"
+    - cells:
+      - zombie_death_2
+      - "\uC880\uBE44"
+      - death
+      - "\uB9AC\uBDF0\u2026 \uB0A8\uAE38\uAC8C\u2026"
+    - cells:
+      - plan_work_1
+      - "\uAE30\uD68D"
+      - work
+      - "\uC774\uAC70 \uC7AC\uBC0C\uC744 \uAC83 \uAC19\uC9C0 \uC54A\uC544\uC694?"
+    - cells:
+      - plan_work_2
+      - "\uAE30\uD68D"
+      - work
+      - "\uAE30\uD68D \uC758\uB3C4\uB294\uC694\u2026"
+    - cells:
+      - dev_work_1
+      - "\uAC1C\uBC1C"
+      - work
+      - "\uBE4C\uB4DC \uB3CC\uB9AC\uB294 \uC911"
+    - cells:
+      - dev_work_2
+      - "\uAC1C\uBC1C"
+      - work
+      - "\uBC84\uADF8 \uC544\uB2C8\uACE0 \uAE30\uB2A5\uC774\uC5D0\uC694"
+    - cells:
+      - art_work_1
+      - "\uC544\uD2B8"
+      - work
+      - "\uB808\uC774\uC5B4 \uD558\uB098\uB9CC \uB354\u2026"
+    - cells:
+      - art_work_2
+      - "\uC544\uD2B8"
+      - work
+      - "\uC774 \uC120 \uB9C8\uC74C\uC5D0 \uC548 \uB4E4\uC5B4"
+    - cells:
+      - plan_wait_plan_1
+      - "\uAE30\uD68D"
+      - wait_plan
+      - "\uC7A0\uAE50\uB9CC, \uC774\uAC83\uB9CC \uC815\uB9AC\uD558\uACE0"
+    - cells:
+      - dev_wait_plan_1
+      - "\uAC1C\uBC1C"
+      - wait_plan
+      - "\uAE30\uD68D\uC11C \uC5B8\uC81C \uB098\uC640\uC694?"
+    - cells:
+      - dev_wait_plan_2
+      - "\uAC1C\uBC1C"
+      - wait_plan
+      - "\uBA85\uC138 \uC5C6\uC73C\uBA74 \uBABB \uC9DC\uC694"
+    - cells:
+      - art_wait_plan_1
+      - "\uC544\uD2B8"
+      - wait_plan
+      - "\uAE30\uD68D \uB098\uC624\uAE30 \uC804\uC5D0 \uCEE8\uC149 \uADF8\uB824 \uB458\uAC8C\uC694"
+    - cells:
+      - plan_guard_1
+      - "\uAE30\uD68D"
+      - guard
+      - "\uC880\uBE44 \uB3D9\uC120\u2026 \uAE30\uD68D\uD574 \uBD10\uC57C\uC9C0"
+    - cells:
+      - dev_guard_1
+      - "\uAC1C\uBC1C"
+      - guard
+      - "while(true) \uACBD\uACC4 \uC911"
+    - cells:
+      - art_guard_1
+      - "\uC544\uD2B8"
+      - guard
+      - "\uC880\uBE44 \uD06C\uB85C\uD0A4 \uD574\uB3C4 \uB3FC\uC694?"
+    - cells:
+      - plan_can_throw_1
+      - "\uAE30\uD68D"
+      - can_throw
+      - "\uAE30\uD68D\uB300\uB85C\uB77C\uBA74 \uB9DE\uC544\uC57C \uB3FC!"
+    - cells:
+      - dev_can_throw_1
+      - "\uAC1C\uBC1C"
+      - can_throw
+      - "\uB358\uC9C0\uAE30 \uD568\uC218 \uD638\uCD9C!"
+    - cells:
+      - art_can_throw_1
+      - "\uC544\uD2B8"
+      - can_throw
+      - "\uD3EC\uBB3C\uC120 \uC608\uC058\uAC8C!"
+    - cells:
+      - plan_can_hit_1
+      - "\uAE30\uD68D"
+      - can_hit
+      - "\uC758\uB3C4\uD55C \uB300\uB85C\uB2E4!"
+    - cells:
+      - dev_can_hit_1
+      - "\uAC1C\uBC1C"
+      - can_hit
+      - "\uD788\uD2B8 \uD310\uC815 \uC815\uC0C1"
+    - cells:
+      - art_can_hit_1
+      - "\uC544\uD2B8"
+      - can_hit
+      - "\uAD6C\uB3C4 \uC88B\uB2E4"
+    - cells:
+      - plan_can_miss_1
+      - "\uAE30\uD68D"
+      - can_miss
+      - "\uBC38\uB7F0\uC2A4 \uC798\uBABB \uC9F0\uB098\u2026"
+    - cells:
+      - dev_can_miss_1
+      - "\uAC1C\uBC1C"
+      - can_miss
+      - "\uCDA9\uB3CC \uD310\uC815 \uBC84\uADF8\uB2E4"
+    - cells:
+      - art_can_miss_1
+      - "\uC544\uD2B8"
+      - can_miss
+      - "\uC6D0\uADFC\uC774 \uD2C0\uB838\uC5B4\u2026"
+    - cells:
+      - plan_invasion_1
+      - "\uAE30\uD68D"
+      - invasion
+      - "\uAE30\uD68D\uC5D0 \uC5C6\uB358 \uC774\uBCA4\uD2B8\uB2E4!"
+    - cells:
+      - dev_invasion_1
+      - "\uAC1C\uBC1C"
+      - invasion
+      - "\uC608\uC678 \uCC98\uB9AC \uC548 \uD588\uB294\uB370!"
+    - cells:
+      - art_invasion_1
+      - "\uC544\uD2B8"
+      - invasion
+      - "\uC2E4\uB8E8\uC5E3 \uBB34\uC11C\uC6CC!"
+    - cells:
+      - plan_melee_win_1
+      - "\uAE30\uD68D"
+      - melee_win
+      - "\uD53C\uB4DC\uBC31 \uBC18\uC601!"
+    - cells:
+      - dev_melee_win_1
+      - "\uAC1C\uBC1C"
+      - melee_win
+      - "\uB514\uBC84\uADF8 \uC644\uB8CC!"
+    - cells:
+      - art_melee_win_1
+      - "\uC544\uD2B8"
+      - melee_win
+      - "\uBA85\uC554 \uB123\uC5B4 \uC904\uAC8C!"
+    - cells:
+      - plan_melee_loss_1
+      - "\uAE30\uD68D"
+      - melee_loss
+      - "\uC2A4\uCF54\uD504 \uC904\uC77C\uAC8C\uC694\u2026"
+    - cells:
+      - dev_melee_loss_1
+      - "\uAC1C\uBC1C"
+      - melee_loss
+      - "\uB864\uBC31\u2026"
+    - cells:
+      - art_melee_loss_1
+      - "\uC544\uD2B8"
+      - melee_loss
+      - "\uC190\uBAA9 \uB098\uAC14\uB2E4\u2026"
+    - cells:
+      - plan_kill_1
+      - "\uAE30\uD68D"
+      - kill
+      - "\uB808\uBCA8 \uB514\uC790\uC778 \uC131\uACF5"
+    - cells:
+      - dev_kill_1
+      - "\uAC1C\uBC1C"
+      - kill
+      - "\uBC84\uADF8 \uD558\uB098 \uC7A1\uC558\uB2E4"
+    - cells:
+      - art_kill_1
+      - "\uC544\uD2B8"
+      - kill
+      - "\uB808\uD37C\uB7F0\uC2A4 \uD655\uBCF4"
+    - cells:
+      - plan_low_mental_1
+      - "\uAE30\uD68D"
+      - low_mental
+      - "\uAE30\uD68D\uC11C \uAC08\uC544\uC5CE\uACE0 \uC2F6\uB2E4\u2026"
+    - cells:
+      - dev_low_mental_1
+      - "\uAC1C\uBC1C"
+      - low_mental
+      - "\uCF58\uC194\uC774 \uBE68\uAC1C\u2026"
+    - cells:
+      - art_low_mental_1
+      - "\uC544\uD2B8"
+      - low_mental
+      - "\uC120\uC774 \uB5A8\uB824\u2026"
+    - cells:
+      - plan_hungry_1
+      - "\uAE30\uD68D"
+      - hungry
+      - "\uC2DD\uB2E8\uB3C4 \uAE30\uD68D\uD574\uC57C \uD558\uB294\uB370\u2026"
+    - cells:
+      - dev_hungry_1
+      - "\uAC1C\uBC1C"
+      - hungry
+      - "\uBA54\uBAA8\uB9AC \uBD80\uC871\u2026"
+    - cells:
+      - art_hungry_1
+      - "\uC544\uD2B8"
+      - hungry
+      - "\uC0C9\uC774 \uB2E4 \uD68C\uC0C9\uC73C\uB85C \uBCF4\uC5EC\u2026"
+    - cells:
+      - plan_sleep_1
+      - "\uAE30\uD68D"
+      - sleep
+      - "\uAFC8\uC5D0\uC11C \uD68C\uC758\uD560\uAC8C\uC694"
+    - cells:
+      - dev_sleep_1
+      - "\uAC1C\uBC1C"
+      - sleep
+      - "\uC790\uB294 \uB3D9\uC548 \uBE4C\uB4DC \uB3CC\uB824 \uB458\uAC8C"
+    - cells:
+      - art_sleep_1
+      - "\uC544\uD2B8"
+      - sleep
+      - "\uAFC8\uC5D0\uC11C \uCC44\uC0C9\uD560\uAC8C\uC694"
+    - cells:
+      - plan_faint_1
+      - "\uAE30\uD68D"
+      - faint
+      - "\uAE30\uD68D\u2026 \uC218\uC815\u2026"
+    - cells:
+      - dev_faint_1
+      - "\uAC1C\uBC1C"
+      - faint
+      - "NullReference\u2026"
+    - cells:
+      - art_faint_1
+      - "\uC544\uD2B8"
+      - faint
+      - "Ctrl+Z\u2026"
   - name: ShelterItems
     source: ShelterItems.csv
     keyIndex: 0

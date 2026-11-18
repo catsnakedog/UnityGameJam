@@ -203,9 +203,7 @@ namespace UnityGameJam.Shelter
         {
             if (IsFollowing || InputBlocked() || direction.sqrMagnitude == 0f || deltaTime <= 0f) return;
             previousSlot = 0;
-            Vector2 previousCentre = transform.position;
-            MoveCentre(previousCentre + Vector2.ClampMagnitude(direction, 1f) * panSpeed * deltaTime);
-            if (commander && (Vector2)transform.position != previousCentre) commander.DeselectSurvivor();
+            MoveCentre((Vector2)transform.position + Vector2.ClampMagnitude(direction, 1f) * panSpeed * deltaTime);
         }
 
         public Vector2 EdgeDirection(Vector2 pointer, Rect viewport)
@@ -222,8 +220,9 @@ namespace UnityGameJam.Shelter
             foreach (var area in FindObjectsByType<ShelterArea>(FindObjectsSortMode.None))
             {
                 if (area.gameObject.scene != gameObject.scene || !area.isActiveAndEnabled) continue;
-                float top = area.transform.TransformPoint(new Vector3(0f, area.height)).y;
-                var bounds = Rect.MinMaxRect(area.Left, area.FloorY, area.Right, top);
+                float bottom = area.LocalBottom;
+                var bounds = Rect.MinMaxRect(area.Left, area.transform.TransformPoint(new Vector3(0f, bottom)).y,
+                    area.Right, area.transform.TransformPoint(new Vector3(0f, bottom + area.height)).y);
                 mapBounds = hasMapBounds ? Rect.MinMaxRect(Mathf.Min(mapBounds.xMin, bounds.xMin), Mathf.Min(mapBounds.yMin, bounds.yMin),
                     Mathf.Max(mapBounds.xMax, bounds.xMax), Mathf.Max(mapBounds.yMax, bounds.yMax)) : bounds;
                 hasMapBounds = true;

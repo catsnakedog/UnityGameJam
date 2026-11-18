@@ -18,6 +18,7 @@ namespace UnityGameJam.Shelter
         [SerializeField] float rise = 0.28f;
         Vector3 startPosition;
         float elapsed;
+        float lastDisplayed = float.NaN;
 
         void Awake()
         {
@@ -31,13 +32,31 @@ namespace UnityGameJam.Shelter
                 field == GameDevField.Graphics ? graphicsIcon : programmingIcon;
             // Trim floating-point noise from subtracting two near-equal progress values.
             float displayed = Mathf.Round(amount * 1000f) / 1000f;
-            if (displayed > 0f) amountLabel.SetText("+{0}%", displayed);
-            else amountLabel.SetText("<0.001%");
+            bubble.gameObject.SetActive(true);
+            if (displayed != lastDisplayed)
+            {
+                if (displayed > 0f) amountLabel.SetText("+{0}%", displayed);
+                else amountLabel.SetText("<0.001%");
+                CenterContents();
+                lastDisplayed = displayed;
+            }
             bubble.transform.localPosition = startPosition;
             bubble.alpha = 1f;
             elapsed = 0f;
-            bubble.gameObject.SetActive(true);
             enabled = true;
+        }
+
+        void CenterContents()
+        {
+            const float gap = 4f;
+            amountLabel.ForceMeshUpdate();
+            var bounds = amountLabel.textBounds;
+            var picture = icon.rectTransform;
+            float iconWidth = picture.rect.width;
+            float left = -(iconWidth + gap + bounds.size.x) * 0.5f;
+            picture.anchoredPosition = new Vector2(left - picture.rect.xMin, picture.anchoredPosition.y);
+            var label = amountLabel.rectTransform;
+            label.anchoredPosition = new Vector2(left + iconWidth + gap - bounds.min.x, label.anchoredPosition.y);
         }
 
         void Update()
