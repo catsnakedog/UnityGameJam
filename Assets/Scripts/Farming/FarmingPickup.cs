@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityGameJam.Shelter;
 namespace ShelterRun
 {
     public sealed class FarmingPickup : MonoBehaviour
@@ -12,7 +14,8 @@ namespace ShelterRun
         [SerializeField] TMP_Text weightLabel;
         [SerializeField] SpriteRenderer sprite;
         [SerializeField] Sprite standingSprite;
-        [SerializeField] Sprite lyingSprite;
+        SurvivorAnimation.Artwork artwork;
+        readonly SurvivorAnimation.Playback playback = new SurvivorAnimation.Playback();
         float displayHeight;
         FarmingDepth2D depth;
         SortingGroup group;
@@ -24,8 +27,12 @@ namespace ShelterRun
         public FarmingRecord Record { get; private set; }
         public PickupState State { get; private set; } = PickupState.Available;
         public Vector3 AimPosition => transform.position + Vector3.up * displayHeight;
-        public void Initialize(FarmingRecord record, Transform tabletop = null)
+        public void Initialize(FarmingRecord record, Transform tabletop, SurvivorAnimation.Artwork characterArt)
         {
+            if (record.Type == FarmingObjectType.Person && characterArt?.standing == null)
+                throw new InvalidOperationException("Missing farming person art for " + record.Id);
+            artwork = characterArt;
+            if (artwork != null) sprite.sprite = artwork.standing;
             Record = record; depth = GetComponent<FarmingDepth2D>(); group = GetComponent<SortingGroup>();
             labelHeight = weightLabel.transform.localPosition.y;
             if (tabletop)
@@ -50,11 +57,13 @@ namespace ShelterRun
         public void PlaceInHands(int index)
         {
             bool person = Record.Type == FarmingObjectType.Person;
-            sprite.sprite = person ? lyingSprite : standingSprite;
+            sprite.sprite = person ? artwork.standing : standingSprite;
             transform.localRotation = Quaternion.identity;
             transform.localPosition = person ? new Vector3(0, .58f + index * .22f, 0)
                 : new Vector3(index % 2 == 0 ? -.19f : .19f, .55f + index / 2 * .24f, 0);
-            visual.localPosition = Vector3.zero;
+            // Imported survivor frames pivot at the feet. Centre the horizontal body over the hands.
+            visual.localRotation = person ? Quaternion.Euler(0, 0, 90) : Quaternion.identity;
+            visual.localPosition = person ? -(visual.localRotation * sprite.sprite.bounds.center) : Vector3.zero;
         }
         public void Throw(Vector3 destination, bool deposit, FarmingRules rules)
         {
@@ -78,7 +87,9 @@ namespace ShelterRun
             transform.SetPositionAndRotation(destination, Quaternion.identity);
             if (!deposit)
             {
-                sprite.sprite = standingSprite;
+                visual.localRotation = Quaternion.identity;
+                visual.localPosition = Vector3.zero;
+                sprite.sprite = artwork != null ? artwork.standing : standingSprite;
                 State = PickupState.Available; weightLabel.gameObject.SetActive(true); yield break;
             }
             for (float elapsed = 0; elapsed < rules.FadeDuration; elapsed += Time.deltaTime)
@@ -94,6 +105,8 @@ namespace ShelterRun
             var labelColor = weightLabel.color; labelColor.a = visibility; weightLabel.color = labelColor;
             if (State == PickupState.Available)
             {
+                if (artwork != null && visibility > 0f)
+                    playback.Sample(artwork, SurvivorAnimation.Pose.Idle, SurvivorAnimation.Pose.Idle, sprite, Time.deltaTime);
                 visual.localPosition = Vector3.up * displayHeight;
                 focusMarker.transform.localPosition = Vector3.up * displayHeight;
                 weightLabel.transform.localPosition = Vector3.up * (labelHeight + displayHeight);

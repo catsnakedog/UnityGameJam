@@ -87,7 +87,7 @@ namespace ShelterRun
             if (session.Phase == FarmingPhase.Ready)
             {
                 overlayTitle.text = $"{session.Rules.Duration:0.##}초, 챙기고 구하라";
-                overlayBody.text = $"복도에서 시작해 325호의 사람 {session.PeopleTotal}명과 물자를 구하세요.\n문 앞에서 E로 입실 · 출구 문에서 E로 복도 복귀\n\nA / D   좌우 이동       E   문 / 들기 / 내려놓기\n한 번에 {session.Rules.Capacity}칸 · 사람 2~4칸 · 물자 1~2칸\n들고 나온 대상은 복도 왼쪽 벙커에서 E로 투입하세요.";
+                overlayBody.text = $"복도에서 한 명을 들고 시작합니다. 각 호실의 생존자와 물자를 벙커로 옮기세요.\n문 앞에서 E로 입실 · 출구 문에서 E로 복도 복귀\n\nA / D   좌우 이동       E   문 / 들기 / 내려놓기\n한 번에 {session.Rules.Capacity}칸 · 사람 2~4칸 · 물자 1~2칸\n들고 나온 대상은 복도 왼쪽 벙커에서 E로 투입하세요.";
                 actionText.text = "E   파밍 시작";
             }
             else if (session.Phase == FarmingPhase.Finished)

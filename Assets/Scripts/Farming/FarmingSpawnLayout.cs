@@ -68,6 +68,9 @@ namespace ShelterRun
 
             var slots = rooms.Select((room, index) => new RoomSlots(room, rules.RoomSpawns[index])).ToArray();
             var people = database.Records.Where(r => r.Type == FarmingObjectType.Person).ToList();
+            var starter = database.Get(rules.StartingPersonId);
+            if (!people.Remove(starter) || starter.Weight > rules.Capacity)
+                throw new InvalidOperationException($"Starting person {starter.Id} must be a Person within carry capacity.");
             var can = database.Get(FarmingDataKeys.SpaghettiCan);
             var items = database.Records.Where(r => r.Type == FarmingObjectType.Item && r != can).ToList();
             if (people.Count != slots.Sum(s => s.Rule.People) || can.Type != FarmingObjectType.Item ||

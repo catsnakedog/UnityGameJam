@@ -10,6 +10,8 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 게임 실행 소스는 기존 `editor.data-tool`에서 선택한다. 연결 목록은 SpreadConfig를 재사용하며 켜면 실행 때마다 활성 시트를 읽고, 끄면 내부 CSV 기반 데이터를 사용한다. [설정 명세](DataSpecs/DataToolSettings.md) · [두 모드 Windows 실행 검증](DataHistory/20261119-live-sheets-02-verified.md)
 
+파밍 첫 운반 인물은 기존 `data.farming.rules`의 startingPersonId로 `data.farming.pickups`의 Person 행을 참조한다. 방별 인원은 첫 운반 인물을 제외한 나머지를 배정한다. [필드 명세](DataSpecs/FarmingRules.md) · [변경 이력](DataHistory/20261119-farming-start-plan.md)
+
 파밍 무작위 배치는 기존 `data.farming.rules`의 거리순 방별 인원과 레전드 가중치를 사용한다. 생성 대상은 `data.farming.pickups`, 물자 등급은 `data.shelter.items.rank`에서 조회한다. [배치 규칙](DataSpecs/FarmingRules.md) · [3,000회 배치와 Play 검증](DataHistory/20261119-farming-spawns-02-verified.md)
 
 확정 아이템은 기존 `data.shelter.items`의 12종과 `data.farming.pickups`의 물자 12종으로 연결한다. 멘탈 회복 물자 4종은 ShelterItems의 useKind와 mentalRestore로 가방 사용 효과를 결정한다. 통조림의 회분과 허기 회복량은 `data.bunker.rules`에서 읽는다. [아이템 효과](DataSpecs/ShelterItems.md) · [기존 12종 연결](DataHistory/20261118-item-roster-02-verified.md)
@@ -61,7 +63,7 @@ SpreadConfig 연결 작업 `Codex spread-config-20261118` 완료: 기존 `editor
 | `data.bunker.rules` | active / Codex 벙커 시뮬레이션 | 벙커 전체 틱, 초/틱, 이벤트·작업·습격 주기, 좀비 접근 시간, 보초 원거리 사격 주기, 침입 시 전원 멘탈 손실, 보초 배치 시간당 멘탈 소모, 개발 효율·작업 멘탈, 멘탈 상한·기절·회복, 허기·통조림 | `Assets/Settings/Shelter/BunkerRules.asset` | [BunkerRules](DataSpecs/BunkerRules.md) |
 | `data.example-items` | deprecated (삭제 완료) / Codex example-cleanup-20261118 | 폐기한 도구 시연 데이터, ExampleItems | 없음. 시트/CSV/생성 DB/연결 설정에서 제거 | [폐기 명세](DataSpecs/ExampleItems.md) |
 | `data.farming.pickups` | active / 파밍 | 사람·물자 종류, 파밍 운반 무게/슬롯 비용, pickup weight, carry cost | [FarmingData](https://docs.google.com/spreadsheets/d/1-Lh4oAsNLFpcfi4KGDePAxdBvVdU3pueHlGUxzibsM8/edit?gid=1800384264#gid=1800384264) → `Assets/Settings/Farming/FarmingData.csv` | [FarmingData](DataSpecs/FarmingData.md) |
-| `data.farming.rules` | active / 파밍 | 제한시간, 운반 용량, 이동속도, 상호작용 거리, 던지기, 경고, 기본 호실 크기, 방 노출 시간, 거리순 호실별 인원과 레전드 스폰 가중치 | `Assets/Settings/Farming/FarmingRules.asset` | [FarmingRules](DataSpecs/FarmingRules.md) |
+| `data.farming.rules` | active / 파밍 | 제한시간, 운반 용량, 이동속도, 상호작용 거리, 던지기, 경고, 기본 호실 크기, 방 노출 시간, 시작 운반 인물, 거리순 호실별 인원과 레전드 스폰 가중치 | `Assets/Settings/Farming/FarmingRules.asset` | [FarmingRules](DataSpecs/FarmingRules.md) |
 | `audio.cue.ui-click` | placeholder / 오디오 | 공용 UI 클릭음, UI_Click, button click | `Assets/Settings/Audio/UI_Click.asset` | [SoundCue](DataSpecs/SoundCue.md) |
 | `audio.cue.sfx-default` | placeholder / 오디오 | 기본 효과음 설정 예제, SFX_Default | `Assets/Settings/Audio/SFX_Default.asset` | [SoundCue](DataSpecs/SoundCue.md) |
 | `audio.cue.ambience-loop` | placeholder / 오디오 | 반복 환경음 설정 예제, Ambience_Loop | `Assets/Settings/Audio/Ambience_Loop.asset` | [SoundCue](DataSpecs/SoundCue.md) |

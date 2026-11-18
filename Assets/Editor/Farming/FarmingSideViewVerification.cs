@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityGameJam.Shelter;
 namespace ShelterRun.Editor
 {
     public static class FarmingSideViewVerification
@@ -78,6 +79,36 @@ namespace ShelterRun.Editor
             }
             finally{Place(p,original);}
         }
+        static SpriteRenderer ImageOf(Component actor) =>
+            (SpriteRenderer)new SerializedObject(actor).FindProperty("sprite").objectReferenceValue;
+
+        static void CheckPlayerAnimation(FarmingPlayer player)
+        {
+            var config = new SerializedObject(player);
+            var source = (SurvivorAnimation)config.FindProperty("artworkSource").objectReferenceValue;
+            var art = source.FindArtwork(config.FindProperty("appearanceId").stringValue);
+            var image = ImageOf(player);
+            var position = player.transform.position;
+            foreach (var pose in new[] { SurvivorAnimation.Pose.Idle, SurvivorAnimation.Pose.Walk })
+            {
+                var clip = art.Get(pose).clip;
+                var curve = AnimationUtility.GetObjectReferenceCurveBindings(clip).Single(b => b.propertyName == "m_Sprite");
+                var frames = AnimationUtility.GetObjectReferenceCurve(clip, curve).Select(k => k.value).ToArray();
+                var seen = new HashSet<Sprite>();
+                var direction = pose == SurvivorAnimation.Pose.Idle ? Vector2.zero : Vector2.left;
+                for (int i = 0; i < 8; i++)
+                {
+                    player.Move(direction, .06f);
+                    seen.Add(image.sprite);
+                }
+                Check(seen.Count > 1 && seen.All(frame => frames.Contains(frame)), "Player displays authored " + pose + " frames");
+            }
+            Check(image.flipX, "Player faces left while walking left");
+            player.Move(Vector2.right, .05f);
+            Check(!image.flipX, "Player faces right while walking right");
+            Place(player, position);
+        }
+
         static IEnumerator Run(FarmingSession s)
         {
             var map=FarmingMap2D.Instance;var p=s.Player;
@@ -94,6 +125,10 @@ namespace ShelterRun.Editor
             Check(s.Pickups.Count == db.Records.Count + map.Rooms.Length - 1 && db.Records.All(row =>
                 s.Pickups.Count(x => x.RecordId == row.Id) == (row.Id == FarmingDataKeys.SpaghettiCan ? map.Rooms.Length : 1)),
                 "Every roster ID spawns once, with one can per room");
+            var starter = p.Inventory.Carried.Single();
+            Check(starter.RecordId == s.Rules.StartingPersonId && starter.State == PickupState.Carried &&
+                starter.transform.IsChildOf(p.transform) && p.Inventory.Used == starter.Record.Weight &&
+                s.PeopleSaved == 0 && s.DepositedIds.Count == 0, "Starting person is carried at normal cost and has not yet been rescued");
             var entrances = map.Doors.Where(d => d.Area == map.Corridor).OrderBy(d => Mathf.Abs(d.transform.position.x - s.Bunker.LandingPosition.x)).ToArray();
             for (int i = 0; i < entrances.Length; i++)
             {
@@ -110,9 +145,15 @@ namespace ShelterRun.Editor
             float duration = AssetDatabase.LoadAssetAtPath<FarmingRules>(FarmingCsvImporter.RulesPath).Duration;
             Check(s.Rules.Duration == duration && s.Remaining == duration,
                 $"Ready timer matches the saved FarmingRules duration ({duration}s)");
-            Check(s.Pickups.All(x=>x.GetComponentInChildren<SpriteRenderer>().color.a==0),"Room contents hidden from corridor");
+            Check(s.Pickups.Where(x => x != starter).All(x => ImageOf(x).color.a == 0) && ImageOf(starter).color.a == 1, "Room contents hidden and carried person visible in corridor");
             float started = Time.time;
             s.Begin();yield return null;yield return null;
+            CheckPlayerAnimation(p);
+            Place(p, new Vector3(13, map.Corridor.GroundY, 0));
+            p.Interact();
+            Check(starter.State == PickupState.InFlight && p.Inventory.Used == 0, "Starting person can be thrown");
+            yield return new WaitForSeconds(s.Rules.ThrowDuration + .05f);
+            Check(starter.State == PickupState.Available && ImageOf(starter).transform.localRotation == Quaternion.identity, "Starting person stands on landing");
             foreach(var key in new[]{Key.D,Key.A})
             {
                 Place(p,new Vector3(5,map.Corridor.GroundY,0));var before=p.transform.position;yield return KeyPress(key);
@@ -124,17 +165,30 @@ namespace ShelterRun.Editor
                 Place(p,entrance.transform.position);yield return new WaitForSeconds(.15f);Check(map.ActiveArea==map.Corridor,"Walking to door does not auto-enter "+entrance.DestinationLabel);
                 float remaining=s.Remaining;yield return KeyPress(Key.E);Check(map.ActiveArea==entrance.Target.Area,"E enters "+entrance.DestinationLabel);Check(s.Remaining<remaining,"Timer continues through door");
                 yield return new WaitForSeconds(s.Rules.RoomRevealDuration+.05f);Check(map.ActiveArea.Reveal==1&&map.Corridor.Reveal==0&&map.Rooms.Where(r=>r!=map.ActiveArea).All(r=>r.Reveal==0),"Only current room is visible");
+                var artSource = (SurvivorAnimation)new SerializedObject(p).FindProperty("artworkSource").objectReferenceValue;
+                foreach (var person in s.Pickups.Where(x => x.Record.Type == FarmingObjectType.Person && map.RoomAt(x.transform.position) == map.ActiveRoom))
+                {
+                    var art = artSource.FindArtwork(person.RecordId);
+                    var motion = art.Get(SurvivorAnimation.Pose.Idle);
+                    if (motion?.clip)
+                    {
+                        var binding = AnimationUtility.GetObjectReferenceCurveBindings(motion.clip).Single(b => b.propertyName == "m_Sprite");
+                        var keyframes = AnimationUtility.GetObjectReferenceCurve(motion.clip, binding);
+                        Check(keyframes.Any(key => key.value == ImageOf(person).sprite), person.RecordId + " displays its shelter idle clip");
+                    }
+                    else Check(ImageOf(person).sprite == art.standing, person.RecordId + " uses its authored standing sprite");
+                }
                 CheckMovement();Door(p,entrance.Target);Check(map.ActiveArea==map.Corridor,"Room exit returns to corridor");
             }
             var first=map.Doors.First(d=>d.Area==map.Corridor);Door(p,first);
-            var people=s.Pickups.Where(x=>x.Record.Type==FarmingObjectType.Person).ToArray();var light=people.Where(x=>x.Record.Weight==2).ToArray();var medium=people.First(x=>x.Record.Weight==3);var heavy=people.First(x=>x.Record.Weight==4);
+            var people=s.Pickups.Where(x=>x.Record.Type==FarmingObjectType.Person).ToArray();var light=new[] { starter, people.Single(x=>x!=starter && x.Record.Weight==2) };var medium=people.First(x=>x.Record.Weight==3);var heavy=people.First(x=>x.Record.Weight==4);
             Pick(p,light[0]);Check(p.Inventory.Used==2&&light[0].State==PickupState.Carried,"Two-slot person carried");
-            Check(light[0].GetComponentInChildren<SpriteRenderer>().sprite.rect.width>light[0].GetComponentInChildren<SpriteRenderer>().sprite.rect.height,"Person carried horizontally");
-            Place(p,new Vector3(10,map.ActiveArea.GroundY,0));var carryStart=p.transform.position;yield return KeyPress(Key.D);Check(p.transform.position.x>carryStart.x+.2f&&p.Inventory.Used==2,"Actual keyboard movement while carrying");
+            Check(ImageOf(starter).bounds.size.x > ImageOf(starter).bounds.size.y, "Person carried horizontally");
+            TravelTo(p,first.Target.Area);Place(p,new Vector3(10,map.ActiveArea.GroundY,0));var carryStart=p.transform.position;yield return KeyPress(Key.D);Check(p.transform.position.x>carryStart.x+.2f&&p.Inventory.Used==2,"Actual keyboard movement while carrying");
             float baseline=p.transform.position.y;for(int i=0;i<200;i++)p.Move(Vector2.right,.02f);Check(p.transform.position.x>map.ActiveArea.Right-1&&p.transform.position.y==baseline,"Walks in front of all tables without getting trapped");
             TravelTo(p,map.Corridor);yield return new WaitForSeconds(.1f);Check(p.Inventory.Used==2&&light[0].transform.IsChildOf(p.transform)&&light[0].GetComponentInChildren<SpriteRenderer>().color.a==1,"Door preserves held person and visibility");
             Pick(p,medium);Check(p.Inventory.Used==2&&medium.State==PickupState.Available,"Capacity overflow still rejected");Pick(p,light[1]);Check(p.Inventory.Used==4,"Two people fill four slots");TravelTo(p,map.Corridor);
-            Place(p,s.Bunker.LandingPosition);p.Interact();Check(p.Inventory.Used==0&&s.PeopleSaved==2,"Bunker takes all carried people");
+            Place(p,s.Bunker.LandingPosition);p.Interact();Check(p.Inventory.Used==0 && s.PeopleSaved==2 && s.DepositedIds.Count(id=>id==starter.RecordId)==1,"Bunker takes both carried people and records starter once");
             yield return new WaitForSeconds(s.Rules.ThrowDuration+s.Rules.FadeDuration*.5f);float alpha=light[0].GetComponentInChildren<SpriteRenderer>().color.a;Check(alpha>0&&alpha<1,"Deposit fades out");yield return new WaitForSeconds(s.Rules.FadeDuration);Check(light.All(x=>x.State==PickupState.Deposited&&!x.gameObject.activeSelf),"Deposited people disappear");
             Pick(p,heavy);Check(p.Inventory.Used==4,"Four-slot person can be carried");TravelTo(p,map.Corridor);Place(p,new Vector3(13,0,0));p.Move(Vector2.right,.01f);p.Interact();
             Check(heavy.State==PickupState.InFlight&&p.Inventory.Used==0,"Empty corridor interaction throws held target");
@@ -154,6 +208,10 @@ namespace ShelterRun.Editor
                 $"Configured {duration}s flow finishes at zero after {elapsed:F2}s");
             var end=p.transform.position;p.Move(Vector2.right,1);p.Interact();s.Tick(1);Check(p.transform.position==end&&completed==1&&p.Inventory.Used==3,"Deadline freezes movement/interactions and excludes unbanked carry");
             Check(!map.Traverse(first.Target),"Doors disabled after deadline");
+            FarmingRunTransfer.Capture(s.DepositedIds, db);
+            Check(FarmingRunTransfer.People.Contains(starter.RecordId) && !FarmingRunTransfer.People.Contains(medium.RecordId) &&
+                FarmingRunTransfer.People.Count == s.PeopleSaved && FarmingRunTransfer.Items.Count == s.ItemsSaved,
+                "Transfer includes deposited starter and excludes unbanked person");
             Check(rulesBefore==EditorJsonUtility.ToJson(AssetDatabase.LoadAssetAtPath<FarmingRules>(FarmingCsvImporter.RulesPath))&&dbBefore==EditorJsonUtility.ToJson(AssetDatabase.LoadAssetAtPath<FarmingDatabase>(FarmingCsvImporter.DatabasePath)),"Authoritative farming data unchanged");
         }
     }

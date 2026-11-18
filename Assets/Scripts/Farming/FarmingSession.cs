@@ -45,8 +45,8 @@ namespace ShelterRun
                 await GameJam.Data.GameData.InitializeAsync();
                 if (this == null) return;
                 new UnityGameJam.Characters.CharacterCatalog(GameJam.Data.GameData.GetTable(UnityGameJam.Characters.CharacterKeys.Table)).ValidateFarming(loader.Database);
-                SpawnPickups();
                 player.Initialize(this);
+                SpawnPickups();
                 Remaining = Rules.Duration;
                 Phase = FarmingPhase.Ready;
                 hud.Prepare(Rules);
@@ -65,18 +65,28 @@ namespace ShelterRun
         {
             var prefabs = pickupPrefabs.ToDictionary(prefab => prefab.RecordId, StringComparer.Ordinal);
             var placements = FarmingSpawnLayout.Create(FarmingMap2D.Instance, bunker, Rules, loader.Database);
-            foreach (var placement in placements)
-                if (!prefabs.ContainsKey(placement.Record.Id))
-                    throw new InvalidOperationException($"Missing farming pickup prefab for {placement.Record.Id}.");
+            var starter = loader.Database.Get(Rules.StartingPersonId);
+            foreach (var record in placements.Select(p => p.Record).Append(starter))
+                if (!prefabs.ContainsKey(record.Id))
+                    throw new InvalidOperationException($"Missing farming pickup prefab for {record.Id}.");
+
+            FarmingPickup Spawn(FarmingRecord record, Vector3 position, Transform parent, Transform slot = null)
+            {
+                var item = Instantiate(prefabs[record.Id], position, Quaternion.identity, parent);
+                item.Initialize(record, slot, record.Type == FarmingObjectType.Person ? player.ArtworkFor(record.Id) : null);
+                pickups.Add(item);
+                if (record.Type == FarmingObjectType.Person) PeopleTotal++;
+                return item;
+            }
+
+            if (!player.Take(Spawn(starter, player.transform.position, null)))
+                throw new InvalidOperationException("Failed to carry starting person " + starter.Id);
 
             foreach (var placement in placements)
             {
                 var slot = placement.Tabletop;
                 var parent = slot ? slot.parent : placement.Room.transform;
-                var item = Instantiate(prefabs[placement.Record.Id], placement.Ground, Quaternion.identity, parent);
-                item.Initialize(placement.Record, slot);
-                pickups.Add(item);
-                if (placement.Record.Type == FarmingObjectType.Person) PeopleTotal++;
+                Spawn(placement.Record, placement.Ground, parent, slot);
             }
         }
 

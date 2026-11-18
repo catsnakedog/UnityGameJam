@@ -27,10 +27,12 @@ namespace ShelterRun
         [SerializeField] float warningSeconds;
         [SerializeField] Vector2 mapHalfExtents;
         [SerializeField] float roomRevealDuration;
+        [SerializeField] string startingPersonId;
         [Tooltip("Nearest corridor door to the bunker first.")]
         [SerializeField] RoomSpawnRule[] roomSpawns;
         public float Duration => duration;
         public int Capacity => capacity;
+        public string StartingPersonId => startingPersonId;
         public float MoveSpeed => moveSpeed;
         public float InteractionRadius => interactionRadius;
         public float DropDistance => dropDistance;
@@ -49,6 +51,8 @@ namespace ShelterRun
                     throw new InvalidOperationException("FarmingRules requires positive finite values.");
             if (capacity < 1 || warningSeconds > duration)
                 throw new InvalidOperationException("Invalid FarmingRules capacity/warningSeconds.");
+            if (string.IsNullOrWhiteSpace(startingPersonId))
+                throw new InvalidOperationException("Missing FarmingRules starting person ID.");
             if (roomSpawns == null || roomSpawns.Length == 0)
                 throw new InvalidOperationException("Missing FarmingRules room spawn settings.");
             int previousWeight = 0;

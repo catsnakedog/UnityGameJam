@@ -1,6 +1,6 @@
 # FarmingRules 명세
 
-- 데이터 ID: `data.farming.rules`; 상태: active; 담당: 파밍; 문서 스키마 v3; 확인일: 2026-11-18.
+- 데이터 ID: `data.farming.rules`; 상태: active; 담당: 파밍; 문서 스키마 v4; 확인일: 2026-11-19.
 - 소유 의미: 한 파밍 세션의 제한시간·운반 용량·이동/상호작용/연출 규칙. 개체별 운반 비용은 [FarmingData](FarmingData.md)가 소유한다.
 - 정본: [FarmingRules.asset](../../Assets/Settings/Farming/FarmingRules.asset), 타입 `ShelterRun.FarmingRules`. CSV 원본 없음.
 - GUID: `22168f09c24cbfb49aeb55b136dd0298`; 주소 `data/farming/rules`; 그룹 `Farming Local`; 라벨 `farming`.
@@ -24,18 +24,19 @@
 | warningSeconds | float | 남은 시간 경고 임계값 / 초 | 10 | duration 이하; FarmingHud 색 변경 |
 | mapHalfExtents | Vector2 | 기본 호실 설계 반크기 / Unity 거리 단위 | (11, 8) | x는 FarmingSideViewBuilder의 방 너비 설계에 사용. y는 이전 2축 설계 호환용 보존값이며 사이드뷰에서 미사용. 실제 경계는 씬의 Walk left/right |
 | roomRevealDuration | float | 입실 시 해당 공간 노출 페이드 시간 / 초 | 0.5 | 필수, 유한한 양수; FarmingMap2D → FarmingRoom2D |
-| roomSpawns[].people | int | 해당 방에 배정할 고유 인원 / 명 | 가까운 순 3, 2, 1 | 필수, 기본값 없음, 0 이상. 합이 파밍 Person 행 수와 일치하고 방별 책상 사이 자리 수 이내 |
+| startingPersonId | string | 첫 운반 인물의 FarmingData.id | person_01 | 필수, 기본값 없음. Person 행 한 개를 참조하며 운반 비용이 capacity 이하여야 한다. 회차 시작 시 가방과 운반 표시를 초기화한다. |
+| roomSpawns[].people | int | 해당 방에 배정할 고유 인원 / 명 | 가까운 순 2, 2, 1 | 필수, 기본값 없음, 0 이상. 합이 시작 운반 인물을 제외한 파밍 Person 행 수와 일치하고 방별 책상 사이 자리 수 이내 |
 | roomSpawns[].legendWeight | int | 레전드 물자 하나를 배치할 때 해당 방의 추첨 가중치 / 상대값 | 가까운 순 1, 2, 3 | 필수, 기본값 없음. 양수이고 거리가 멀어질수록 증가. 합은 int 범위 |
 
 배열은 복도에서 벙커 투입 지점과 방문 사이의 수평 거리순이다. 방마다 한 행이 필요하다. 파밍 회차 시작 시 `FarmingSpawnLayout`이 통조림 한 개씩의 자리를 먼저 확보하고, 레전드를 하나씩 별도 추첨한다. 빈 책상 자리가 있는 방만 가중치 합에 포함한다. 방 안의 빈 책상 자리는 균등 추첨한다. 나머지 물자는 전체 빈 책상 자리에서 균등 추첨하고, 사람은 책상 사이의 빈 통로 자리를 사용한다. 배정 결과의 수명은 현재 씬 한 회차다.
 
 검사 구현은 `FarmingRules.Validate`. 사이드뷰의 이동/근접/투하 거리는 수평 월드 단위, throwArc는 수직 시각 높이다. mapHalfExtents는 기본 호실 설계용이며 플레이 중 경계를 중복 저장하지 않는다. Inspector 직렬화로 0이 들어와도 유효 기본값으로 간주하지 않는다. 값·스키마·GUID·주소 변경 없이 소비만 전환했다. [사이드뷰 전환 계획](../DataHistory/20261118-farming-sideview-01-planned.md).
 
-단일 설정 에셋이며 행 ID/외래키/활성화 목록은 없다. 구간별 규칙이 필요해지면 먼저 적용 범위와 프로필 선택 계약을 설계한다. 단순한 씬 추가나 난이도 조정 때문에 같은 주소/역할의 Rules 복제본을 만들지 않는다. 삭제/주소 변경은 모든 소비자 전환이 포함된 이전 작업으로 처리한다.
+단일 설정 에셋이다. 시작 인물의 FarmingData ID를 삭제·변경할 때는 시작 인물 참조와 방별 배정 가능 인원도 함께 갱신한다. 구간별 규칙이 필요해지면 먼저 적용 범위와 프로필 선택 계약을 설계한다. 단순한 씬 추가나 난이도 조정 때문에 같은 주소/역할의 Rules 복제본을 만들지 않는다. 삭제/주소 변경은 모든 소비자 전환이 포함된 이전 작업으로 처리한다.
 
 ## 중복 조사와 검증
 
-- 스폰 검증에서 3,000회 모두 DB 행별 수량과 방별 인원이 맞았다. 두 레전드의 방 배정 6,000회와 실제 회차 재시작을 확인했다. [결과와 편집 위치](../DataHistory/20261119-farming-spawns-02-verified.md)
+- 이전 3·2·1 배치 검증에서 3,000회 모두 DB 행별 수량과 방별 인원이 맞았다. 두 레전드의 방 배정 6,000회와 실제 회차 재시작을 확인했다. [결과와 편집 위치](../DataHistory/20261119-farming-spawns-02-verified.md)
 
 - 확인: FarmingRules 필드/Validate, FarmingDataLoader, Session, Player, Inventory, Pickup, Hud 및 CSV.
 - `capacity`와 `FarmingData.weight`는 같은 칸 단위를 쓰지만 전체 한도와 개체 비용으로 구분한다. HUD/인벤토리에는 이 값을 참조해 전달한다.

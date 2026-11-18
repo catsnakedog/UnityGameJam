@@ -37,7 +37,7 @@
 | 소비자 | FarmingSession이 FarmingPickup.RecordId를 조회해 Initialize. FarmingInventory/Player/Hud가 Type/Weight를 사용. EventPopupController는 기존 GameData 설정 로더로 같은 DB를 조회해 예정된 획득 이벤트의 파밍 경로를 검증 |
 | 수명/실패 | FarmingSession 종료 시 로더 핸들 해제. 로드/Validate 실패 시 시작 차단 |
 
-생성 SO는 직접 수정하지 않는다. 전용 검증기가 있는 기존 CSV이므로 공용 CSV 폴더에 복사하거나 Data Manager에 두 번째로 등록하지 않는다. 파밍 시작 시 전체 행에서 생성 대상을 읽는다. 신규 ID를 추가할 때 같은 recordId를 가진 프리팹을 Farming Session의 pickupPrefabs에 연결한다. Person은 Characters 행과 방별 인원 합, Item은 ShelterItems 행과 빈 책상 자리 수를 함께 확인한다.
+생성 SO는 직접 수정하지 않는다. 전용 검증기가 있는 기존 CSV이므로 공용 CSV 폴더에 복사하거나 Data Manager에 두 번째로 등록하지 않는다. 파밍 시작 시 전체 행에서 생성 대상을 읽는다. 신규 ID를 추가할 때 같은 recordId를 가진 프리팹을 Farming Session의 pickupPrefabs에 연결한다. Person은 Characters 행과 시작 운반 인물 한 명 및 방별 인원 합, Item은 ShelterItems 행과 빈 책상 자리 수를 함께 확인한다.
 
 ## 필드와 관계
 

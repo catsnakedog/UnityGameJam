@@ -11,11 +11,14 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
+using UnityGameJam.Shelter;
 namespace ShelterRun.Editor
 {
     public static class FarmingSideViewBuilder
     {
         const string Prefabs="Assets/Prefabs/Farming/";
+        const string SurvivorPrefab = "Assets/Prefabs/Shelter/Survivor.prefab";
+        const string PlayerArtworkId = "person_01";
         static TMP_FontAsset font;
         [MenuItem("Tools/Farming/Rebuild Side View Scene")]
         public static void Build()
@@ -94,7 +97,8 @@ namespace ShelterRun.Editor
                 var root=new GameObject(row.Id);root.AddComponent<FarmingDepth2D>();var pickup=root.AddComponent<FarmingPickup>();
                 var visual=SpriteObject("Visual",row.Id,root.transform,Vector3.zero,1);var focus=SpriteObject("Focus","focus",root.transform,Vector3.zero,-1);focus.SetActive(false);
                 var label=Label(row.Weight+"칸",root.transform,new Vector3(0,row.Type==FarmingObjectType.Person?1.55f:.8f,0),2.3f,20);
-                Text(pickup,"recordId",row.Id);Set(pickup,"visual",visual.transform);Set(pickup,"sprite",visual.GetComponent<SpriteRenderer>());Set(pickup,"standingSprite",FarmingSideViewArt.Load(row.Id));Set(pickup,"lyingSprite",FarmingSideViewArt.Load(row.Type==FarmingObjectType.Person?row.Id+"_lying":row.Id));Set(pickup,"focusMarker",focus);Set(pickup,"weightLabel",label);
+                Text(pickup,"recordId",row.Id);Set(pickup,"visual",visual.transform);Set(pickup,"sprite",visual.GetComponent<SpriteRenderer>());Set(pickup,"standingSprite",FarmingSideViewArt.Load(row.Id));Set(pickup,"focusMarker",focus);Set(pickup,"weightLabel",label);
+                if (row.Type == FarmingObjectType.Person) ConfigureCharacter(root, row.Id);
                 result.Add(row.Id,PrefabUtility.SaveAsPrefabAsset(root,Prefabs+row.Id+".prefab"));UnityEngine.Object.DestroyImmediate(root);
             }
             return result;
@@ -115,9 +119,71 @@ namespace ShelterRun.Editor
         static FarmingPlayer Player()
         {
             var root=new GameObject("Player");var depth=root.AddComponent<FarmingDepth2D>();var so=new SerializedObject(depth);so.FindProperty("worldOrder").intValue=200;so.ApplyModifiedPropertiesWithoutUndo();var feet=root.AddComponent<CircleCollider2D>();feet.radius=.17f;feet.isTrigger=true;
-            var body=SpriteObject("Body","player_idle",root.transform,Vector3.zero,1);var player=root.AddComponent<FarmingPlayer>();Set(player,"body",body.transform);Set(player,"sprite",body.GetComponent<SpriteRenderer>());Set(player,"idleSprite",FarmingSideViewArt.Load("player_idle"));Set(player,"carrySprite",FarmingSideViewArt.Load("player_carry"));Set(player,"feet",feet);
+            var body=SpriteObject("Body","player_idle",root.transform,Vector3.zero,1);var player=root.AddComponent<FarmingPlayer>();Set(player,"body",body.transform);Set(player,"sprite",body.GetComponent<SpriteRenderer>());Set(player,"feet",feet);
+            ConfigureCharacter(root, null);
             var prefab=PrefabUtility.SaveAsPrefabAsset(root,Prefabs+"Player.prefab");UnityEngine.Object.DestroyImmediate(root);return ((GameObject)PrefabUtility.InstantiatePrefab(prefab)).GetComponent<FarmingPlayer>();
         }
+        // Apply the original 3/2/1 layout migration once. Later Inspector choices remain authoritative.
+        [MenuItem("Tools/Farming/Apply Starting Carry and Character Art")]
+        public static void ApplyStartingCarryAndCharacterArt()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Stop Play before updating farming assets.");
+
+            var rules = AssetDatabase.LoadAssetAtPath<FarmingRules>(FarmingCsvImporter.RulesPath);
+            if (string.IsNullOrEmpty(rules.StartingPersonId))
+            {
+                int[] previousCounts = { 3, 2, 1 };
+                if (!rules.RoomSpawns.Select(room => room.People).SequenceEqual(previousCounts))
+                    throw new InvalidOperationException("Set the starting person and room quotas together in FarmingRules.");
+                var settings = new SerializedObject(rules);
+                settings.FindProperty("startingPersonId").stringValue = "person_01";
+                settings.FindProperty("roomSpawns").GetArrayElementAtIndex(0).FindPropertyRelative("people").intValue = 2;
+                settings.ApplyModifiedPropertiesWithoutUndo();
+                AssetDatabase.SaveAssetIfDirty(rules);
+            }
+            rules.Validate();
+
+            var db = AssetDatabase.LoadAssetAtPath<FarmingDatabase>(FarmingCsvImporter.DatabasePath);
+            var ids = db.Records.Where(row => row.Type == FarmingObjectType.Person).Select(row => row.Id);
+            foreach (string id in ids.Prepend(null))
+            {
+                string path = Prefabs + (id ?? "Player") + ".prefab";
+                var root = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    ConfigureCharacter(root, id);
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(root); }
+            }
+        }
+
+        static void ConfigureCharacter(GameObject root, string pickupId)
+        {
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>(SurvivorPrefab).GetComponent<SurvivorAnimation>();
+            var artId = pickupId;
+            SerializedObject owner;
+            if (pickupId == null)
+            {
+                owner = new SerializedObject(root.GetComponent<FarmingPlayer>());
+                owner.FindProperty("artworkSource").objectReferenceValue = source;
+                var appearance = owner.FindProperty("appearanceId");
+                if (string.IsNullOrEmpty(appearance.stringValue)) appearance.stringValue = PlayerArtworkId;
+                artId = appearance.stringValue;
+            }
+            else
+            {
+                owner = new SerializedObject(root.GetComponent<FarmingPickup>());
+                owner.FindProperty("standingSprite").objectReferenceValue = null;
+            }
+            var renderer = (SpriteRenderer)owner.FindProperty("sprite").objectReferenceValue;
+            owner.ApplyModifiedPropertiesWithoutUndo();
+            var art = source.FindArtwork(artId) ?? throw new InvalidOperationException("No survivor artwork for " + artId);
+            renderer.sprite = art.Get(SurvivorAnimation.Pose.Idle)?.firstFrame ?? art.standing;
+            if (!renderer.TryGetComponent<Animator>(out _)) renderer.gameObject.AddComponent<Animator>();
+        }
+
         static FarmingBunker Bunker(Transform parent)
         {
             var root=SpriteObject("Bunker drop zone","bunker",parent,new Vector3(2,0,0),0);var collider=root.AddComponent<PolygonCollider2D>();collider.points=new[]{new Vector2(-1.25f,-.3f),new Vector2(1.25f,-.3f),new Vector2(1.25f,.5f),new Vector2(-1.25f,.5f)};collider.isTrigger=true;

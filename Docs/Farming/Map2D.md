@@ -5,10 +5,10 @@
 ## 씬과 조작
 
 - 씬: `Assets/Scenes/Farming.unity`. Editor에서 복도·문·호실·책상을 편집할 수 있다. Farming Session의 Pickup Prefabs가 각 생성 대상의 외형을 연결한다.
-- 복도에서 시작한다. A/D로 좌우 이동하고 325·324·323호 문 앞에서 E를 누르면 해당 방으로 이동한다. 방의 왼쪽 출구 문에서 E를 누르면 대응하는 복도 문으로 돌아온다.
+- 복도에서 person_01을 든 채 시작한다. A/D로 좌우 이동하고 325·324·323호 문 앞에서 E를 누르면 해당 방으로 이동한다. 방의 왼쪽 출구 문에서 E를 누르면 대응하는 복도 문으로 돌아온다.
 - 문에 닿는 것만으로는 이동하지 않는다. E 한 번에 한 번만 전환되며 운반 상태·남은 시간·방의 파밍 상태는 유지한다.
-- 새 회차마다 벙커 가까운 325호부터 324호, 323호 순으로 사람 3·2·1명을 배정한다. 사람은 이웃한 책상 사이의 통로에 서고 물자는 책상 프리팹의 빈 상판 위치에 놓인다. 통조림은 방마다 한 개, 다른 물자는 각각 한 개다. 레전드 두 종은 각각 방 가중치 1·2·3으로 독립 추첨한다.
-- 복도 왼쪽 BUNKER에서 E로 운반 중인 대상을 모두 투입한다. 4칸 제한, 사람 2~4칸, 물자 1~2칸, 포물선 던지기·투입 페이드·60초 종료·벙커 씬 연결은 기존 시스템을 사용한다.
+- 새 회차마다 벙커 가까운 325호부터 324호, 323호 순으로 나머지 다섯 사람을 2·2·1명씩 배정한다. 시작 인물도 일반 인물과 같은 비용으로 운반하고 던지기·재획득·벙커 투입이 가능하다. 사람은 이웃한 책상 사이의 통로에 서고 물자는 책상 프리팹의 빈 상판 위치에 놓인다. 통조림은 방마다 한 개, 다른 물자는 각각 한 개다. 레전드 두 종은 각각 방 가중치 1·2·3으로 독립 추첨한다.
+- 복도 왼쪽 BUNKER에서 E로 운반 중인 대상을 모두 투입한다. 4칸 제한, 사람 2~4칸, 물자 1~2칸, 포물선 던지기·투입 페이드·규칙의 제한시간 종료·벙커 씬 연결은 기존 시스템을 사용한다.
 - E 우선순위: 운반 중 벙커 투입 → 가까운 문 → 가까운 파밍 대상 → 마지막 운반 대상 내려놓기. 문 근처에서는 HUD에 목적지가 표시된다.
 
 ## 공간과 이동
@@ -21,13 +21,13 @@
 
 ## 아트·소팅·교체
 
-- 현재 월드 이미지: `Assets/Art/Farming/SideView/`. 정면 벽·문·가구와 측면 캐릭터를 같은 픽셀 스타일로 제작했다. 모든 이미지 Sprite Single, PPU64, Point, mipmap off, 무압축, Full Rect.
+- 배경·가구·물자 이미지: `Assets/Art/Farming/SideView/`. 정면 벽·문·가구와 측면 캐릭터를 같은 픽셀 스타일로 제작했다. 모든 이미지 Sprite Single, PPU64, Point, mipmap off, 무압축, Full Rect.
 - 실제 임포트한 30개 이미지의 GUID/local ID/크기/PPU는 [SideViewArtManifest.json](SideViewArtManifest.json)에 기록한다.
 - 벽: 192×256, 바닥: 128×64. Rectangle SpriteRenderer의 Tiled 모드이며 다이아몬드 투영/Isometric Tilemap은 사용하지 않는다.
 - 문/문 강조: 96×192, 테이블: 192×96, 의자: 64×96, 창: 192×128, 벙커 문: 192×192, 포커스: 128×32.
-- 서 있는 인물/플레이어: 64×96, 누운 인물: 128×64, 물자: 64×64. 일반 오브젝트 Pivot은 하단 중앙, 누운 인물은 중앙이다. 벽/바닥은 좌하단.
+- 플레이어와 사람은 벙커 Survivor 프리팹이 연결한 Aseprite 원본과 프레임 타이밍을 공유한다. 플레이어는 A/D 방향에 따라 걷고 멈추면 대기한다. 구조 대상은 방에서 자기 ID의 대기 클립을 재생하며 기본 그림만 있는 5·6번은 그 그림을 표시한다. 운반 중인 사람은 수평으로 눕는다.
 - 배경 벽 -100, 바닥 -90, 창 -50, 문 0, 의자 5, 테이블 SortingGroup 10, 인물/월드 물자 100, 플레이어 200. 테이블 위 물건은 테이블 그룹 내부 20/21, 운반물은 플레이어 그룹 내부 10부터다. Z는 모두 0이며 Y-Z 아이소메트릭 깊이 계산을 하지 않는다.
-- PNG 바이트만 같은 경로에 덮어쓰고 `.meta`는 유지한다. 새 이미지 규격은 위 크기/PPU/Pivot을 유지한다. 인물 프리팹의 standingSprite/lyingSprite, Player의 idleSprite/carrySprite 참조는 저장되어 있다.
+- PNG 바이트만 같은 경로에 덮어쓰고 `.meta`는 유지한다. 새 이미지 규격은 위 크기/PPU/Pivot을 유지한다. 캐릭터의 동작은 `Assets/Art/Shelter/Characters/`에서 편집한다. 파밍 플레이어의 `appearanceId`는 현재 person_01이며 구조 인물 목록과 독립된 외형 선택값이다.
 - HUD 이미지는 기존 `Assets/Art/UI/Farming/`와 `FarmingHud.prefab`을 재사용한다. 안내 문구만 사이드뷰 조작으로 갱신했다.
 
 ## 데이터·제작 도구
@@ -38,4 +38,4 @@
 
 검증: `Tools > Farming > Verify Side View Play`를 새 파밍 Ready 상태에서 실행한다. 결과는 `Docs/Farming/Verification-SideView.txt`에 기록한다. 이전 Verification-2D/Movement는 아이소메트릭 당시의 기록이다.
 
-현재 무작위 배치의 [Play 검사·재시작·추첨 결과](../DataHistory/20261119-farming-spawns-02-verified.md). 초기 사이드뷰의 [조작·아트 검증](../DataHistory/20261118-farming-sideview-02-verified.md), [복도 화면](../../outputs/Farming/sideview-corridor.png), [325호 화면](../../outputs/Farming/sideview-room.png).
+이전 3·2·1 배치의 [Play 검사·재시작·추첨 결과](../DataHistory/20261119-farming-spawns-02-verified.md). 초기 사이드뷰의 [조작·아트 검증](../DataHistory/20261118-farming-sideview-02-verified.md), [복도 화면](../../outputs/Farming/sideview-corridor.png), [325호 화면](../../outputs/Farming/sideview-room.png).

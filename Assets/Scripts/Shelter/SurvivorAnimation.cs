@@ -26,21 +26,52 @@ namespace UnityGameJam.Shelter
             public Motion Get(Pose pose) => motions != null && (int)pose < motions.Length ? motions[(int)pose] : null;
         }
 
+        // Each renderer advances independently through the same authored poses and frame times.
+        public sealed class Playback
+        {
+            AnimationClip current;
+            float elapsed;
+
+            public void Restart() { current = null; elapsed = 0f; }
+
+            public void Sample(Artwork artwork, Pose pose, Pose idle, SpriteRenderer image, float dt)
+            {
+                var motion = artwork.Get(pose);
+                if (motion?.firstFrame == null && pose == Pose.TiredWalk) motion = artwork.Get(Pose.Walk);
+                if (motion?.firstFrame == null && pose != Pose.Faint) motion = artwork.Get(idle);
+                if (motion?.firstFrame == null && pose != Pose.Faint) motion = artwork.Get(Pose.Idle);
+                var clip = motion?.clip;
+                if (current != clip) { current = clip; elapsed = 0f; }
+                if (clip && clip.length > 0f)
+                {
+                    // Keep the last faint frame until recovery. Other loops use the authored key times.
+                    float time = pose == Pose.Faint || pose == Pose.RangedAttack
+                        ? Mathf.Min(elapsed, Mathf.Max(0f, clip.length - 0.5f / clip.frameRate))
+                        : Mathf.Repeat(elapsed, clip.length);
+                    clip.SampleAnimation(image.gameObject, time);
+                    elapsed += dt;
+                }
+                else image.sprite = motion?.firstFrame ? motion.firstFrame : artwork.standing;
+            }
+        }
+
         [SerializeField] SpriteRenderer image;
         [SerializeField] Artwork[] characters;
         CharacterIdentity actor;
         ShelterWalker walker;
         Artwork art;
         ShelterArea workingRoom;
-        float seatedTime, shotRemaining, elapsed;
+        float seatedTime, shotRemaining;
         bool shotFacesLeft;
-        AnimationClip current;
+        readonly Playback playback = new Playback();
+
+        public Artwork FindArtwork(string characterId) => Array.Find(characters, entry => entry.characterId == characterId);
 
         public void Bind(CharacterIdentity owner, ShelterWalker movement)
         {
             actor = owner;
             walker = movement;
-            art = Array.Find(characters, entry => entry.characterId == owner.Id);
+            art = FindArtwork(owner.Id);
             if (art == null) { Debug.LogError("Missing survivor artwork for " + owner.Id, this); return; }
             if (walker.visual) walker.visual.gameObject.SetActive(false);
             Refresh(0f);
@@ -53,7 +84,7 @@ namespace UnityGameJam.Shelter
             if (attack?.firstFrame == null) return;
             shotFacesLeft = targetX < transform.position.x;
             shotRemaining = attack.clip ? attack.clip.length : Time.deltaTime;
-            current = null;
+            playback.Restart();
         }
 
         void LateUpdate()
@@ -89,22 +120,7 @@ namespace UnityGameJam.Shelter
 
             image.flipX = pose == Pose.RangedAttack ? shotFacesLeft : walker.FacingLeft;
             shotRemaining = Mathf.Max(0f, shotRemaining - dt);
-            var motion = art.Get(pose);
-            if (motion?.firstFrame == null && pose == Pose.TiredWalk) motion = art.Get(Pose.Walk);
-            if (motion?.firstFrame == null && pose != Pose.Faint) motion = art.Get(idle);
-            if (motion?.firstFrame == null && pose != Pose.Faint) motion = art.Get(Pose.Idle);
-            var clip = motion?.clip;
-            if (current != clip) { current = clip; elapsed = 0f; }
-            if (clip && clip.length > 0f)
-            {
-                // Keep the last faint frame until recovery. Other loops use the authored key times.
-                float time = pose == Pose.Faint || pose == Pose.RangedAttack
-                    ? Mathf.Min(elapsed, Mathf.Max(0f, clip.length - 0.5f / clip.frameRate))
-                    : Mathf.Repeat(elapsed, clip.length);
-                clip.SampleAnimation(image.gameObject, time);
-                elapsed += dt;
-            }
-            else image.sprite = motion?.firstFrame ? motion.firstFrame : art.standing;
+            playback.Sample(art, pose, idle, image, dt);
         }
     }
 }
