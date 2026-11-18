@@ -30,7 +30,7 @@ public static class BunkerSetup
             data.FindProperty("invasionApproachTicks").intValue = 6;
             data.FindProperty("guardVolleyEveryTicks").intValue = 2;
             data.FindProperty("invasionMentalLoss").intValue = 2;
-            data.FindProperty("guardTicksPerMental").intValue = 8;
+            data.FindProperty("guardMentalLossPerTick").intValue = 2;
             data.FindProperty("workEveryTicks").intValue = 1;
             data.FindProperty("percentPerAbility").floatValue = 0.1f;
             data.FindProperty("mentalCostPerWork").intValue = 1;
@@ -41,8 +41,8 @@ public static class BunkerSetup
             data.FindProperty("hungerLoss").intValue = 1;
             data.FindProperty("foodRestore").intValue = 5;
             data.FindProperty("servingsPerCan").intValue = 4;
-            data.FindProperty("faintDurationTicks").intValue = 40;
-            data.FindProperty("wakeMental").intValue = 30;
+            data.FindProperty("sleepMentalPerTick").intValue = 5;
+            data.FindProperty("wakeMental").intValue = 50;
             // Initial authoring only; the existing SO remains the editable source of truth.
             data.FindProperty("evaluationTargetProgress").doubleValue = 96;
             data.FindProperty("evaluationReferenceTicks").intValue = 24;

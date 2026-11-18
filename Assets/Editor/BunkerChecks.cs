@@ -54,6 +54,51 @@ public static class BunkerChecks
         finally { UnityEngine.Object.DestroyImmediate(rules); }
         return string.Join("\n", checks);
     }
+    static void CheckRescue(BunkerSimulation sim, ShelterRoster roster, ShelterArea[] rooms, List<string> checks)
+    {
+        var patient = roster.Characters[0];
+        var fallen = patient.GetComponent<ShelterWalker>();
+        var carrier = roster.Characters[1].GetComponent<ShelterWalker>();
+        var guard = rooms.Single(room => room.roomType == ShelterRoomType.ZombieInvasion);
+        var bed = rooms.Single(room => room.roomType == ShelterRoomType.Sleeping);
+        var lower = rooms.Single(room => room.roomType == ShelterRoomType.Programming);
+        var commander = UnityEngine.Object.FindFirstObjectByType<ShelterCommander>();
+        ShelterElevatorChecks.Move(fallen, guard);
+        ShelterElevatorChecks.Move(carrier, lower);
+        patient.SetMental(0);
+        for (int i = 0; i < 41; i++) patient.AdvanceMentalTick();
+        patient.SetMental(sim.Rules.WakeMental);
+        Check(!patient.CanAct && fallen.NeedsRescue, "Elapsed ticks and external mental gain cannot replace a rescue", checks);
+        patient.SetMental(0);
+        Check(commander.ClickWorld(carrier.transform.position + Vector3.up) && commander.Selected == carrier &&
+            commander.ClickWorld(fallen.transform.position + Vector3.up) && carrier.IsRescuing, "Selecting a survivor and clicking the patient starts a rescue", checks);
+        var spare = roster.Characters[2].GetComponent<ShelterWalker>();
+        Check(!spare.TryRescue(fallen) && !carrier.MoveTo(lower), "Only one rescuer can claim the patient", checks);
+        bool carriedInLift = false;
+        for (int i = 0; i < 6000 && carrier.IsRescuing; i++)
+        {
+            foreach (var lift in carrier.navigation.Elevators) lift.Advance(.02f);
+            carrier.Tick(.02f);
+            if (fallen.IsBeingCarried && carrier.IsInElevator && carrier.CurrentElevator.PassengerCount == 2 && Vector3.Distance(fallen.transform.position, carrier.transform.position) < 1f)
+                carriedInLift = true;
+        }
+        Check(carriedInLift && patient.IsRestingAfterRescue && !patient.CanAct && fallen.CurrentRoom == bed && carrier.CurrentRoom == bed,
+            "The rescuer picks up the patient, carries them in the elevator and delivers them to the sleeping room", checks);
+        sim.AcquirePause(checks);
+        sim.Advance(sim.Rules.SecondsPerTick);
+        sim.ReleasePause(checks);
+        Check(patient.CurrentMental == 0, "Bed rest observes the shared pause", checks);
+        int ticksToWake = Mathf.CeilToInt((float)sim.Rules.WakeMental / sim.Rules.SleepMentalPerTick);
+        for (int i = 1; i < ticksToWake; i++)
+        {
+            sim.Advance(sim.Rules.SecondsPerTick);
+            Check(!patient.CanAct && patient.CurrentMental == i * sim.Rules.SleepMentalPerTick, "Still unconscious after bed tick " + i, checks);
+        }
+        sim.Advance(sim.Rules.SecondsPerTick);
+        Check(patient.CanAct && !patient.IsRestingAfterRescue && patient.CurrentMental >= sim.Rules.WakeMental,
+            "The delivered survivor regains control at the threshold", checks);
+    }
+
     public static async Task<string> RunPlay()
     {
         if (!EditorApplication.isPlaying) throw new Exception("Play mode required.");
@@ -130,15 +175,20 @@ public static class BunkerChecks
             actor.gameObject.SetActive(true); second.gameObject.SetActive(true);
             foreach (var type in new[] { ShelterRoomType.Common, ShelterRoomType.Sleeping, ShelterRoomType.ZombieInvasion })
             {
-                plan.roomType = type; sim.Advance(sim.Rules.SecondsPerTick * sim.Rules.WorkEveryTicks);
-                Check(Mathf.Approximately(dev.Progress.Planning, expected) && actor.CurrentMental == beforeIdle, "Non-work room excluded: " + type, checks);
+                int beforeRoom = actor.CurrentMental;
+                plan.roomType = type;
+                sim.Advance(sim.Rules.SecondsPerTick);
+                int roomDelta = type == ShelterRoomType.Sleeping ? sim.Rules.SleepMentalPerTick :
+                    type == ShelterRoomType.ZombieInvasion ? -sim.Rules.GuardMentalLossPerTick : 0;
+                Check(Mathf.Approximately(dev.Progress.Planning, expected) && actor.CurrentMental == actor.ClampMental(beforeRoom + roomDelta),
+                    "Room changes mental without producing development: " + type, checks);
             }
             plan.roomType = ShelterRoomType.Planning;
             if (cost > 0)
             {
                 actor.SetMental(1);
                 sim.Advance(workSeconds);
-                Check(!actor.CanAct && actor.FaintTicksRemaining == sim.Rules.FaintDurationTicks, "Last work interval can exhaust a worker", checks);
+                Check(actor.IsFainted && !actor.CanAct && actor.CurrentMental == 0, "Last work interval can exhaust a worker", checks);
                 float beforeFaint = dev.Progress.Planning;
                 sim.Advance(sim.Rules.SecondsPerTick);
                 float partnerGain = sim.Rules.WorkEveryTicks == 1 ? roster.Characters[1].Definition.Planning * sim.Rules.PercentPerAbility : 0;
@@ -146,6 +196,11 @@ public static class BunkerChecks
             }
             dev.RestartDevelopment();
             Check(actor.CanAct && actor.CurrentMental == initialMental, "Restart restores initial mental", checks);
+            await Task.Yield(); // Let the input block from the old event controller finish this frame.
+            CheckRescue(sim, roster, rooms, checks);
+            ShelterElevatorChecks.Move(walker, plan);
+            ShelterElevatorChecks.Move(second, plan);
+            dev.RestartDevelopment();
             int random = 0, invasion = 0, work = 0, end = 0;
             sim.RandomEventDue += _ => random++; sim.ZombieInvasionDue += _ => invasion++;
             sim.WorkProcessed += _ => work++; sim.DurationEnded += () => end++;
@@ -161,8 +216,9 @@ public static class BunkerChecks
             sim.Advance(1000); Check(end == 1 && sim.RemainingTicks == 0, "No progress after end", checks);
             var source = AssetDatabase.LoadAssetAtPath<BunkerRules>(BunkerSetup.RulesPath);
             Check(sim.Rules.TotalTicks == source.TotalTicks && sim.Rules.WorkEveryTicks == source.WorkEveryTicks &&
-                sim.Rules.PercentPerAbility == source.PercentPerAbility && sim.Rules.MentalCostPerWork == source.MentalCostPerWork,
-                "Built work settings match the authored SO", checks);
+                sim.Rules.PercentPerAbility == source.PercentPerAbility && sim.Rules.MentalCostPerWork == source.MentalCostPerWork &&
+                sim.Rules.GuardMentalLossPerTick == source.GuardMentalLossPerTick && sim.Rules.SleepMentalPerTick == source.SleepMentalPerTick &&
+                sim.Rules.WakeMental == source.WakeMental, "Built work and room mental settings match the authored SO", checks);
         }
         finally { if (events) events.enabled = true; Time.timeScale = previousScale; }
         string result = string.Join("\n", checks);

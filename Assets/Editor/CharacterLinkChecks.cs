@@ -54,7 +54,7 @@ public static class CharacterLinkChecks
                     Check(source.Get<int>("mental") == actor.Definition.Mental, "Runtime mental does not mutate DB");
                     var walker = actor.GetComponent<ShelterWalker>();
                     Check(!walker.MoveTo(UnityEngine.Object.FindObjectsByType<ShelterArea>(FindObjectsSortMode.None).Single(a => a.roomType == ShelterRoomType.ZombieInvasion)), "Exhausted survivor cannot move");
-                    actor.SetMental(actor.Definition.Mental);
+                    actor.ResetMental();
                     Check(walker.MoveTo(UnityEngine.Object.FindObjectsByType<ShelterArea>(FindObjectsSortMode.None).Single(a => a.roomType == ShelterRoomType.ZombieInvasion)), "Spawned survivor can navigate to combat room");
                 }
                 await SceneManager.LoadSceneAsync("Assets/Scenes/ShelterPrototype.unity");

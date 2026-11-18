@@ -27,3 +27,7 @@ Accessible을 끄거나 엘리베이터를 비활성화하면 연결이 끊어�
 공용 수치는 [ElevatorRules.asset](../Assets/Settings/Shelter/ElevatorRules.asset) 하나에서 편집한다. 데이터 ID `data.shelter.elevators`, [명세](DataSpecs/ElevatorRules.md). 수정 후 기존 Addressables 콘텐츠 빌드 또는 Tools > Shelter > Build Elevator Data를 실행한다. 씬에는 ShelterTransit이 기존 시뮬레이션/명단/입력 관리자와 연결되어 있다. 새 빈 씬은 이 관리자 구성이 필요하므로 현재 씬을 복제해서 배치하는 방법을 권장한다.
 
 [Edit 검증](Elevators-checks-edit.txt), [Play 검증](Elevators-checks-play.txt), [기존 좀비 전투 회귀 검증](Zombies/Verification-play.txt). 동승, 목적층별 하차, 세 번째 호출자의 순서, 같은 층 통과와 일시정지를 검사한다. [동승 변경 이력](DataHistory/20261118-shelter-elevator-pairs.md).
+
+## 기절한 생존자 구조
+
+움직일 수 있는 생존자를 선택하고 기절한 생존자를 클릭하면 구조자가 해당 위치로 이동한다. 도착하면 대상자를 들고 수면실까지 자동 이동한다. 층이 다르면 기존 엘리베이터를 이용한다. 구조 명령 중에는 다른 생존자를 조작할 수 있다. 구조자가 다시 기절하면 탑승 중인 차량에서 하차하거나 현재 바닥에 환자를 내려놓고 다른 생존자가 구조를 이어간다. 수면실 인계 후 기절자는 매 틱 회복하고 기준 멘탈에 도달하면 다시 이동·작업·전투할 수 있다. [방 멘탈 설정](DataSpecs/BunkerRules.md)

@@ -88,7 +88,7 @@ namespace UnityGameJam.Shelter
         void ProcessTick(int tick)
         {
             foreach (var actor in roster.Characters)
-                if (actor) { actor.AdvanceMentalTick(); actor.AdvanceGuardDutyTick(); actor.AdvanceHungerTick(tick); }
+                if (actor) { actor.AdvanceMentalTick(); actor.AdvanceHungerTick(tick); }
             // All due work on the last tick precedes submission of the final progress snapshot.
             if (tick % Rules.WorkEveryTicks == 0) { ProcessWork(); WorkProcessed?.Invoke(tick); }
             if (tick % Rules.RandomEventEveryTicks == 0) RandomEventDue?.Invoke(tick);

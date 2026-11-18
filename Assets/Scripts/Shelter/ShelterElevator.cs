@@ -23,7 +23,7 @@ namespace UnityGameJam.Shelter
         public ElevatorPhase Phase { get; private set; }
         public ShelterWalker Owner => Passenger ? Passenger : waiting.Count > 0 ? waiting[0].actor : null;
         public ShelterWalker Passenger => riders.Count > 0 ? riders[0].actor : null;
-        public int PassengerCount => riders.Count;
+        public int PassengerCount => riders.Count == 1 && riders[0].actor && riders[0].actor.IsCarrying ? 2 : riders.Count;
         public float CabinY { get; private set; }
         public float TripDestination => riders.Count > 0 ? NextDropOff().to : waiting.Count > 0 ? waiting[0].to : CabinY;
         public int QueueCount => waiting.Count + riders.Count;
@@ -112,11 +112,11 @@ namespace UnityGameJam.Shelter
         }
         void BoardWaitingCompanion()
         {
-            if (riders.Count != 1) return;
+            if (PassengerCount != 1) return;
             foreach (var request in waiting)
             {
                 var actor = request.actor;
-                if (!actor || !actor.isActiveAndEnabled || !actor.IsMoving || actor.IsMovementLocked ||
+                if (!actor || actor.IsCarrying || !actor.isActiveAndEnabled || !actor.IsMoving || actor.IsMovementLocked ||
                     Mathf.Abs(request.from - CabinY) > 0.05f || Mathf.Abs(actor.transform.position.y - CabinY) > 0.03f) continue;
                 // The next waiter can board directly from the second queue position.
                 float distanceBehindPad = (actor.transform.position.x - CallPoint(request.from, request.side).x) * request.side;

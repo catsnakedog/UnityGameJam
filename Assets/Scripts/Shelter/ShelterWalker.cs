@@ -14,12 +14,13 @@ namespace UnityGameJam.Shelter
         public bool playerSelectable = true;
         [HideInInspector] public bool externallyDriven;
         readonly HashSet<object> movementLocks = new HashSet<object>();
-        public bool IsMovementLocked => movementLocks.Count > 0 || ((identity = identity ? identity : GetComponent<UnityGameJam.Characters.CharacterIdentity>()) != null && !identity.CanAct);
+        public bool IsMovementLocked => movementLocks.Count > 0 || (Identity && !Identity.CanAct);
         public void AcquireMovementLock(object owner) { if (owner != null) movementLocks.Add(owner); }
         public void ReleaseMovementLock(object owner) { if (owner != null) movementLocks.Remove(owner); }
         UnityGameJam.Characters.CharacterIdentity identity;
 
-        private void Awake() => identity = GetComponent<UnityGameJam.Characters.CharacterIdentity>();
+        private UnityGameJam.Characters.CharacterIdentity Identity =>
+            identity ? identity : (identity = GetComponent<UnityGameJam.Characters.CharacterIdentity>());
 
         [Header("Movement")]
         [Min(0.1f)] public float walkSpeed = 3.2f;
@@ -49,6 +50,16 @@ namespace UnityGameJam.Shelter
         private int rideIndex = -1;
         private ShelterArea afterRideDestination;
         private bool stopAfterRide;
+        private float destinationOffset;
+
+        private ShelterWalker rescueTarget;
+        private ShelterWalker rescuedBy;
+        private ShelterArea rescueBed;
+        private bool carrying;
+        public bool IsBeingCarried => rescuedBy && rescuedBy.carrying;
+        internal bool IsCarrying => carrying;
+        public bool IsRescuing => rescueTarget;
+        public bool NeedsRescue => Identity && Identity.IsFainted && !Identity.IsRestingAfterRescue;
 
         private float facing = 1f;
         internal bool FacingLeft => facing < 0;
@@ -63,7 +74,7 @@ namespace UnityGameJam.Shelter
                 if(candidate.gameObject.scene==gameObject.scene) { simulation=candidate; break; }
             FindNavigation();
             if (nameLabel != null) nameLabel.text = characterName;
-            if (identity) identity.RefreshStatusLabel();
+            if (Identity) Identity.RefreshStatusLabel();
             ResolveInitialRoom();
             SetSelected(false);
         }
@@ -95,13 +106,16 @@ namespace UnityGameJam.Shelter
             return Mathf.Abs(p.x) <= 0.48f && p.y >= -0.08f && p.y <= 2.15f;
         }
 
-        public bool MoveTo(ShelterArea room)
+        public bool MoveTo(ShelterArea room) => !IsRescuing && MoveTo(room, arrivalOffset);
+
+        private bool MoveTo(ShelterArea room, float offset)
         {
             if (IsMovementLocked) return false;
             FindNavigation();
-            if (!IsInElevator && Destination == room && IsMoving && navigation && routeVersion == navigation.Version) return true;
+            if (!IsInElevator && Destination == room && Mathf.Approximately(offset, destinationOffset) && IsMoving && navigation && routeVersion == navigation.Version) return true;
             Vector2 from = IsInElevator && rideIndex >= 0 ? route[rideIndex].position : (Vector2)transform.position;
-            if (navigation == null || !navigation.TryFindElevatorPath(from, room, arrivalOffset, walkSpeed, out var nextRoute)) return false;
+            if (navigation == null || !navigation.TryFindElevatorPath(from, room, offset, walkSpeed, out var nextRoute)) return false;
+            destinationOffset = offset;
             if (IsInElevator) { afterRideDestination = room; stopAfterRide = false; Destination = room; Status = "하차 후 목적지 변경"; return true; }
             ReleaseRequest();
             Destination = room;
@@ -117,6 +131,7 @@ namespace UnityGameJam.Shelter
         public void Stop()
         {
             if (IsInElevator) { stopAfterRide = true; afterRideDestination = null; Status = "도착층에서 정지"; return; }
+            ReleaseRescueTarget(false);
             ReleaseRequest();
             route = null;
             Destination = null;
@@ -149,6 +164,7 @@ namespace UnityGameJam.Shelter
             transform.position = new Vector3(point.x, point.y, transform.position.z);
             Velocity = dt > 0 ? (point - previous) / dt : Vector2.zero;
             if (Mathf.Abs(Velocity.x) > 0.01f) facing = Mathf.Sign(Velocity.x);
+            SyncPassengerPosition();
             Animate(dt);
         }
         public void FinishRide(ShelterElevator lift)
@@ -161,7 +177,7 @@ namespace UnityGameJam.Shelter
             {
                 var next = afterRideDestination; afterRideDestination = null;
                 Destination = null; // The remaining route still belongs to the previous order.
-                if (!MoveTo(next)) Stop();
+                if (!MoveTo(next, destinationOffset)) Stop();
                 return;
             }
             if (!IsMoving) Arrive(); else { Status = "MOVING"; ReserveNextRide(); }
@@ -176,21 +192,126 @@ namespace UnityGameJam.Shelter
         void OnDisable()
         {
             if (CurrentElevator) CurrentElevator.Cancel(this, true);
+            ResetRescue();
             ReleaseRequest(); route = null;
         }
         void Arrive()
-        { CurrentRoom = Destination && Destination.kind == ShelterArea.AreaKind.Room ? Destination : null; Status = "ARRIVED"; }
+        {
+            CurrentRoom = Destination && Destination.kind == ShelterArea.AreaKind.Room ? Destination : null;
+            Status = "ARRIVED";
+            if (!rescueTarget) return;
+            if (carrying)
+            {
+                ReleaseRescueTarget(CurrentRoom == rescueBed && rescueBed && rescueBed.IsOperational);
+                return;
+            }
+            if (!rescueTarget.NeedsRescue || !rescueBed || !rescueBed.IsOperational ||
+                !rescueTarget.isActiveAndEnabled || Vector2.Distance(transform.position, rescueTarget.transform.position) > 0.55f)
+            {
+                Stop();
+                return;
+            }
+            carrying = true;
+            rescueTarget.CurrentRoom = null;
+            SyncPassengerPosition();
+            if (!MoveTo(rescueBed, arrivalOffset)) Stop();
+        }
+
+        // The patient's reservation spans both trips so a second rescuer cannot take the same patient.
+        public bool TryRescue(ShelterWalker target)
+        {
+            if (!target || target == this || IsMovementLocked || rescueTarget || target.rescuedBy ||
+                !target.isActiveAndEnabled || !target.NeedsRescue || target.IsInElevator) return false;
+            FindNavigation();
+            if (!navigation) return false;
+            navigation.Refresh();
+            var pickup = navigation.AreaAt(target.transform.position);
+            if (!pickup) return false;
+            foreach (var bed in navigation.Areas)
+            {
+                if (bed.kind != ShelterArea.AreaKind.Room || bed.roomType != ShelterRoomType.Sleeping || !bed.IsOperational ||
+                    !navigation.TryFindElevatorPath(target.transform.position, bed, arrivalOffset, walkSpeed, out _)) continue;
+                if (!MoveTo(pickup, target.transform.position.x - pickup.Centre.x)) return false;
+                rescueTarget = target;
+                rescueBed = bed;
+                target.rescuedBy = this;
+                return true;
+            }
+            return false;
+        }
+
+        internal void OnFainted()
+        {
+            // If already riding, the existing elevator takes the patient to its landing before dropping anyone.
+            Stop();
+            if (!IsInElevator) ResolveInitialRoom();
+        }
+
+        internal void ResetRescue()
+        {
+            if (rescuedBy)
+            {
+                var carrier = rescuedBy;
+                if (carrier.CurrentElevator) carrier.CurrentElevator.Cancel(carrier, true);
+                carrier.Stop();
+            }
+            if (!rescueTarget) return;
+            if (CurrentElevator) CurrentElevator.Cancel(this, true);
+            Stop();
+        }
+
+        private void SyncPassengerPosition()
+        {
+            if (carrying && rescueTarget)
+                rescueTarget.transform.position = transform.position + new Vector3(-0.32f * facing, 0.65f, -0.02f);
+        }
+
+        private void ReleaseRescueTarget(bool delivered)
+        {
+            var target = rescueTarget;
+            if (target)
+            {
+                target.rescuedBy = null;
+                if (carrying)
+                {
+                    Vector3 drop = transform.position;
+                    if (delivered)
+                    {
+                        // Set down beside the carrier, leaving both survivors individually clickable.
+                        float direction = drop.x <= rescueBed.Centre.x ? 1f : -1f;
+                        drop.x = rescueBed.ArrivalPoint(drop.x - rescueBed.Centre.x + direction * 0.8f).x;
+                    }
+                    target.transform.position = drop;
+                    target.ResolveInitialRoom();
+                    if (delivered)
+                    {
+                        target.CurrentRoom = rescueBed;
+                        target.Identity.BeginBedRest();
+                    }
+                }
+            }
+            carrying = false;
+            rescueTarget = null;
+            rescueBed = null;
+        }
 
         public void Tick(float deltaTime, System.Func<Vector2, Vector2, float> movementFraction = null)
         {
+            AdvanceRoute(deltaTime, movementFraction);
+            SyncPassengerPosition();
+        }
+
+        private void AdvanceRoute(float deltaTime, System.Func<Vector2, Vector2, float> movementFraction)
+        {
             Velocity = Vector2.zero;
             if (IsInElevator) return; // The single vehicle update carries its passenger; never simulate it per requester.
+            if (rescueTarget && !IsMoving) Stop();
             if (deltaTime <= 0f || !IsMoving || IsMovementLocked) return;
             if (navigation == null || Destination == null || !Destination.IsWalkable)
             {
                 Stop(); Status = "NO ROUTE"; return;
             }
-            if (routeVersion != navigation.Version && !MoveTo(Destination))
+            if (routeVersion != navigation.Version && !MoveTo(Destination, destinationOffset))
             {
                 Stop(); Status = "NO ROUTE"; return;
             }

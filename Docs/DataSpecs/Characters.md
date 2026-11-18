@@ -8,7 +8,7 @@
 
 ## 2026-11-18 좀비 전투 소비 연결
 
-기존 시트/CSV/DB/ID/초기값은 유지한다. ZombieAgent가 장비를 반영한 CharacterIdentity.Combat 및 CurrentMental/SetMental을 사용한다. BunkerRules(data.bunker.rules)의 mentalMaximum=100, faintDurationTicks=40, wakeMental=30을 공용 CharacterIdentity에 연결했다. SetMental은 0 하한 계약을 유지하고 상한을 적용하며, 0인 동안 이동·작업·전투를 차단한다. 양수 회복 또는 40틱 경과 시 다시 행동 가능. ResetMental은 기존 Definition.Mental로 복원. 이전 본문의 전투/상한/기절 미연결 설명은 이 계약으로 대체한다. [좀비 명세](Zombies.md).
+현재 구조·각성 조건은 [벙커 규칙](BunkerRules.md)의 방 멘탈과 기절 구조를 따른다. 아래는 최초 전투 연결 시점의 기록이다. 기존 시트/CSV/DB/ID/초기값은 유지한다. ZombieAgent가 장비를 반영한 CharacterIdentity.Combat 및 CurrentMental/SetMental을 사용한다. BunkerRules(data.bunker.rules)의 mentalMaximum=100, faintDurationTicks=40, wakeMental=30을 공용 CharacterIdentity에 연결했다. SetMental은 0 하한 계약을 유지하고 상한을 적용하며, 0인 동안 이동·작업·전투를 차단한다. 양수 회복 또는 40틱 경과 시 다시 행동 가능. ResetMental은 기존 Definition.Mental로 복원. 이전 본문의 전투/상한/기절 미연결 설명은 이 계약으로 대체한다. [좀비 명세](Zombies.md).
 
 ## 현재 편집 원본 — Google Sheets (2026-11-18)
 

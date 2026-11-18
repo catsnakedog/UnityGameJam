@@ -41,28 +41,35 @@ namespace UnityGameJam.Characters
         public CharacterDefinition Definition { get; private set; }
         public string Id => Definition?.Id;
         public int CurrentMental { get; private set; }
-        public int FaintTicksRemaining { get; private set; }
-        public bool CanAct => CurrentMental > 0;
+        public bool IsFainted { get; private set; }
+        public bool IsRestingAfterRescue { get; private set; }
+        public bool CanAct => !IsFainted && CurrentMental > 0;
         public bool IsTired => rules && CanAct && CurrentMental <= rules.TiredMentalThreshold;
         BunkerRules rules;
-        int guardDutyTicks;
         public void ConfigureMental(BunkerRules value) { rules = value; SetMental(CurrentMental); }
-        public void ResetMental() { guardDutyTicks = 0; FaintTicksRemaining = 0; SetMental(Definition.Mental); }
-        internal void AdvanceGuardDutyTick()
+        public void ResetMental()
         {
-            var walker = GetComponent<ShelterWalker>();
-            var room = walker.CurrentRoom;
-            if (!isActiveAndEnabled || !CanAct || walker.IsInElevator || !room || !room.IsWalkable ||
-                room.roomType != ShelterRoomType.ZombieInvasion || !room.ContainsFeet(transform.position))
-            { guardDutyTicks = 0; return; }
-            if (++guardDutyTicks < rules.GuardTicksPerMental) return;
-            guardDutyTicks = 0;
-            SetMental(CurrentMental - 1);
+            GetComponent<ShelterWalker>().ResetRescue();
+            IsFainted = false;
+            IsRestingAfterRescue = false;
+            SetMental(Definition.Mental);
+        }
+        internal void BeginBedRest()
+        {
+            IsRestingAfterRescue = true;
+            SetMental(CurrentMental);
         }
         public void AdvanceMentalTick()
         {
-            if (CurrentMental == 0 && FaintTicksRemaining > 0 && --FaintTicksRemaining == 0) SetMental(rules.WakeMental);
-            RefreshStatusLabel();
+            if (!rules || !isActiveAndEnabled) return;
+            var walker = GetComponent<ShelterWalker>();
+            var room = walker.CurrentRoom;
+            if (!room || !room.IsWalkable || walker.IsMoving || walker.IsInElevator ||
+                !room.ContainsFeet(transform.position)) return;
+            if (room.roomType == ShelterRoomType.Sleeping && room.IsOperational && (CanAct || IsRestingAfterRescue))
+                SetMental(ClampMental((long)CurrentMental + rules.SleepMentalPerTick));
+            else if (room.roomType == ShelterRoomType.ZombieInvasion && CanAct)
+                SetMental(Mathf.Max(0, CurrentMental - rules.GuardMentalLossPerTick));
         }
         public int ClampMental(long value) => (int)System.Math.Max(0, System.Math.Min(rules ? rules.MentalMaximum : int.MaxValue, value));
         [SerializeField] UnityEngine.UI.Image mentalFill;
@@ -87,11 +94,21 @@ namespace UnityGameJam.Characters
         public void SetMental(int value)
         {
             if (value < 0) throw new System.ArgumentOutOfRangeException(nameof(value));
-            int previous = CurrentMental;
             CurrentMental = ClampMental(value);
-            if (CurrentMental == 0) guardDutyTicks = 0;
-            if (CurrentMental > 0) FaintTicksRemaining = 0;
-            else if (rules && (previous > 0 || FaintTicksRemaining == 0)) FaintTicksRemaining = rules.FaintDurationTicks;
+            if (CurrentMental == 0 && !IsFainted)
+            {
+                IsFainted = true;
+                GetComponent<ShelterWalker>().OnFainted();
+            }
+            else if (IsRestingAfterRescue && CurrentMental >= rules.WakeMental)
+            {
+                var room = GetComponent<ShelterWalker>().CurrentRoom;
+                if (room && room.roomType == ShelterRoomType.Sleeping && room.IsOperational)
+                {
+                    IsFainted = false;
+                    IsRestingAfterRescue = false;
+                }
+            }
             RefreshStatusLabel();
         }
     }

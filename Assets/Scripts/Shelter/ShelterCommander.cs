@@ -77,7 +77,9 @@ namespace UnityGameJam.Shelter
             {
                 if (actor.gameObject.scene != gameObject.scene || !actor.playerSelectable || !actor.isActiveAndEnabled || !actor.ContainsClick(point)) continue;
                 float distance = Vector2.Distance(point, (Vector2)actor.transform.position + Vector2.up);
-                if (distance < nearest) { hit = actor; nearest = distance; }
+                bool preferPatient = Mathf.Approximately(distance, nearest) && Selected && !Selected.IsMovementLocked &&
+                    actor.NeedsRescue && hit && !hit.NeedsRescue;
+                if (distance < nearest || preferPatient) { hit = actor; nearest = distance; }
             }
             return hit;
         }
@@ -89,6 +91,12 @@ namespace UnityGameJam.Shelter
             if (hit != null)
             {
                 ClearRejected();
+                if (Selected && Selected != hit && !Selected.IsMovementLocked && hit.NeedsRescue)
+                {
+                    bool accepted = Selected.TryRescue(hit);
+                    Message = accepted ? hit.characterName + " 구조 중 · 수면실로 이동" : "현재 구조할 수 없습니다";
+                    return accepted;
+                }
                 if (Selected != null) Selected.SetSelected(false);
                 Selected = hit;
                 Selected.SetSelected(true);
@@ -113,7 +121,7 @@ namespace UnityGameJam.Shelter
                 rejected = destination;
                 rejectedUntil = Time.unscaledTime + 2f;
                 destination.ShowHighlight(true, true);
-                Message = Selected.IsMovementLocked ? "전투 중이거나 탈진하여 이동할 수 없습니다" : "NO ROUTE TO " + destination.displayName;
+                Message = Selected.IsRescuing ? "부상자를 구조하고 있습니다" : Selected.IsMovementLocked ? "전투 중이거나 탈진하여 이동할 수 없습니다" : "NO ROUTE TO " + destination.displayName;
                 return false;
             }
             Message = Selected.characterName + "  >  " + destination.displayName;

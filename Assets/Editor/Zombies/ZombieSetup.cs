@@ -35,15 +35,6 @@ public static class ZombieSetup
             throw new InvalidOperationException("Duplicate data/zombies address.");
         settings.CreateOrMoveEntry(guid, group).SetAddress(ZombieData.Address);
         var bunker = AssetDatabase.LoadAssetAtPath<BunkerRules>(BunkerSetup.RulesPath);
-        var so = new SerializedObject(bunker);
-        // Only the pre-feature schema (all fields absent/zero) is migrated. Subsequent designer values are preserved.
-        if (so.FindProperty("mentalMaximum").intValue == 0 && so.FindProperty("faintDurationTicks").intValue == 0 && so.FindProperty("wakeMental").intValue == 0)
-        {
-            so.FindProperty("mentalMaximum").intValue = 100;
-            so.FindProperty("faintDurationTicks").intValue = 40;
-            so.FindProperty("wakeMental").intValue = 30;
-            so.ApplyModifiedPropertiesWithoutUndo();
-        }
         bunker.Validate();
         EnsurePrefab();
         EnsureSurvivorLabel();

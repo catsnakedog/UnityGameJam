@@ -73,7 +73,7 @@ public static class ZombieQueueChecks
             ctrl.Simulation.Advance(period * ctrl.Simulation.Rules.SecondsPerTick);
             for (int i = 0; i < z.Length; i++)
                 Check(Mathf.Abs(outside * (positions[i] - z[i].transform.position.x) - period * ctrl.Simulation.Rules.SecondsPerTick * ctrl.Data.WalkSpeed) < 0.001f, "Every approaching zombie walks at the same speed");
-            Check(z[0].Hp == 1 && z[1].Hp == 2 && z[2].Hp == 2 && hero.CurrentMental == 60, "A guard shoots only the front target, and waiting zombies do not retaliate");
+            Check(z[0].Hp == 1 && z[1].Hp == 2 && z[2].Hp == 2 && hero.CurrentMental == hero.Definition.Mental - period * ctrl.Simulation.Rules.GuardMentalLossPerTick, "A guard shoots only the front target, and waiting zombies do not retaliate");
             ctrl.Simulation.Advance(period * ctrl.Simulation.Rules.SecondsPerTick);
             Check(ctrl.Zombies.SequenceEqual(z.Skip(1)) && z[1].Hp == 2 && z[2].Hp == 2, "Killing the front never spills that shot into the queue");
 
@@ -111,7 +111,7 @@ public static class ZombieQueueChecks
             Step(10); Check(Gap(ctrl) >= ctrl.Data.MinimumSpacing - 0.002f, "Large frame catch-up cannot merge agents");
             var before = z.Select(a => a.transform.position).ToArray(); ctrl.Simulation.AcquirePause(stop); Step(10);
             Check(z.Select(a => a.transform.position).SequenceEqual(before), "Pause freezes entire queue"); ctrl.Simulation.ReleasePause(stop);
-            hero.SetMental(60); Move(z[0].TargetRoom); ctrl.AdvanceMovement(0.04f);
+            hero.ResetMental(); Move(z[0].TargetRoom); ctrl.AdvanceMovement(0.04f);
             die = 0; z[0].ProcessTick(5); z[0].ProcessTick(10);
             Check(z[0].State == ZombieState.Dead && ctrl.Zombies.Count == 5 && ctrl.Zombies.All(a => a.Hp == a.InitialHp), "Killing one occupant leaves five separate intact zombies");
             Step(2); Check(Gap(ctrl) >= ctrl.Data.MinimumSpacing - 0.002f, "Queue resumes safely when a blocker dies");

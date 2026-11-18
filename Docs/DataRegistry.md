@@ -6,6 +6,8 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 ## 등록된 데이터
 
+수면실·전투방의 틱당 멘탈과 구조 후 각성 기준은 기존 `data.bunker.rules`에서 편집한다. 구조 대상과 운반자는 회차 상태다. [규칙 명세](DataSpecs/BunkerRules.md) · [구현·컴파일 검증](DataHistory/20261119-room-rescue-02-code.md)
+
 벙커 생존자의 피곤한 표정 전환 기준은 기존 `data.bunker.rules`에서 담당한다. 캐릭터 식별과 현재 멘탈은 기존 `data.characters` 및 CharacterIdentity를 사용한다. [멘탈 표시 명세](DataSpecs/BunkerRules.md) · [번들·Play 검증](DataHistory/20261119-survivor-animation-verified.md)
 
 게임 실행 소스는 기존 `editor.data-tool`에서 선택한다. 연결 목록은 SpreadConfig를 재사용하며 켜면 실행 때마다 활성 시트를 읽고, 끄면 내부 CSV 기반 데이터를 사용한다. [설정 명세](DataSpecs/DataToolSettings.md) · [두 모드 Windows 실행 검증](DataHistory/20261119-live-sheets-02-verified.md)
@@ -62,7 +64,7 @@ SpreadConfig 연결 작업 `Codex spread-config-20261118` 완료: 기존 `editor
 | `data.zombies` | active (이동 수치 임시) / Codex zombie-sheets-20261118 | 좀비 ID·웨이브 구간·기본 HP·전투력·주사위 판정·이동/접촉 | [Zombies](https://docs.google.com/spreadsheets/d/1mk2k50Kk5fqtwSMTrCEui_cuhgOGMbh1aIX9e0zETl8/edit?gid=1826540193#gid=1826540193) / [ZombieRules](https://docs.google.com/spreadsheets/d/1mk2k50Kk5fqtwSMTrCEui_cuhgOGMbh1aIX9e0zETl8/edit?gid=551346486#gid=551346486) → `Assets/Settings/Shelter/Zombies.csv`, `ZombieRules.csv` → 기존 `ZombieData.asset` | [Zombies](DataSpecs/Zombies.md), [ZombieRules](DataSpecs/ZombieRules.md) |
 | `data.shelter.items` | active (사용·장착 연결) / 벙커 물자 | 물자 ID·표시명·사용 또는 장착 분류·멘탈 회복량·등급·획득 이벤트·장착 전투/개발 보정 | [ShelterItems](https://docs.google.com/spreadsheets/d/158_0ouUqo0t8b6hI9U_r-ilHkHkzPqoQ_tOVGc4wjp4/edit?gid=1351218376#gid=1351218376) → `Assets/Settings/Data/Csv/ShelterItems.csv` | [ShelterItems](DataSpecs/ShelterItems.md) |
 | `data.events` | active (사용자 예시) / 선택형 이벤트 / Codex event-effects-20261118 | 사건 ID·타이틀·본문·Yes/No 효과·발생 조건, Events, eventId, laptop; 《60 Seconds!》식 사건 알림 참고 | [Events](https://docs.google.com/spreadsheets/d/1OCAvPsKuDhUua0sQuHHT0L1Hr6R24ZBA2fU4QzJ6CMU/edit?gid=1622955486#gid=1622955486) → `Assets/Settings/Data/Csv/Events.csv` | [Events](DataSpecs/Events.md) |
-| `data.bunker.rules` | active / Codex 벙커 시뮬레이션 | 벙커 전체 틱, 초/틱, 이벤트·작업·습격 주기, 좀비 접근 시간, 보초 원거리 사격 주기, 침입 시 전원 멘탈 손실, 보초 배치 시간당 멘탈 소모, 개발 효율·작업 멘탈, 멘탈 상한·기절·회복, 허기·통조림 | `Assets/Settings/Shelter/BunkerRules.asset` | [BunkerRules](DataSpecs/BunkerRules.md) |
+| `data.bunker.rules` | active / Codex 벙커 시뮬레이션 | 벙커 전체 틱, 초/틱, 이벤트·작업·습격 주기, 좀비 접근 시간, 보초 원거리 사격 주기, 침입 시 전원 멘탈 손실, 전투방 틱당 멘탈 소모·수면실 회복, 개발 효율·작업 멘탈, 멘탈 상한·기절·회복, 허기·통조림 | `Assets/Settings/Shelter/BunkerRules.asset` | [BunkerRules](DataSpecs/BunkerRules.md) |
 | `data.example-items` | deprecated (삭제 완료) / Codex example-cleanup-20261118 | 폐기한 도구 시연 데이터, ExampleItems | 없음. 시트/CSV/생성 DB/연결 설정에서 제거 | [폐기 명세](DataSpecs/ExampleItems.md) |
 | `data.farming.pickups` | active / 파밍 | 사람·물자 종류, 파밍 운반 무게/슬롯 비용, pickup weight, carry cost | [FarmingData](https://docs.google.com/spreadsheets/d/1-Lh4oAsNLFpcfi4KGDePAxdBvVdU3pueHlGUxzibsM8/edit?gid=1800384264#gid=1800384264) → `Assets/Settings/Farming/FarmingData.csv` | [FarmingData](DataSpecs/FarmingData.md) |
 | `data.farming.rules` | active / 파밍 | 제한시간, 운반 용량, 이동속도, 상호작용 거리, 던지기, 경고, 기본 호실 크기, 방 노출 시간, 시작 운반 인물, 거리순 호실별 인원과 레전드 스폰 가중치 | `Assets/Settings/Farming/FarmingRules.asset` | [FarmingRules](DataSpecs/FarmingRules.md) |

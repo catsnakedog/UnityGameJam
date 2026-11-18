@@ -91,7 +91,7 @@ public static class ZombieChecks
         }
         finally { foreach (var pair in otherRooms) pair.Key.roomType = pair.Value; }
         Check(first.State == ZombieState.Occupying && second.State == ZombieState.Occupying && first.TargetRoom == room && second.TargetRoom == room, "Two live invaders occupy the same room");
-        foreach (var actor in actors) { actor.SetMental(60); Move(actor, room); }
+        foreach (var actor in actors) { actor.ResetMental(); Move(actor, room); }
         Advance(ctrl, 0.05f);
         int secondHp = second.Hp;
         var dice = ScriptRolls(ctrl, 1, 6, 6, 6, 6);
@@ -129,7 +129,7 @@ public static class ZombieChecks
             void Reset()
             {
                 dev.RestartDevelopment();
-                foreach (var actor in actors) { actor.ResetMental(); Move(actor, sleeping); }
+                foreach (var actor in actors) { actor.ResetMental(); Move(actor, common); }
                 Advance(ctrl, 0);
             }
             Reset();
@@ -160,19 +160,19 @@ public static class ZombieChecks
             sim.Advance(0.5 * sim.Rules.SecondsPerTick);
             Check(z.State == ZombieState.Approaching && z.ResolvedCombats == 0 && !guard.IsOccupied, "No early attack or breach at tick one");
             var rolls = ScriptRolls(ctrl, 6, 1, 1, 1, 1); Ticks(1);
-            Check(rolls.Count == 0 && z.ResolvedCombats == 4 && z.Hp == z.InitialHp && actors.All(a => a.CurrentMental == 60), "Four guards fire on tick two without distant retaliation");
+            Check(rolls.Count == 0 && z.ResolvedCombats == 4 && z.Hp == z.InitialHp && actors.All(a => a.CurrentMental == 56), "Four guards fire on tick two without distant retaliation");
             Ticks(1);
             Check(z.ResolvedCombats == 4 && !guard.IsOccupied, "No additional volley on tick three");
             rolls = ScriptRolls(ctrl, 1, 6, 6, 6, 6); Ticks(1);
-            Check(rolls.Count == 0 && z.State == ZombieState.Dead && ctrl.Zombies.Count == 0 && actors.All(a => a.CurrentMental == 65), "The second volley on tick four can stop the zombie before it breaches");
+            Check(rolls.Count == 0 && z.State == ZombieState.Dead && ctrl.Zombies.Count == 0 && actors.All(a => a.CurrentMental == 57), "The second volley on tick four can stop the zombie before it breaches");
             Ticks(4);
-            Check(actors.All(a => a.CurrentMental == 64), "Every guard loses one mental after eight assigned ticks");
+            Check(actors.All(a => a.CurrentMental == 49), "Every guard loses two mental per assigned tick");
 
             Reset(); Move(actors[0], guard); z = ctrl.SpawnWave(); ctrl.RollDie = Outcome(false); Ticks(travel - 1);
             Check(z.ResolvedCombats == 2 && z.State == ZombieState.Approaching && !guard.IsOccupied, "Two volleys before tick six and no early entry");
             rolls = ScriptRolls(ctrl, 1, 6, 6, 1); Ticks(1);
             Check(rolls.Count == 0 && z.State == ZombieState.Defending && z.Hp == 1 && guard.IsOccupied &&
-                z.ResolvedCombats == 4 && actors[0].CurrentMental == 56 && actors.Skip(1).All(a => a.CurrentMental == 58), "At tick six the last volley hits, breach costs everyone two, then melee hits one guard immediately");
+                z.ResolvedCombats == 4 && actors[0].CurrentMental == 44 && actors.Skip(1).All(a => a.CurrentMental == 58), "At tick six the last volley hits, breach costs everyone two, then melee hits one guard immediately");
             ctrl.RollDie = Outcome(false); Ticks(period - 1);
             Check(z.ResolvedCombats == 4, "Melee does not repeat at the shorter ranged interval");
             Ticks(1);
@@ -181,14 +181,14 @@ public static class ZombieChecks
             Check(z.State == ZombieState.Defending && actors[0].CanAct && actors.Skip(1).All(a => a.CurrentMental == 58), "A living guard holds after three melee rounds and the same breach is charged only once");
             actors[0].SetMental(2); Ticks(period);
             Check(!actors[0].CanAct && z.State == ZombieState.Invading && !guard.IsOccupied && z.Hp == 1, "When the last guarding survivor faints the invader continues with its remaining HP");
-            for (int i = 0; i < sim.Rules.FaintDurationTicks; i++) actors[0].AdvanceMentalTick();
-            Check(actors[0].CurrentMental == sim.Rules.WakeMental, "Fainted guard wakes at the configured mental value");
+            for (int i = 0; i < 41; i++) actors[0].AdvanceMentalTick();
+            Check(actors[0].IsFainted && actors[0].CurrentMental == 0, "Fainted guard waits for rescue beyond the former timer");
 
             Reset(); Move(actors[0], guard); Ticks(7);
             Move(actors[0], sleeping); Ticks(1); Move(actors[0], guard); Ticks(7);
-            Check(actors[0].CurrentMental == 60, "Leaving guard duty resets its personal seven-tick remainder");
+            Check(actors[0].CurrentMental == 37, "One sleep tick and fourteen guard ticks use the respective room rates");
             Ticks(1);
-            Check(actors[0].CurrentMental == 59 && actors[1].CurrentMental == 60, "Guard duty drains while no zombies are present");
+            Check(actors[0].CurrentMental == 35 && actors[1].CurrentMental == 60, "Guard duty drains while no zombies are present");
             Reset(); Move(actors[0], guard); z = ctrl.SpawnWave(); ctrl.RollDie = Outcome(false); Ticks(volley);
             ctrl.RollDie = Outcome(true); Ticks(travel - volley);
             Check(z.State == ZombieState.Dead && actors.Skip(1).All(a => a.CurrentMental == 60) && !guard.IsOccupied, "A lethal final volley prevents both entry and shelter-wide mental loss");
@@ -197,7 +197,7 @@ public static class ZombieChecks
             rolls = ScriptRolls(ctrl, 4, 4, 6); Ticks(volley);
             Check(rolls.Count == 0 && z.Hp == 1, "One guard can hit while a teammate ties");
             rolls = ScriptRolls(ctrl, 6, 1); Advance(ctrl, 0.01f);
-            Check(rolls.Count == 0 && z.Hp == 1 && actors[0].CurrentMental == 60, "Only the tied shot rerolls; it cannot cause melee damage outside");
+            Check(rolls.Count == 0 && z.Hp == 1 && actors[0].CurrentMental == 56, "Only the tied shot rerolls; it cannot cause melee damage outside");
 
             Reset(); z = ctrl.SpawnWave(); Ticks(travel);
             Check(z.State == ZombieState.Invading && actors.All(a => a.CurrentMental == 58), "An undefended room gets six ticks of warning and charges one breach");
@@ -217,7 +217,7 @@ public static class ZombieChecks
             for (int i = 0; i < 1500 && z.State != ZombieState.Occupying; i++)
             { Advance(ctrl, 0.05f); climbed |= z.GetComponent<ShelterWalker>().IsInElevator; }
             Check(climbed && z.State == ZombieState.Occupying && target.IsOccupied && target.IsWalkable && !target.IsOperational, "Elevator graph reaches target and occupies without blocking entry");
-            actors[0].SetMental(60); Move(actors[0], target);
+            actors[0].ResetMental(); Move(actors[0], target);
             Check(!actors[0].GetComponent<ShelterWalker>().CanWorkInCurrentRoom, "Occupied room stops work");
             ctrl.RollDie = Outcome(true); Advance(ctrl, 0.05f);
             Check(z.State == ZombieState.Encounter, "Entering occupied room automatically starts combat");
@@ -233,9 +233,9 @@ public static class ZombieChecks
             Reset(); await CheckSharedOccupation(ctrl, guard, plan, actors);
 
             Reset(); Move(actors[0], plan); float progress = dev.Progress.Planning;
-            plan.SetOccupied(checks, true); sim.Advance(sim.Rules.SecondsPerTick);
+            plan.SetOccupied(checks, true); sim.Advance(sim.Rules.SecondsPerTick * sim.Rules.WorkEveryTicks);
             Check(dev.Progress.Planning == progress, "Real work tick produces no progress in occupied planning room");
-            plan.SetOccupied(checks, false); sim.Advance(sim.Rules.SecondsPerTick);
+            plan.SetOccupied(checks, false); sim.Advance(sim.Rules.SecondsPerTick * sim.Rules.WorkEveryTicks);
             Check(dev.Progress.Planning > progress, "Real work tick resumes after liberation");
 
             Reset(); sim.SetPendingWaveHpModifier(4); sim.Advance(sim.Rules.InvasionEveryTicks * sim.Rules.SecondsPerTick);

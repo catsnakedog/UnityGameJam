@@ -1,5 +1,17 @@
 # 벙커 틱·작업 규칙
 
+## 방 멘탈과 기절 구조
+
+| 필드 | 타입 · 단위 | 필수 · 초기값 · 제약 |
+|---|---|---|
+| sleepMentalPerTick | int · 수면실 1인당 멘탈 포인트/틱 | 필수 5, 1 이상 |
+| guardMentalLossPerTick | int · 전투방 1인당 멘탈 포인트/틱 | 필수 2, 0 이상 |
+| wakeMental | int · 수면실에 인계된 기절자의 각성 기준(이상) | 필수 50, 1 이상 mentalMaximum 이하 |
+
+CharacterIdentity.AdvanceMentalTick이 방 소속·정지·활성 여부를 확인해 기존 멘탈에 적용한다. 운영 중인 수면실에서 의식이 있거나 구조 완료된 사람은 매 틱 회복한다. 전투방은 주둔 중 매 틱 소모하며 교전 중에도 적용한다. 범위는 0부터 mentalMaximum까지다. 기절 후 회복량을 받아도 수면실 인계 전에는 행동할 수 없다. 구조는 다른 행동 가능한 캐릭터를 선택한 뒤 기절자를 클릭하면 시작한다. 운반자와 피구조자는 같은 경로로 이동한다. 방 멘탈과 기절 상태는 회차마다 초기화한다.
+
+기존 guardTicksPerMental과 faintDurationTicks는 폐기하고 wakeMental은 각성 기준으로 전환한다. 시뮬레이션, 이동 명령, 초기 설치 및 검증 코드가 새 규칙을 소비한다. 별도 CSV·로더는 없으며 [변경 전 조사](../DataHistory/20261119-room-rescue-01-plan.md)에 근거를 기록했다.
+
 ## 생존자 피곤 상태 표시
 
 `tiredMentalThreshold`는 필수 정수이며 단위는 현재 멘탈 포인트다. 사용자가 정한 초기값은 50이며 허용 범위는 0부터 `mentalMaximum`까지다. 0은 기절이 우선한다. 행동 가능한 캐릭터의 현재 멘탈이 이 값 이하일 때 피곤한 대기와 걷기를 재생한다. 이동 속도와 능력은 기존 규칙을 따른다.
@@ -30,7 +42,7 @@ Windows 번들로 불러온 값 50과 6인의 51·50·0 전환을 확인했다. 
 
 벙커의 캐릭터 정보 카드는 씬 시뮬레이션이 로드한 `Rules.MentalMaximum`을 멘탈 게이지 상한으로 사용한다. 현재 포인트는 선택한 생존자에게서 읽는다. [카드 검증](../DataHistory/20261118-shelter-character-card-verified.md)
 
-기존 정본/주소/GUID/주기를 유지. 필수 int 필드 `mentalMaximum`(멘탈 포인트, >0, 최초100), `faintDurationTicks`(기본 틱, >0, 최초40), `wakeMental`(멘탈 포인트, >0 및 상한 이하, 최초30)을 추가한다. 빈 값/암묵 기본값 없음. 근거는 노션 전역 상수의 멘탈 상한100/기절1시간=40틱/깨어남30. CharacterIdentity.ConfigureMental/SetMental/AdvanceMentalTick과 BunkerSimulation.ProcessTick에서 소비. 멘탈 0은 행동 차단, 양수 회복은 탈진 해제, 기절 기간이 끝나면 wakeMental로 복원. 새 게임은 Characters의 원래 초기 멘탈로 리셋. 수치 원본은 이 SO만 소유. 기존 이벤트의 멘탈 효과도 같은 SetMental 경계에서 상한을 적용한다. [계획](../DataHistory/20261118-zombie-invasion-01-planned.md), [좀비 명세](Zombies.md). 기존 검증 기록의 멘탈 상한 미정 설명은 이 계약으로 대체한다.
+당시 계약이며 현재 기절·각성은 위의 방 멘탈과 기절 구조를 따른다. 기존 정본/주소/GUID/주기를 유지. 필수 int 필드 `mentalMaximum`(멘탈 포인트, >0, 최초100), `faintDurationTicks`(기본 틱, >0, 최초40), `wakeMental`(멘탈 포인트, >0 및 상한 이하, 최초30)을 추가한다. 빈 값/암묵 기본값 없음. 근거는 노션 전역 상수의 멘탈 상한100/기절1시간=40틱/깨어남30. CharacterIdentity.ConfigureMental/SetMental/AdvanceMentalTick과 BunkerSimulation.ProcessTick에서 소비. 멘탈 0은 행동 차단, 양수 회복은 탈진 해제, 기절 기간이 끝나면 wakeMental로 복원. 새 게임은 Characters의 원래 초기 멘탈로 리셋. 수치 원본은 이 SO만 소유. 기존 이벤트의 멘탈 효과도 같은 SetMental 경계에서 상한을 적용한다. [계획](../DataHistory/20261118-zombie-invasion-01-planned.md), [좀비 명세](Zombies.md). 기존 검증 기록의 멘탈 상한 미정 설명은 이 계약으로 대체한다.
 
 ## 현재 추가 계약 — 기획 선행 조건 (2026-11-18)
 
@@ -91,6 +103,6 @@ Windows 번들로 불러온 값 50과 6인의 51·50·0 전환을 확인했다. 
 | invasionApproachTicks | int · 선두가 막힘없이 생성 지점부터 입구까지 걷는 벙커 틱 | 6, 양수 | 공용 이동 속도 × 틱당 초 × 접근 틱으로 스폰 거리를 계산 |
 | guardVolleyEveryTicks | int · 보초의 원거리 사격 간격(벙커 틱) | 2, 필수 양수 | `BunkerRules.GuardVolleyEveryTicks`를 통해 `ZombieAgent`가 생성 후 첫 사격과 다음 사격을 예약한다. 입구 도착 틱에도 사격을 먼저 처리한다. |
 | invasionMentalLoss | int · 침입 1마리당 1인 멘탈 | 2, 0 이상 | 실내 진입 시 구조 인원 전원에 1회 |
-| guardTicksPerMental | int · 보초 멘탈 1점당 연속 배치 틱 | 8, 양수 | 행동 가능한 전투 방 인원별로 계산하고 이탈·탈진·재시작 때 잔여 시간 초기화 |
+| guardMentalLossPerTick | int · 보초 1인당 멘탈 포인트/틱 | 2, 0 이상 | 전투방에 배치된 행동 가능한 인원별로 매 틱 차감 |
 
 빈 값이나 암묵적 대체값을 사용하지 않는다. 기존 SO 주소·GUID와 로딩 수명을 유지한다. 개체의 남은 거리와 배치 시간은 해당 플레이에서만 사용한다. 기존 좀비 시트의 주사위 피해와 전원 침입 손실은 적용 대상과 시점이 다르다. [6틱 접근·2틱 사격 검증](../DataHistory/20261119-zombie-volley-02-verified.md)
