@@ -8,7 +8,7 @@
 
 ## 자유 배치
 
-현재 `Assets/Scenes/ShelterPrototype.unity`를 편집한다. Farming에서 구조한 캐릭터만 생성되며 벙커 씬을 직접 실행하면 명단이 비어 있다.
+현재 `Assets/Scenes/ShelterPrototype.unity`를 편집한다. 파밍에서 넘어오면 1번과 추가로 구조한 캐릭터가 생성된다. 벙커 씬을 직접 실행하면 명단이 비어 있다.
 
 | 추가할 것 | 메뉴 / 프리팹 | 배치 방법 |
 |---|---|---|

@@ -67,7 +67,7 @@ namespace ShelterRun
             timeFill.fillAmount = session.Remaining / session.Rules.Duration;
             var inventory = session.Player.Inventory;
             capacityText.text = $"운반  {inventory.Used} / {inventory.Capacity}칸";
-            rescuedText.text = $"벙커 투입   사람 {session.PeopleSaved}/{session.PeopleTotal}   ·   물자 {session.ItemsSaved}";
+            rescuedText.text = $"확보   사람 {session.PeopleSaved}/{session.PeopleTotal}   ·   물자 {session.ItemsSaved}";
             int filled = 0;
             foreach (var item in inventory.Carried)
                 for (int i = 0; i < item.Record.Weight && filled < slots.Count; i++) slots[filled++].Show(item.Record.Type);
@@ -87,14 +87,14 @@ namespace ShelterRun
             if (session.Phase == FarmingPhase.Ready)
             {
                 overlayTitle.text = $"{session.Rules.Duration:0.##}초, 챙기고 구하라";
-                overlayBody.text = $"복도에서 한 명을 들고 시작합니다. 각 호실의 생존자와 물자를 벙커로 옮기세요.\n문 앞에서 E로 입실 · 출구 문에서 E로 복도 복귀\n\nA / D   좌우 이동       E   문 / 들기 / 내려놓기\n한 번에 {session.Rules.Capacity}칸 · 사람 2~4칸 · 물자 1~2칸\n들고 나온 대상은 복도 왼쪽 벙커에서 E로 투입하세요.";
+                overlayBody.text = $"당신은 이미 확보된 생존자입니다. 빈손으로 출발해 각 호실의 생존자와 물자를 벙커로 옮기세요.\n문 앞에서 E로 입실 · 출구 문에서 E로 복도 복귀\n\nA / D   좌우 이동       E   문 / 들기 / 내려놓기\n한 번에 {session.Rules.Capacity}칸 · 사람 2~4칸 · 물자 1~2칸\n들고 나온 대상은 복도 왼쪽 벙커에서 E로 투입하세요.";
                 actionText.text = "E   파밍 시작";
             }
             else if (session.Phase == FarmingPhase.Finished)
             {
                 promptText.text = "벙커로 이동 버튼으로 계속   ·   [ R ] 다시 파밍";
                 overlayTitle.text = "파밍 종료";
-                overlayBody.text = $"벙커에 사람 {session.PeopleSaved}명과 물자 {session.ItemsSaved}개를 보냈습니다.\n\n남겨진 사람  {session.PeopleTotal - session.PeopleSaved}명\n미투입 운반분  {inventory.Used}칸\n\n투입하지 못한 대상은 벙커에 포함되지 않습니다.";
+                overlayBody.text = $"당신을 포함해 생존자 {session.PeopleSaved}명과 물자 {session.ItemsSaved}개를 확보했습니다.\n\n남겨진 사람  {session.PeopleTotal - session.PeopleSaved}명\n미투입 운반분  {inventory.Used}칸\n\n들고 있던 대상은 벙커에 포함되지 않습니다.";
                 actionText.text = "벙커로 이동";
             }
         }

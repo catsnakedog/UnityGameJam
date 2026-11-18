@@ -1,7 +1,29 @@
+PASS: Pick up person_02
+PASS: Deliver person_02
+PASS: Restart clears the prior rescue and restores the room pickups
 PASS: Fresh farming clears previous roster
+PASS: A fresh run starts empty-handed with only the player secured
+PASS: Secured count including player: 1
 PASS: Roster data loads
-PASS: 2 rescued: exact IDs, no items/unbanked/duplicate survivors
-PASS: No fixed example characters: 2
+PASS: 0 additional rescues: exact IDs including the player once
+PASS: Exact number of secured items reaches shelter
+PASS: Exact number of shelter characters: 1
+PASS: CSV abilities and mental on person_01
+PASS: Runtime mental does not mutate DB
+PASS: Exhausted survivor cannot move
+PASS: Spawned survivor can navigate to combat room
+PASS: Shelter reload preserves IDs without duplicate spawns
+PASS: Fresh farming clears previous roster
+PASS: A fresh run starts empty-handed with only the player secured
+PASS: Pick up person_02
+PASS: Deliver person_02
+PASS: Pick up canfood
+PASS: Deliver canfood
+PASS: Secured count including player: 2
+PASS: Roster data loads
+PASS: 1 additional rescues: exact IDs including the player once
+PASS: Exact number of secured items reaches shelter
+PASS: Exact number of shelter characters: 2
 PASS: CSV abilities and mental on person_01
 PASS: Runtime mental does not mutate DB
 PASS: Exhausted survivor cannot move
@@ -12,14 +34,24 @@ PASS: Exhausted survivor cannot move
 PASS: Spawned survivor can navigate to combat room
 PASS: Shelter reload preserves IDs without duplicate spawns
 PASS: Fresh farming clears previous roster
+PASS: A fresh run starts empty-handed with only the player secured
+PASS: Pick up person_02
+PASS: Deliver person_02
+PASS: Pick up person_03
+PASS: Deliver person_03
+PASS: Pick up person_04
+PASS: Deliver person_04
+PASS: Pick up person_05
+PASS: Deliver person_05
+PASS: Pick up person_06
+PASS: Deliver person_06
+PASS: Pick up canfood
+PASS: Deliver canfood
+PASS: Secured count including player: 6
 PASS: Roster data loads
-PASS: 0 rescued: exact IDs, no items/unbanked/duplicate survivors
-PASS: No fixed example characters: 0
-PASS: Shelter reload preserves IDs without duplicate spawns
-PASS: Fresh farming clears previous roster
-PASS: Roster data loads
-PASS: 6 rescued: exact IDs, no items/unbanked/duplicate survivors
-PASS: No fixed example characters: 6
+PASS: 5 additional rescues: exact IDs including the player once
+PASS: Exact number of secured items reaches shelter
+PASS: Exact number of shelter characters: 6
 PASS: CSV abilities and mental on person_01
 PASS: Runtime mental does not mutate DB
 PASS: Exhausted survivor cannot move

@@ -15,7 +15,7 @@ namespace ShelterRun
         [SerializeField] FarmingHud hud;
         [SerializeField] FarmingPickup[] pickupPrefabs;
         readonly List<FarmingPickup> pickups = new List<FarmingPickup>();
-        readonly List<string> depositedIds = new List<string>();
+        readonly List<string> securedIds = new List<string>();
         readonly HashSet<FarmingPickup> depositedObjects = new HashSet<FarmingPickup>();
         FarmingDataLoader loader;
         int startFrame;
@@ -25,7 +25,7 @@ namespace ShelterRun
         public FarmingPlayer Player => player;
         public FarmingBunker Bunker => bunker;
         public IReadOnlyList<FarmingPickup> Pickups => pickups;
-        public IReadOnlyList<string> DepositedIds => depositedIds.AsReadOnly();
+        public IReadOnlyList<string> SecuredIds => securedIds.AsReadOnly();
         public float Remaining { get; private set; }
         public int PeopleSaved { get; private set; }
         public int ItemsSaved { get; private set; }
@@ -65,28 +65,20 @@ namespace ShelterRun
         {
             var prefabs = pickupPrefabs.ToDictionary(prefab => prefab.RecordId, StringComparer.Ordinal);
             var placements = FarmingSpawnLayout.Create(FarmingMap2D.Instance, bunker, Rules, loader.Database);
-            var starter = loader.Database.Get(Rules.StartingPersonId);
-            foreach (var record in placements.Select(p => p.Record).Append(starter))
-                if (!prefabs.ContainsKey(record.Id))
-                    throw new InvalidOperationException($"Missing farming pickup prefab for {record.Id}.");
+            foreach (var placement in placements)
+                if (!prefabs.ContainsKey(placement.Record.Id))
+                    throw new InvalidOperationException($"Missing farming pickup prefab for {placement.Record.Id}.");
 
-            FarmingPickup Spawn(FarmingRecord record, Vector3 position, Transform parent, Transform slot = null)
-            {
-                var item = Instantiate(prefabs[record.Id], position, Quaternion.identity, parent);
-                item.Initialize(record, slot, record.Type == FarmingObjectType.Person ? player.ArtworkFor(record.Id) : null);
-                pickups.Add(item);
-                if (record.Type == FarmingObjectType.Person) PeopleTotal++;
-                return item;
-            }
-
-            if (!player.Take(Spawn(starter, player.transform.position, null)))
-                throw new InvalidOperationException("Failed to carry starting person " + starter.Id);
-
+            PeopleTotal = loader.Database.Records.Count(record => record.Type == FarmingObjectType.Person);
+            RecordSecured(loader.Database.Get(Rules.StartingPersonId));
             foreach (var placement in placements)
             {
+                var record = placement.Record;
                 var slot = placement.Tabletop;
                 var parent = slot ? slot.parent : placement.Room.transform;
-                Spawn(placement.Record, placement.Ground, parent, slot);
+                var item = Instantiate(prefabs[record.Id], placement.Ground, Quaternion.identity, parent);
+                item.Initialize(record, slot, record.Type == FarmingObjectType.Person ? player.ArtworkFor(record.Id) : null);
+                pickups.Add(item);
             }
         }
 
@@ -119,8 +111,12 @@ namespace ShelterRun
         {
             if (!CanAct || !depositedObjects.Add(item)) return;
             // Commit when thrown before the deadline; the short visual may finish after zero.
-            depositedIds.Add(item.Record.Id);
-            if (item.Record.Type == FarmingObjectType.Person) PeopleSaved++;
+            RecordSecured(item.Record);
+        }
+        void RecordSecured(FarmingRecord record)
+        {
+            securedIds.Add(record.Id);
+            if (record.Type == FarmingObjectType.Person) PeopleSaved++;
             else ItemsSaved++;
         }
         public void Notify(string message) { hud.Notify(message); }
@@ -134,7 +130,7 @@ namespace ShelterRun
                 return;
             }
             restarting = true;
-            FarmingRunTransfer.Capture(depositedIds, loader.Database);
+            FarmingRunTransfer.Capture(securedIds, loader.Database);
             SceneManager.LoadSceneAsync(scene);
         }
         public void Restart()

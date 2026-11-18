@@ -113,7 +113,6 @@ MonoBehaviour:
   body: {fileID: 7946807660008012406}
   sprite: {fileID: 8225037286154624618}
   artworkSource: {fileID: 8593883638433248048, guid: 1992a54a66ec43d4f86b47caf518ad89, type: 3}
-  appearanceId: person_01
   feet: {fileID: 5961927401644199384}
 --- !u!1 &5921680890782956417
 GameObject:

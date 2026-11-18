@@ -57,7 +57,7 @@ CharacterDefinition의 동일 이름 프로퍼티(DesignId/Combat/Role/Descripti
 
 person_01~06에 사용자 예시 1/2/7/10을 임시 공통값으로 적용. 이름은 기존 MIRA/JIN/NOA 및 임시 PERSON 04~06. 능력→진행도 환산은 [BunkerRules](BunkerRules.md)의 계수를 사용하며 능력 정본은 이 CSV를 유지한다. 생성은 구조 순서.
 
-FarmingData에는 능력/멘탈을 복제하지 않는다. 종료 시 투입 Person ID만 FarmingRunTransfer에 복사. 같은 ID는 한 명만 생성. 물자 및 들고만 있는 사람 제외. 새 파밍/Play 진입 시 초기화; 벙커 재로드는 명단 유지. 직접 벙커 실행은 빈 명단. 영구 저장 없음. 현재 멘탈은 인스턴스 상태이며 원본 SO를 바꾸지 않는다.
+파밍에서 벙커로 이동하면 `FarmingRunTransfer.People`을 따라 플레이어 한 명과 추가로 투입한 사람들을 각 ID당 한 번씩 생성한다. 새 파밍 회차에서는 플레이어부터 다시 집계하고, 같은 회차의 벙커 재로드에서는 확보한 명단을 유지한다. 파밍을 거치지 않고 벙커를 직접 실행하면 명단은 비어 있다. 능력·초기 멘탈은 Characters에서 읽고 현재 멘탈은 인스턴스에 보관한다. [시작 플레이어 명세](FarmingRules.md)
 
 현재 생성 위치는 `ShelterPrototype.unity` 거실 바닥의 기존 6개 spawnPoints 참조다. 6개 방 배치에 맞춰 Transform 위치만 이동했으며 생성 순서·캐릭터 정본은 유지한다. 설치 도구는 기존 spawnPoints를 보존하며, 신규 배치 시 ENTRY가 없으면 유일한 Common 방을 사용한다. [맵 변경 이력](../DataHistory/20261118-shelter-map-layout.md).
 

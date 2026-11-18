@@ -37,7 +37,7 @@
 | 소비자 | FarmingSession이 FarmingPickup.RecordId를 조회해 Initialize. FarmingInventory/Player/Hud가 Type/Weight를 사용. EventPopupController는 기존 GameData 설정 로더로 같은 DB를 조회해 예정된 획득 이벤트의 파밍 경로를 검증 |
 | 수명/실패 | FarmingSession 종료 시 로더 핸들 해제. 로드/Validate 실패 시 시작 차단 |
 
-생성 SO는 직접 수정하지 않는다. 전용 검증기가 있는 기존 CSV이므로 공용 CSV 폴더에 복사하거나 Data Manager에 두 번째로 등록하지 않는다. 파밍 시작 시 전체 행에서 생성 대상을 읽는다. 신규 ID를 추가할 때 같은 recordId를 가진 프리팹을 Farming Session의 pickupPrefabs에 연결한다. Person은 Characters 행과 시작 운반 인물 한 명 및 방별 인원 합, Item은 ShelterItems 행과 빈 책상 자리 수를 함께 확인한다.
+생성 SO는 직접 수정하지 않는다. 전용 검증기가 있는 기존 CSV이므로 공용 CSV 폴더에 복사하거나 Data Manager에 두 번째로 등록하지 않는다. 파밍 시작 시 전체 행에서 생성 대상을 읽는다. 신규 구조 대상이나 물자는 같은 recordId의 프리팹을 Farming Session의 pickupPrefabs에 연결한다. Person은 Characters 행과 1:1로 대응하며, 행 수는 플레이어 한 명과 방별 인원의 합이다. Item은 ShelterItems 행과 빈 책상 자리 수를 함께 확인한다.
 
 ## 필드와 관계
 
@@ -47,7 +47,7 @@
 | type | FarmingObjectType | Person(직렬화 0), Item(1) | 필수, 기본값 없음 | CSV는 정확히 Person/Item 문자열, enum 유효성 검사 |
 | weight | int | 한 개체의 운반 비용 / **칸** | 필수, 기본값 없음 | Person 2~4, Item 1~2; 정수만 허용 |
 
-검사 구현: `FarmingCsvImporter.Parse` 및 `FarmingDatabase.Validate`. `FarmingPickup.recordId`는 이 테이블 `id`의 외래키다. `FarmingSession`은 배치 전에 모든 생성 대상에 대응하는 프리팹을 확인한다. 매 회차 사람과 일반·희귀·레전드 물자는 ID당 한 번 생성한다. 통조림만 방마다 하나씩 생성하며 세 개체는 각자 운반·투입할 수 있다. [방별 규칙](FarmingRules.md)
+검사 구현: `FarmingCsvImporter.Parse` 및 `FarmingDatabase.Validate`. `FarmingPickup.recordId`는 이 테이블 `id`의 외래키다. `FarmingSession`은 배치 전에 모든 생성 대상에 대응하는 프리팹을 확인한다. 시작 Person 행은 플레이어와 벙커 명단에 쓰인다. 방에는 나머지 사람과 일반·희귀·레전드 물자를 ID당 한 번 생성한다. 통조림만 방마다 하나씩 생성하며 세 개체는 각자 운반·투입할 수 있다. [방별 규칙](FarmingRules.md)
 
 ## 현재 레코드
 
@@ -64,7 +64,7 @@ CSV 순서로 열거하며 활성화 필드는 없다. 예고 없는 ID 삭제�
 - 실제 기능 검증 이력: [파밍 검증 스냅샷](../DataHistory/20261118-143045-3883526-verified.md), [검증 설명](../Farming/Verification.md). 이번 문서 작업에서는 파일/소비 코드만 재확인했다.
 
 ## 2026-11-18 캐릭터 연결
-Person의 기존 id를 별도 [Characters](Characters.md)의 id에서 참조한다. 기존 CSV의 type/weight/ID는 유지한다. FarmingSession은 시작 전에 1:1 관계를 검증하며 벙커 이동 시 투입 Person ID를 전달한다. 이전 문서의 후속 연결 없음 설명은 이 계약으로 대체한다. 영구 저장은 없다.
+Person의 기존 id를 별도 [Characters](Characters.md)의 id에서 참조한다. 기존 CSV의 type/weight/ID는 유지한다. FarmingSession은 시작 전에 1:1 관계를 검증하며 벙커 이동 시 플레이어와 구조 완료한 사람의 ID를 전달한다. 영구 저장은 없다.
 
 ## 2026-11-18 사이드뷰 최초 배치 이력
 

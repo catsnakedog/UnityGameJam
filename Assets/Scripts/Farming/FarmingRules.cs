@@ -27,6 +27,7 @@ namespace ShelterRun
         [SerializeField] float warningSeconds;
         [SerializeField] Vector2 mapHalfExtents;
         [SerializeField] float roomRevealDuration;
+        [Tooltip("Playable survivor who starts secured for the bunker.")]
         [SerializeField] string startingPersonId;
         [Tooltip("Nearest corridor door to the bunker first.")]
         [SerializeField] RoomSpawnRule[] roomSpawns;

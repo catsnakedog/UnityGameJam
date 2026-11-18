@@ -24,8 +24,8 @@
 | warningSeconds | float | 남은 시간 경고 임계값 / 초 | 10 | duration 이하; FarmingHud 색 변경 |
 | mapHalfExtents | Vector2 | 기본 호실 설계 반크기 / Unity 거리 단위 | (11, 8) | x는 FarmingSideViewBuilder의 방 너비 설계에 사용. y는 이전 2축 설계 호환용 보존값이며 사이드뷰에서 미사용. 실제 경계는 씬의 Walk left/right |
 | roomRevealDuration | float | 입실 시 해당 공간 노출 페이드 시간 / 초 | 0.5 | 필수, 유한한 양수; FarmingMap2D → FarmingRoom2D |
-| startingPersonId | string | 첫 운반 인물의 FarmingData.id | person_01 | 필수, 기본값 없음. Person 행 한 개를 참조하며 운반 비용이 capacity 이하여야 한다. 회차 시작 시 가방과 운반 표시를 초기화한다. |
-| roomSpawns[].people | int | 해당 방에 배정할 고유 인원 / 명 | 가까운 순 2, 2, 1 | 필수, 기본값 없음, 0 이상. 합이 시작 운반 인물을 제외한 파밍 Person 행 수와 일치하고 방별 책상 사이 자리 수 이내 |
+| startingPersonId | string | 플레이어이자 기본 확보 생존자인 FarmingData.id | person_01 | 필수, 기본값 없음. Person 행 한 개를 참조한다. FarmingPlayer는 이 ID의 동작을 재생하고 FarmingSession은 확보 명단에 이 ID를 한 번 기록한다. 운반 칸은 모두 비어 있다. |
+| roomSpawns[].people | int | 해당 방에 배정할 고유 인원 / 명 | 가까운 순 2, 2, 1 | 필수, 기본값 없음, 0 이상. 합이 플레이어를 제외한 파밍 Person 행 수와 일치하고 방별 책상 사이 자리 수 이내 |
 | roomSpawns[].legendWeight | int | 레전드 물자 하나를 배치할 때 해당 방의 추첨 가중치 / 상대값 | 가까운 순 1, 2, 3 | 필수, 기본값 없음. 양수이고 거리가 멀어질수록 증가. 합은 int 범위 |
 
 배열은 복도에서 벙커 투입 지점과 방문 사이의 수평 거리순이다. 방마다 한 행이 필요하다. 파밍 회차 시작 시 `FarmingSpawnLayout`이 통조림 한 개씩의 자리를 먼저 확보하고, 레전드를 하나씩 별도 추첨한다. 빈 책상 자리가 있는 방만 가중치 합에 포함한다. 방 안의 빈 책상 자리는 균등 추첨한다. 나머지 물자는 전체 빈 책상 자리에서 균등 추첨하고, 사람은 책상 사이의 빈 통로 자리를 사용한다. 배정 결과의 수명은 현재 씬 한 회차다.
@@ -35,6 +35,8 @@
 단일 설정 에셋이다. 시작 인물의 FarmingData ID를 삭제·변경할 때는 시작 인물 참조와 방별 배정 가능 인원도 함께 갱신한다. 구간별 규칙이 필요해지면 먼저 적용 범위와 프로필 선택 계약을 설계한다. 단순한 씬 추가나 난이도 조정 때문에 같은 주소/역할의 Rules 복제본을 만들지 않는다. 삭제/주소 변경은 모든 소비자 전환이 포함된 이전 작업으로 처리한다.
 
 ## 중복 조사와 검증
+
+- 플레이어 외형·방 배치·벙커 기본 확보 명단이 같은 `startingPersonId`를 참조한다. [시작 인물 변경 이력](../DataHistory/20261119-farming-starting-player.md)
 
 - 이전 3·2·1 배치 검증에서 3,000회 모두 DB 행별 수량과 방별 인원이 맞았다. 두 레전드의 방 배정 6,000회와 실제 회차 재시작을 확인했다. [결과와 편집 위치](../DataHistory/20261119-farming-spawns-02-verified.md)
 

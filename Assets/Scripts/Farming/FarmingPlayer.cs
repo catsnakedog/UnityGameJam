@@ -9,7 +9,6 @@ namespace ShelterRun
         [SerializeField] Transform body;
         [SerializeField] SpriteRenderer sprite;
         [SerializeField] SurvivorAnimation artworkSource;
-        [SerializeField] string appearanceId;
         SurvivorAnimation.Artwork artwork;
         readonly SurvivorAnimation.Playback playback = new SurvivorAnimation.Playback();
         [SerializeField] CircleCollider2D feet;
@@ -24,13 +23,13 @@ namespace ShelterRun
         {
             session = owner;
             Inventory = new FarmingInventory(owner.Rules.Capacity);
-            artwork = ArtworkFor(appearanceId);
+            artwork = ArtworkFor(owner.Rules.StartingPersonId);
             AnimatePose(false, 0f);
         }
         internal SurvivorAnimation.Artwork ArtworkFor(string id) =>
             artworkSource.FindArtwork(id) ?? throw new InvalidOperationException("Missing farming character art for " + id);
 
-        internal bool Take(FarmingPickup item)
+        bool Take(FarmingPickup item)
         {
             if (!Inventory.TryAdd(item)) return false;
             item.Carry(body, Inventory.Carried.Count - 1);

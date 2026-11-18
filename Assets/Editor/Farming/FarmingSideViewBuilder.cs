@@ -18,7 +18,6 @@ namespace ShelterRun.Editor
     {
         const string Prefabs="Assets/Prefabs/Farming/";
         const string SurvivorPrefab = "Assets/Prefabs/Shelter/Survivor.prefab";
-        const string PlayerArtworkId = "person_01";
         static TMP_FontAsset font;
         [MenuItem("Tools/Farming/Rebuild Side View Scene")]
         public static void Build()
@@ -124,8 +123,8 @@ namespace ShelterRun.Editor
             var prefab=PrefabUtility.SaveAsPrefabAsset(root,Prefabs+"Player.prefab");UnityEngine.Object.DestroyImmediate(root);return ((GameObject)PrefabUtility.InstantiatePrefab(prefab)).GetComponent<FarmingPlayer>();
         }
         // Apply the original 3/2/1 layout migration once. Later Inspector choices remain authoritative.
-        [MenuItem("Tools/Farming/Apply Starting Carry and Character Art")]
-        public static void ApplyStartingCarryAndCharacterArt()
+        [MenuItem("Tools/Farming/Apply Starting Survivor and Character Art")]
+        public static void ApplyStartingSurvivorAndCharacterArt()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
                 throw new InvalidOperationException("Stop Play before updating farming assets.");
@@ -168,9 +167,7 @@ namespace ShelterRun.Editor
             {
                 owner = new SerializedObject(root.GetComponent<FarmingPlayer>());
                 owner.FindProperty("artworkSource").objectReferenceValue = source;
-                var appearance = owner.FindProperty("appearanceId");
-                if (string.IsNullOrEmpty(appearance.stringValue)) appearance.stringValue = PlayerArtworkId;
-                artId = appearance.stringValue;
+                artId = AssetDatabase.LoadAssetAtPath<FarmingRules>(FarmingCsvImporter.RulesPath).StartingPersonId;
             }
             else
             {

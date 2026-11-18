@@ -8,6 +8,6 @@
 
 GameDevManager 오브젝트의 BunkerSimulation Inspector에서 현재/남은 틱, Pause, Open Bunker Rules를 사용할 수 있다. 랜덤/침공은 `RandomEventDue(int tick)` / `ZombieInvasionDue(int tick)` C# 이벤트만 제공하며 확률 추첨/좀비 생성은 아직 없다. `WorkProcessed`, `TickOccurred`, `DurationEnded`로 후속 기능을 연결한다. `GameDevManager.RestartDevelopment()`는 진행도와 틱을 초기화한다.
 
-벙커를 직접 Play하면 기존 규칙대로 구조된 사람이 없어 작업자가 없다. Farming에서 사람을 벙커에 투입한 후 진입한다. 현재 점수 공식은 미정이므로 시간 종료 후 기존 AwaitingScore 상태로 넘어간다.
+파밍을 마치고 벙커에 진입하면 1번과 추가로 구조한 생존자들이 작업자로 합류한다. 벙커 씬에서 직접 Play하면 파밍 명단이 비어 있다. 현재 점수 공식은 미정이므로 시간 종료 후 기존 AwaitingScore 상태로 넘어간다.
 
 [데이터 명세](DataSpecs/BunkerRules.md) · [검증 기록](DataHistory/20261118-bunker-ticks-02-verified.md)
