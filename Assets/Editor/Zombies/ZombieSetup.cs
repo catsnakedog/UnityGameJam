@@ -86,7 +86,13 @@ public static class ZombieSetup
         var instance = UnityEngine.Object.Instantiate(source); instance.name = "Zombie";
         try
         {
-            var identity = instance.GetComponent<CharacterIdentity>(); if (identity) UnityEngine.Object.DestroyImmediate(identity);
+            var identity = instance.GetComponent<CharacterIdentity>();
+            if (identity)
+            {
+                var gauge = instance.transform.Find("Mental gauge");
+                if (gauge) UnityEngine.Object.DestroyImmediate(gauge.gameObject);
+                UnityEngine.Object.DestroyImmediate(identity);
+            }
             var walker = instance.GetComponent<ShelterWalker>(); walker.playerSelectable = false; walker.externallyDriven = true;
             walker.characterName = "좀비"; walker.walkSpeed = walker.climbSpeed = 0; // Runtime catalog provides speeds.
             if (walker.selectionMarker) walker.selectionMarker.enabled = false;

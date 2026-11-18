@@ -215,11 +215,12 @@ public static class GameDevSetup
         if (data.FindProperty("mentalFill").objectReferenceValue) return false;
         var label = root.GetComponent<ShelterWalker>().nameLabel;
         var rect = Rect("Mental gauge", root.transform, 0, 0, 104, 14);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.localScale = Vector3.one * 0.01f;
-        rect.localPosition = new Vector3(0, 2.22f, 0);
         var canvas = rect.gameObject.GetComponent<Canvas>() ?? rect.gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(104, 14);
+        rect.localScale = Vector3.one * 0.01f;
+        rect.localPosition = new Vector3(0, 2.22f, 0);
         canvas.sortingOrder = label.GetComponent<MeshRenderer>().sortingOrder + 1;
         var track = Picture("Track", rect, 0, 0, 104, 14, ArtRoot + "panel.png");
         var fill = Picture("Fill", track.transform, 2, -2, 100, 10, ArtRoot + "gauge.png");
