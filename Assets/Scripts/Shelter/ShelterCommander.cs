@@ -94,7 +94,7 @@ namespace UnityGameJam.Shelter
                 if (Selected && Selected != hit && !Selected.IsMovementLocked && hit.NeedsRescue)
                 {
                     bool accepted = Selected.TryRescue(hit);
-                    Message = accepted ? hit.characterName + " 구조 중 · 수면실로 이동" : "현재 구조할 수 없습니다";
+                    Message = accepted ? hit.characterName + " 구조 중 · 수면실로 이동" : Selected.RoomOrderFailure ?? "현재 구조할 수 없습니다";
                     return accepted;
                 }
                 if (Selected != null) Selected.SetSelected(false);
@@ -121,7 +121,7 @@ namespace UnityGameJam.Shelter
                 rejected = destination;
                 rejectedUntil = Time.unscaledTime + 2f;
                 destination.ShowHighlight(true, true);
-                Message = Selected.IsRescuing ? "부상자를 구조하고 있습니다" : Selected.IsMovementLocked ? "전투 중이거나 탈진하여 이동할 수 없습니다" : "NO ROUTE TO " + destination.displayName;
+                Message = Selected.RoomOrderFailure ?? (Selected.IsRescuing ? "부상자를 구조하고 있습니다" : Selected.IsMovementLocked ? "전투 중이거나 탈진하여 이동할 수 없습니다" : "NO ROUTE TO " + destination.displayName);
                 return false;
             }
             Message = Selected.characterName + "  >  " + destination.displayName;

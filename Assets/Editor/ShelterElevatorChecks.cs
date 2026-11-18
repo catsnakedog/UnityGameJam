@@ -60,22 +60,27 @@ public static class ShelterElevatorChecks
             Move(actors[1], lower); actors[0].MoveTo(lower); actors[1].MoveTo(guard); actors[2].MoveTo(guard);
             for (int i = 0; i < 8000 && actors.Any(a => a.IsMoving); i++) Step(ctrl, 0.02f);
             Check(actors[0].CurrentRoom == lower && actors[1].CurrentRoom == guard && actors[2].CurrentRoom == guard, "Three opposite routes through two cabins complete without deadlock");
-            Move(actors[0], sleeping); Move(actors[1], sleeping); Move(actors[2], sleeping);
-            actors[0].MoveTo(guard); actors[1].MoveTo(guard);
+            Move(actors[0], sleeping); Move(actors[1], sleeping);
+            Check(!actors[2].MoveTo(sleeping), "Third survivor cannot enter the occupied sleeping room");
+            Move(actors[2], common);
+            var boarding = actors.OrderBy(a => Mathf.Abs(a.transform.position.x - upperLift.Bottom.x)).ToArray();
+            var firstRider = boarding.First(); var secondRider = boarding.Last();
+            // Call from farther away first so the companion reaches the queue before boarding completes.
+            secondRider.MoveTo(guard); firstRider.MoveTo(guard);
             for (int i = 0; i < 2000 && upperLift.Phase != ElevatorPhase.Travelling; i++) Step(ctrl, 0.02f);
-            Check(actors[0].CurrentElevator == upperLift && actors[1].CurrentElevator == upperLift && upperLift.PassengerCount == 2,
+            Check(firstRider.CurrentElevator == upperLift && secondRider.CurrentElevator == upperLift && upperLift.PassengerCount == 2,
                 "Two survivors board the same visible cabin in the shelter scene");
-            var p = actors[0].transform.position; var companion = actors[1].transform.position;
+            var p = firstRider.transform.position; var companion = secondRider.transform.position;
             float y = upperLift.CabinY; object pause = new object(); ctrl.Simulation.AcquirePause(pause);
             upperLift.Advance(10); Step(ctrl, 10);
-            Check(actors[0].transform.position == p && actors[1].transform.position == companion && upperLift.CabinY == y, "Popup pause freezes cabin and both passengers"); ctrl.Simulation.ReleasePause(pause);
-            humans[0].SetMental(0);
-            for (int i = 0; i < 2000 && actors[0].IsInElevator; i++) Step(ctrl, 0.02f);
-            Check(!actors[0].IsInElevator && actors[0].IsMovementLocked && Mathf.Abs(actors[0].transform.position.y - guard.FloorY) < 0.001f, "Fainted passenger unloads safely and remains unable to walk");
-            for (int i = 0; i < 2000 && actors[1].IsMoving; i++) Step(ctrl, 0.02f);
-            Check(actors[1].CurrentRoom == guard, "Companion reaches destination independently of fainted rider");
+            Check(firstRider.transform.position == p && secondRider.transform.position == companion && upperLift.CabinY == y, "Popup pause freezes cabin and both passengers"); ctrl.Simulation.ReleasePause(pause);
+            firstRider.GetComponent<UnityGameJam.Characters.CharacterIdentity>().SetMental(0);
+            for (int i = 0; i < 2000 && firstRider.IsInElevator; i++) Step(ctrl, 0.02f);
+            Check(!firstRider.IsInElevator && firstRider.IsMovementLocked && Mathf.Abs(firstRider.transform.position.y - guard.FloorY) < 0.001f, "Fainted passenger unloads safely and remains unable to walk");
+            for (int i = 0; i < 2000 && secondRider.IsMoving; i++) Step(ctrl, 0.02f);
+            Check(secondRider.CurrentRoom == guard, "Companion reaches destination independently of fainted rider");
             dev.RestartDevelopment(); foreach (var h in humans) h.ResetMental();
-            foreach (var actor in actors) Move(actor, sleeping);
+            Move(actors[0], sleeping); Move(actors[1], sleeping); Move(actors[2], common);
             foreach (var h in humans) h.SetMental(0);
             var zombies = Enumerable.Range(0, 6).Select(_ => ctrl.SpawnWave()).ToArray();
             var entered = new List<int>(); int peakPassengers = 0; float groundGap = float.PositiveInfinity;

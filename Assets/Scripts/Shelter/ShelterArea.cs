@@ -53,6 +53,40 @@ namespace UnityGameJam.Shelter
             return new Vector2(Mathf.Clamp(Centre.x + offset, Left + margin, Right - margin), FloorY);
         }
 
+        // Consider both residents and trips already ordered, including a patient still awaiting pickup.
+        internal bool TryFindStandingOffset(ShelterWalker survivor, int capacity, out float offset, ShelterWalker leaving = null)
+        {
+            offset = survivor.arrivalOffset;
+            var positions = new List<float>();
+            int rosterSize = 0;
+            foreach (var identity in FindObjectsByType<UnityGameJam.Characters.CharacterIdentity>(FindObjectsSortMode.None))
+            {
+                if (identity.gameObject.scene != gameObject.scene) continue;
+                rosterSize++;
+                var other = identity.GetComponent<ShelterWalker>();
+                if (other && other != survivor && other != leaving && other.TryGetReservedX(this, out float occupied))
+                    positions.Add(occupied);
+            }
+            if (positions.Count >= capacity) return false;
+            if (survivor.TryGetReservedX(this, out float existing))
+            {
+                offset = existing - Centre.x;
+                return true;
+            }
+            int places = Mathf.Min(capacity, rosterSize);
+            float bestDistance = float.NegativeInfinity;
+            for (int i = 0; i < places; i++)
+            {
+                float x = ArrivalPoint(Mathf.Lerp(Left, Right, (i + .5f) / places) - Centre.x).x;
+                float distance = positions.Count == 0 ? -Mathf.Abs(x - Centre.x - survivor.arrivalOffset) : float.PositiveInfinity;
+                foreach (float occupied in positions) distance = Mathf.Min(distance, Mathf.Abs(x - occupied));
+                if (distance <= bestDistance) continue;
+                bestDistance = distance;
+                offset = x - Centre.x;
+            }
+            return true;
+        }
+
         public void RefreshVisuals()
         {
             width = Mathf.Max(0.5f, width);

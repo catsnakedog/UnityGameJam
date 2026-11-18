@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnityGameJam.Shelter
@@ -10,6 +11,31 @@ namespace UnityGameJam.Shelter
         [SerializeField, Min(0.001f)] float secondsPerTick;
         [SerializeField, Min(1)] int randomEventEveryTicks;
         [SerializeField, Min(1)] int invasionEveryTicks;
+        [SerializeField, Min(1)] int firstInvasionTick;
+        [SerializeField] int[] presentationTicks;
+        [SerializeField] PresentationGrade[] presentationGrades;
+        [Serializable]
+        public struct PresentationGrade
+        {
+            [SerializeField, Min(0)] double minimumScore;
+            [SerializeField] string label;
+            [SerializeField] int mentalDelta;
+            [SerializeField] Color color;
+            public double MinimumScore => minimumScore;
+            public string Label => label;
+            public int MentalDelta => mentalDelta;
+            public Color Color => color;
+        }
+        public IReadOnlyList<int> PresentationTicks => presentationTicks;
+        public int FirstInvasionTick => firstInvasionTick;
+        public bool IsPresentationTick(int tick) => tick < TotalTicks && Array.BinarySearch(presentationTicks, tick) >= 0;
+        public bool IsInvasionTick(int tick) => tick >= firstInvasionTick && tick < TotalTicks && (tick - firstInvasionTick) % invasionEveryTicks == 0;
+        public PresentationGrade GradePresentation(double score)
+        {
+            for (int i = presentationGrades.Length - 1; i >= 0; i--)
+                if (score >= presentationGrades[i].MinimumScore) return presentationGrades[i];
+            throw new ArgumentOutOfRangeException(nameof(score));
+        }
         [SerializeField, Min(1)] int invasionApproachTicks;
         [SerializeField, Min(1), Tooltip("접근 중인 좀비에게 보초가 원거리 사격하는 벙커 틱 간격")] int guardVolleyEveryTicks;
         [SerializeField, Min(0)] int invasionMentalLoss;
@@ -21,6 +47,7 @@ namespace UnityGameJam.Shelter
         [SerializeField, Min(1)] int mentalMaximum;
         [SerializeField, Min(0), Tooltip("피곤한 대기·걷기를 표시하는 멘탈 상한 (포함)")] int tiredMentalThreshold;
         [SerializeField, Min(1)] int sleepMentalPerTick;
+        [SerializeField, Min(1), Tooltip("수면실 한 곳에 머무를 수 있는 생존자 수")] int sleepingRoomCapacity;
         [SerializeField, Min(1)] int wakeMental;
         public const int HungerCapacity = 10;
         [Header("허기와 통조림")]
@@ -39,6 +66,7 @@ namespace UnityGameJam.Shelter
         public int MentalMaximum => mentalMaximum;
         public int TiredMentalThreshold => tiredMentalThreshold;
         public int SleepMentalPerTick => sleepMentalPerTick;
+        public int SleepingRoomCapacity => sleepingRoomCapacity;
         public int WakeMental => wakeMental;
         public int TotalTicks => totalTicks;
         public float SecondsPerTick => secondsPerTick;
@@ -54,6 +82,22 @@ namespace UnityGameJam.Shelter
         public float PlanningUnlockPercent => planningUnlockPercent;
         public void Validate()
         {
+            if (firstInvasionTick < 1 || presentationTicks == null || presentationGrades == null ||
+                presentationGrades.Length == 0 || presentationGrades[0].MinimumScore != 0)
+                throw new InvalidOperationException("Missing bunker event schedule or presentation grades.");
+            int previousTick = 0;
+            foreach (int tick in presentationTicks)
+            {
+                if (tick <= previousTick) throw new InvalidOperationException("Presentation ticks must be positive and strictly increasing.");
+                previousTick = tick;
+            }
+            double previousScore = -1;
+            foreach (var grade in presentationGrades)
+            {
+                if (string.IsNullOrWhiteSpace(grade.Label) || !double.IsFinite(grade.MinimumScore) || grade.MinimumScore <= previousScore)
+                    throw new InvalidOperationException("Presentation grades need labels and increasing finite thresholds.");
+                previousScore = grade.MinimumScore;
+            }
             if (tiredMentalThreshold < 0 || tiredMentalThreshold > mentalMaximum)
                 throw new InvalidOperationException("Invalid data.bunker.rules: tiredMentalThreshold outside mental range.");
             if (invasionApproachTicks < 1 || guardVolleyEveryTicks < 1 || invasionMentalLoss < 0 || guardMentalLossPerTick < 0)
@@ -64,7 +108,7 @@ namespace UnityGameJam.Shelter
                 foodRestore < 1 || foodRestore > HungerCapacity || servingsPerCan < 1)
                 throw new InvalidOperationException("Invalid bunker hunger or food settings.");
             if (evaluationTargetProgress <= 0 || double.IsNaN(evaluationTargetProgress) || double.IsInfinity(evaluationTargetProgress) || evaluationReferenceTicks <= 0 ||
-                mentalMaximum <= 0 || sleepMentalPerTick <= 0 || wakeMental <= 0 || wakeMental > mentalMaximum ||
+                mentalMaximum <= 0 || sleepMentalPerTick <= 0 || sleepingRoomCapacity <= 0 || wakeMental <= 0 || wakeMental > mentalMaximum ||
                 totalTicks <= 0 || randomEventEveryTicks <= 0 || invasionEveryTicks <= 0 || workEveryTicks <= 0 ||
                 secondsPerTick <= 0 || float.IsNaN(secondsPerTick) || float.IsInfinity(secondsPerTick) ||
                 percentPerAbility < 0 || float.IsNaN(percentPerAbility) || float.IsInfinity(percentPerAbility) ||

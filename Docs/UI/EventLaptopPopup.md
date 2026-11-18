@@ -1,10 +1,10 @@
-# 선택형 노트북 이벤트 팝업
+# 노트북 사건·중간 발표 팝업
 
 2026-11-18 · 사용자 예시 12개 사건의 Yes/No 효과 구현·Play 검증 완료. 《60 Seconds!》 같은 사건 알림을 참고한 기존 노트북 프레임/타이핑 유지.
 
 ## 발생과 상태
 
-- 시간은 모두 틱. 기존 `BunkerRules.randomEventEveryTicks`가 발생 간격 정본이며 현재 10틱이다. 별도 시계/시간 환산 없음. 마지막 틱은 개발 종료 우선.
+- 사건 간격은 `BunkerRules.randomEventEveryTicks`가 정한다. 중간 발표 틱에는 발표를 표시하고 마지막 틱에는 개발을 종료한다.
 - 직전 사건과 조건 불충족 사건을 제외한 뒤 균등 추첨. 후보가 없으면 건너뛰며 한 건뿐이어도 직전 사건을 반복하지 않는다.
 - ev_party는 choco>=1일 때만 발생. 선택 직전에도 조건을 다시 확인한다.
 - 표시 중 벙커 틱·캐릭터 이동·신규 월드 클릭 정지. 외부 수동 Paused는 창을 닫아도 보존.
@@ -13,6 +13,8 @@
 stateDiagram-v2
     [*] --> Hidden
     Hidden --> Typing: 이벤트 틱 또는 유효 ID
+    Hidden --> Presentation: 중간 발표 평가 완료
+    Presentation --> Hidden: 계속 버튼 또는 Enter
     Typing --> Choice: 출력 완료 또는 전체 보기
     Choice --> Result: Yes 또는 No / 효과 한 번 적용
     Result --> Hidden: 자동 닫기 또는 계속
@@ -24,6 +26,12 @@ stateDiagram-v2
 선택 후 실제 변화량을 한 줄로 보여 준다. 예: `초콜렛 +1 · 다음 적 HP +4`, `멘탈 3명 -5`, `변화 없음`. 기본 3초의 UI 연출 뒤 자동 닫히며 계속/Enter/Space로 빨리 닫을 수도 있다. UI 연출은 unscaled time이며 게임 틱을 진행시키지 않는다. 선택 버튼은 즉시 숨기고 중복 호출을 거부한다. 결과창이 닫힌 뒤 시간이 다시 흐른다.
 
 같은 틱에 사건과 습격이 겹치면 작업 → 사건 선택/결과 → 습격 순서다. 틱 후반부를 한 번만 처리하여 방금 선택한 다음 습격 HP 보정이 소비되게 한다.
+
+## 중간 발표
+
+발표 시점에 같은 노트북의 Number 영역에 회차와 발생 틱을, Title에 **중간 발표**를 즉시 표시한다. BodyScroll에는 기획·프로그래밍·그래픽 진행도, 평가 점수, 팀원 한 명당 멘탈 보정량을 표시한다. Result에는 해당 등급의 이름을 등급 색으로 표시한다. 시뮬레이션이 판정한 점수·등급·멘탈 보정을 그대로 사용한다. 일정과 등급의 편집 위치는 [벙커 규칙](../DataSpecs/BunkerRules.md)에 있다.
+
+발표에는 계속 버튼 하나만 보인다. 확인할 때까지 벙커 틱과 월드 명령을 정지하고 버튼 클릭 또는 Enter(숫자패드 포함)로 재개한다. 발표 화면은 선택형 사건의 자동 닫기 타이머를 사용하지 않는다. 재시작·종료·비활성화 시 창을 닫고 이 팝업이 보유한 잠금을 해제한다.
 
 ## 효과·실패·수명
 
@@ -56,6 +64,8 @@ CSV는 UTF-8 BOM 포함. `Tools > Events > Import Event CSV`로 효과·참조 �
 `Assets/Art/UI/Events/`의 laptop_frame.png(1120×760), button_normal/hover/pressed.png(180×56)를 사용한다. 아트 파일 변경 없음. PNG 교체 시 같은 경로·크기와 .meta를 보존한다. Sprite Single, 중앙 pivot, PPU100, Bilinear, mipmap 없음, 비슬라이스. 프리팹 GUID 27ae7b09da16b094c9378f228832e349. 실제 문구를 이미지에 굽지 않는다.
 
 ## 검증
+
+벙커 Play에서 실제 발표가 열린 상태로 `EventPopupChecks.CheckPresentationInPlay(false)`를 실행하면 노트북 문구·등급 색, 월드 입력과 틱 정지, 자동 닫힘 시간 경과, Y/N/Space 무시, 계속 버튼과 외부 정지 유지 여부를 검사한다. 다음 발표에서 인수를 `true`로 바꾸면 입력 시스템의 Enter 키로 같은 동작을 검사한다.
 
 [구현·검증 이력](../DataHistory/20261118-event-effects-02-verified.md), [Play 검사](../Events/Verification-effects-play.txt), [경계 검사](../Events/Verification-effects-edge.txt), [Edit 검사](../Events/Verification-effects-edit.txt).
 

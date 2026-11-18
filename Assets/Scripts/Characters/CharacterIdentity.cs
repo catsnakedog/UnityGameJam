@@ -46,6 +46,7 @@ namespace UnityGameJam.Characters
         public bool CanAct => !IsFainted && CurrentMental > 0;
         public bool IsTired => rules && CanAct && CurrentMental <= rules.TiredMentalThreshold;
         BunkerRules rules;
+        internal BunkerRules Rules => rules;
         public void ConfigureMental(BunkerRules value) { rules = value; SetMental(CurrentMental); }
         public void ResetMental()
         {

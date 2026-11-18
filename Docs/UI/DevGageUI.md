@@ -4,7 +4,8 @@
 
 | 요소 | 배치와 크기 | 표시와 입력 |
 |---|---|---|
-| Shelter clock | 좌측 24, 상단 20, 100×100 | 24눈금 다이얼 위의 호박색 링이 12시부터 시계 방향으로 찬다. 중앙에 시:분을 표기하며 월드 클릭을 통과시킨다. |
+| Shelter clock | 좌측 24, 상단 20, 176×176 | 24눈금 다이얼 위의 호박색 링이 12시부터 시계 방향으로 찬다. 중앙에 시:분을 26px로 표기하며 월드 클릭을 통과시킨다. |
+| 일정 표식 | 지름의 40%와 50% 반경에 16×16 | 테두리 안쪽의 붉은 원은 좀비 습격, 바깥 가장자리의 청록 마름모는 중간 발표다. 같은 틱에도 두 표식 중심이 17.6px 떨어진다. 다이얼 오른쪽에는 같은 그림과 한글 범례가 있다. |
 | Planning / Programming / Graphics | 좌측 486, 740, 994. 상단 24. 카드 각각 240×68, 간격 14 | 윗줄에 분야와 퍼센트, 아래에 왼쪽부터 채워지는 독립 게이지. 카드 위에서 월드 클릭을 차단한다. 틈새는 월드 클릭을 통과시킨다. |
 | Status | 진행도 카드 아래 | 데이터 준비·실패·집계·결과 상태를 표시한다. 개발 중에는 숨긴다. 이벤트·엔딩 팝업은 기존 순서로 위에 뜬다. |
 | Mental gauge | Survivor 루트의 로컬 높이 2.22, 폭 1.04, 높이 0.14 월드 단위 | 생존자별 현재 멘탈 비율. 이름은 높이 2.34에 한 줄로 표시하며 탈진하면 이름 뒤에 ‘탈진’을 표시한다. 좌우 이동·엘리베이터 탑승 시 캐릭터를 따라간다. 선택 카드에서는 정확한 수치를 계속 볼 수 있다. |
@@ -12,6 +13,7 @@
 ## 데이터와 전환
 
 - 시계는 벙커 시뮬레이션의 현재 틱을 로드된 전체 틱으로 나눈다. 0틱에 00:00, 절반에 12:00, 마지막 틱에 24:00을 표시한다. 현재 메인 프로젝트의 960틱이면 40틱에 한 시간이다. 일시 정지 동안 시각을 유지하고 재시작하면 첫 틱에서 다시 시작한다. 초침은 없다. [벙커 규칙](../DataSpecs/BunkerRules.md)
+- 회차 시작 시 종료 틱 전의 모든 예정 습격과 중간 발표를 표시한다. 표식 각도는 12시부터 시계 방향으로 `예정 틱 ÷ 전체 틱 × 360°`다. 습격은 `FirstInvasionTick`부터 `InvasionEveryTicks` 간격으로, 발표는 `PresentationTicks`의 각 틱에 배치한다. 각 표식은 시뮬레이션이 같은 종류의 이벤트를 실제 발행한 뒤 사라진다. 앞선 팝업이 시간을 멈추면 아직 발행되지 않은 표식이 남고, 재시작하면 전체 일정이 복원된다. [벙커 규칙](../DataSpecs/BunkerRules.md)
 - 개발 게이지는 기존 `GameDevManager.Progress`와 변경 이벤트를 사용한다. 각 분야 0~100%이며 소수점 첫째 자리까지 버림 표기한다.
 - 머리 위 멘탈 게이지는 생존자마다 `CharacterIdentity.CurrentMental`과 같은 인물에게 이미 연결된 `Rules.MentalMaximum`을 사용한다. 규칙을 받으면 비율을 채우고, 이후 일·아이템·피격·회복·재시작으로 현재값이 바뀔 때 즉시 갱신한다. [캐릭터 명세](../DataSpecs/Characters.md)
 
@@ -19,8 +21,9 @@
 
 - 개발 HUD와 시계는 `Assets/Prefabs/UI/DevGageUI.prefab`, 멘탈 바는 `Assets/Prefabs/Shelter/Survivor.prefab`에서 편집한다. 선택 카드 `Assets/Prefabs/UI/ShelterCharacterCard.prefab`는 시계 아래에 뜬다.
 - `Assets/Art/UI/ShelterClockDial.png`와 `ShelterClockElapsed.png`는 112×112 투명 PNG다. 같은 중심·지름에 맞춰 원본 경로의 파일을 교체한다. Single Sprite, 100 PPU, Bilinear, 압축·mipmap 끔과 기존 .meta를 유지한다. 동적 링은 uGUI Image의 Filled / Radial360을 사용한다.
+- `Assets/Art/UI/ShelterClockInvasion.png`와 `ShelterClockPresentation.png`는 32×32 투명 PNG이며 다이얼과 같은 임포트 설정을 사용한다. 일정 표식은 저장된 `Assets/Prefabs/UI/ShelterClockMarker.prefab`을 복제해 배치하며 범례는 같은 Sprite를 쓴다.
 - 분야 카드·트랙은 기존 `Assets/Art/UI/Farming/panel.png` (64×64, 9-slice), 채움은 `gauge.png` (64×16), 문자에는 기존 한글 폰트를 사용한다. 공유 원화를 교체하면 파밍과 캐릭터 카드에도 반영된다.
-- 기존 프로젝트에서 편집 모드의 `GameDevSetup.UpdateShelterHud()`로 프리팹에 반영한다. `GameDevChecks.CheckShelterHud()`는 저장된 진행도 세 칸의 가로 배치, 링과 시간 문자열 연결, 생존자 프리팹의 월드 게이지 참조를 검사한다.
+- 편집 모드의 `GameDevSetup.UpdateShelterHud()`로 프리팹에 반영한다. `GameDevChecks.CheckShelterHud()`는 저장된 다이얼·표식·범례·캐릭터 카드 간격과 기존 게이지를 검사한다. 벙커 Play 중 `GameDevChecks.CheckClockScheduleInPlay()`는 각 예정 틱의 실제 각도와 시뮬레이션 발행 상태에 따른 가시성을 검사한다.
 
 ## 이전 우측 패널 검증 기록 (2026-11-18)
 

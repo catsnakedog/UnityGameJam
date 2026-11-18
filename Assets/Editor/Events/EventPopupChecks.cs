@@ -9,6 +9,8 @@ using ShelterRun;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityGameJam.Events;
@@ -38,6 +40,66 @@ public static class EventPopupChecks
     }
     static async Task Frame() { int start=Time.frameCount; while(Time.frameCount==start) await Task.Delay(15); }
     static async Task Reveal(EventLaptopPopup popup) { await Frame(); popup.Confirm(); await Frame(); }
+    public static async Task<string> CheckPresentationInPlay(bool pressEnter)
+    {
+        if (!Application.isPlaying) throw new InvalidOperationException("Open a scheduled presentation in Play mode.");
+        var results = new List<string>();
+        var controller = UnityEngine.Object.FindFirstObjectByType<EventPopupController>();
+        var sim = UnityEngine.Object.FindFirstObjectByType<BunkerSimulation>();
+        var commander = UnityEngine.Object.FindFirstObjectByType<ShelterCommander>();
+        var popup = controller.Popup;
+        int tick = sim.CurrentTick;
+        Check(popup.ShowingPresentation && !popup.CanChoose && !popup.IsTyping, "Presentation opens directly on its evaluation", results);
+        var buttons = popup.GetComponentsInChildren<Button>();
+        Check(buttons.Length == 1 && buttons[0].name == "Confirm" && buttons[0].GetComponentInChildren<TMP_Text>().text == "계속", "Only Continue is available", results);
+        var progress = sim.GetComponent<GameDevManager>().Progress;
+        var calculator = new GameDevScoreCalculator(sim.Rules.EvaluationTargetProgress, sim.Rules.TotalTicks, () => tick);
+        Check(calculator.TryCalculate(progress, out double score), "Scheduled tick has a score", results);
+        var grade = sim.Rules.GradePresentation(score);
+        var labels = popup.GetComponentsInChildren<TMP_Text>().Where(t => t.name != "Label").ToDictionary(t => t.name);
+        string content = labels["Content"].text;
+        Check(labels["Title"].text == "중간 발표" && labels["Number"].text.Contains($"{tick}틱") &&
+            new[] { "기획", "프로그래밍", "그래픽", $"평가 점수  {score:0.000}", $"멘탈  {grade.MentalDelta:+0;-0;0}" }.All(content.Contains) &&
+            labels["Result"].text == grade.Label && ((Color32)labels["Result"].color).Equals((Color32)grade.Color),
+            "Tick, progress, calculated score, grade color and mental adjustment visible", results);
+        Check(sim.IsPaused && commander.InputBlocked && !commander.ClickWorld(Vector2.zero), "Presentation blocks world commands", results);
+        sim.Advance(sim.Rules.SecondsPerTick);
+        Check(sim.CurrentTick == tick, "Presentation holds its tick", results);
+
+        var previousKeyboard = Keyboard.current;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var externalPause = new object();
+        try
+        {
+            float ordinaryTimeout = new SerializedObject(popup).FindProperty("resultDisplaySeconds").floatValue;
+            await Task.Delay(TimeSpan.FromSeconds(Mathf.Max(0.5f, ordinaryTimeout) + 0.2f));
+            await Frame();
+            Check(popup.ShowingPresentation && sim.IsPaused, "Presentation remains open beyond the ordinary event timeout", results);
+            void Press(Key key)
+            {
+                keyboard.MakeCurrent();
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(key)); InputSystem.Update();
+                popup.SendMessage("Update");
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); InputSystem.Update();
+            }
+            Press(Key.Y); Press(Key.N); Press(Key.Space);
+            Check(popup.ShowingPresentation && !controller.ChoiceApplied, "Y, N and Space leave the evaluation open", results);
+            sim.AcquirePause(externalPause);
+            if (pressEnter) Press(Key.Enter);
+            else buttons[0].onClick.Invoke();
+            await Frame();
+            Check(!popup.IsOpen && !commander.InputBlocked && sim.IsPaused, "Confirmation releases popup input and preserves external pause", results);
+            sim.ReleasePause(externalPause);
+            Check(sim.IsPaused == sim.Paused, "Popup simulation pause released", results);
+        }
+        finally
+        {
+            sim.ReleasePause(externalPause);
+            InputSystem.RemoveDevice(keyboard);
+            previousKeyboard?.MakeCurrent();
+        }
+        return string.Join("\n", results);
+    }
     public static async Task<string> RunPlay()
     {
         if(!EditorApplication.isPlaying) throw new Exception("Play required.");
@@ -59,7 +121,11 @@ public static class EventPopupChecks
             for(int i=0;i<3;i++)
             {
                 var walker=roster.Characters[i].GetComponent<ShelterWalker>();
-                Check(walker.MoveTo(rooms.Single(room=>room.roomType==types[i])) ,"Room path "+types[i],r); walker.Tick(100);
+                var room = rooms.Single(candidate => candidate.roomType == types[i]);
+                // These effect fixtures need known room membership before resolving choices.
+                walker.transform.position = room.ArrivalPoint(0);
+                walker.ResolveInitialRoom();
+                Check(walker.CurrentRoom == room, "Assigned effect fixture to " + types[i], r);
             }
             // Golden expectations from the user's table: mental sum, plan/prog/art, choco/monster/bacchus, next HP.
             string[] ids={"ev_door","ev_radio","ev_blackout","ev_vending","ev_fight","ev_bug","ev_sns","ev_idea","ev_bacchus","ev_barricade","ev_party","ev_commit"};
@@ -102,12 +168,14 @@ public static class EventPopupChecks
             sim.Advance(interval*sim.Rules.SecondsPerTick);
             Check(ctrl.Popup.IsOpen && ctrl.CurrentEventId!=first,"Consecutive tick events differ",r);
             dev.RestartDevelopment();
-            // Advance to just before invasion with event controller temporarily disabled, then test ordering.
-            ctrl.enabled=false; sim.Advance((sim.Rules.InvasionEveryTicks-1)*sim.Rules.SecondsPerTick); ctrl.enabled=true; await Frame();
+            int firstInvasion = sim.Rules.FirstInvasionTick;
+            ctrl.enabled=false; sim.Advance((firstInvasion-1)*sim.Rules.SecondsPerTick); ctrl.enabled=true; await Frame();
+            Check(ctrl.ShowEvent("ev_door")==EventShowResult.Shown,"Ordinary event opens before the first scheduled invasion",r);
             sim.Advance(sim.Rules.SecondsPerTick);
-            Check(ctrl.Popup.IsOpen && sim.LastWaveTick==0,"Same-tick invasion deferred while event is open",r);
-            sim.SetPendingWaveHpModifier(-4); ctrl.Popup.Close(); sim.Advance(0);
-            Check(sim.LastWaveTick==sim.Rules.InvasionEveryTicks && sim.CurrentWaveHpModifier==-4 && sim.PendingWaveHpModifier==0 && sim.GetCurrentWaveEnemyHp(3)==1,"Next wave consumes adjustment once and HP floor",r);
+            Check(sim.CurrentTick==firstInvasion-1 && sim.LastWaveTick==0,"Open event pauses the clock before the first invasion",r);
+            sim.SetPendingWaveHpModifier(-4); ctrl.Popup.Close(); sim.Advance(sim.Rules.SecondsPerTick);
+            if (ctrl.Popup.IsOpen) { ctrl.Popup.Close(); sim.Advance(0); }
+            Check(sim.LastWaveTick==firstInvasion && sim.CurrentWaveHpModifier==-4 && sim.PendingWaveHpModifier==0 && sim.GetCurrentWaveEnemyHp(3)==1,"Next wave consumes adjustment once and HP floor",r);
             ctrl.enabled=false; sim.Advance(sim.Rules.InvasionEveryTicks*sim.Rules.SecondsPerTick);
             Check(sim.CurrentWaveHpModifier==0,"HP modifier does not leak to later waves",r); ctrl.enabled=true; await Frame();
             dev.RestartDevelopment();

@@ -919,14 +919,14 @@ MonoBehaviour:
   - characterId: person_05
     standing: {fileID: -2077052590953723219, guid: 329779dcc17a2da4594a50879156519e, type: 3}
     motions:
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+    - clip: {fileID: 3172135971258091552, guid: dbe082051dd0444419d438cefcb4a5e6, type: 3}
+      firstFrame: {fileID: -7482434523636138286, guid: dbe082051dd0444419d438cefcb4a5e6, type: 3}
+    - clip: {fileID: 3377290265148058090, guid: b87a21ca8d767ac45ad3787f160e8f0e, type: 3}
+      firstFrame: {fileID: 7427071123380352038, guid: b87a21ca8d767ac45ad3787f160e8f0e, type: 3}
+    - clip: {fileID: -6092247392920246782, guid: e1a7503de2ec79f4fb759da364aed24e, type: 3}
+      firstFrame: {fileID: 151363512489653036, guid: e1a7503de2ec79f4fb759da364aed24e, type: 3}
+    - clip: {fileID: -3256486028613876420, guid: 9115a3132b7693a4985055a5b8b33b17, type: 3}
+      firstFrame: {fileID: -8206210938660913247, guid: 9115a3132b7693a4985055a5b8b33b17, type: 3}
     - clip: {fileID: 0}
       firstFrame: {fileID: 0}
     - clip: {fileID: 0}
@@ -940,14 +940,14 @@ MonoBehaviour:
   - characterId: person_06
     standing: {fileID: 6113843755750713040, guid: fd084d1b2298e6d4db64cc32614e8f25, type: 3}
     motions:
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+    - clip: {fileID: 3172135971258091552, guid: 75284ffe73490fa4e93ce4431e7c90d0, type: 3}
+      firstFrame: {fileID: 659879433093974609, guid: 75284ffe73490fa4e93ce4431e7c90d0, type: 3}
+    - clip: {fileID: 3377290265148058090, guid: 1375eab86017d0b4c96b9b0db24ec3b5, type: 3}
+      firstFrame: {fileID: -901397682246306014, guid: 1375eab86017d0b4c96b9b0db24ec3b5, type: 3}
+    - clip: {fileID: -6092247392920246782, guid: 97bd139bea119164692a19672eaab054, type: 3}
+      firstFrame: {fileID: -7557987932889513438, guid: 97bd139bea119164692a19672eaab054, type: 3}
+    - clip: {fileID: -3256486028613876420, guid: 8398b67162454184e8accd31fe88b408, type: 3}
+      firstFrame: {fileID: -6810556155032255868, guid: 8398b67162454184e8accd31fe88b408, type: 3}
     - clip: {fileID: 0}
       firstFrame: {fileID: 0}
     - clip: {fileID: 0}

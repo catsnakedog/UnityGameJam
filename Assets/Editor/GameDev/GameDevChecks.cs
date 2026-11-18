@@ -93,6 +93,23 @@ public static class GameDevChecks
         Check(arc.sprite && arc.type == Image.Type.Filled && arc.fillMethod == Image.FillMethod.Radial360 &&
             arc.fillOrigin == (int)Image.Origin360.Top && arc.fillClockwise && ui.FindProperty("clockFill").objectReferenceValue == arc &&
             time.font && ui.FindProperty("clockTime").objectReferenceValue == time, "Clock artwork, radial fill and time are bound", checks);
+        var face = (RectTransform)dial;
+        var legend = (RectTransform)dial.Find("Event legend");
+        var marker = (Image)ui.FindProperty("clockMarkerPrefab").objectReferenceValue;
+        var presentation = (Sprite)ui.FindProperty("presentationMarkerSprite").objectReferenceValue;
+        Check(face.rect.size == new Vector2(176, 176) && arc.rectTransform.rect.size == face.rect.size,
+            "The enlarged clock and radial fill share a 176px face", checks);
+        Check(marker && PrefabUtility.IsPartOfPrefabAsset(marker) && marker.sprite && presentation && marker.sprite != presentation &&
+            !marker.raycastTarget && legend.Find("Invasion mark").GetComponent<Image>().sprite == marker.sprite &&
+            legend.Find("Presentation mark").GetComponent<Image>().sprite == presentation &&
+            legend.GetComponentsInChildren<Graphic>().All(graphic => !graphic.raycastTarget),
+            "Two distinct event symbols match the click-through legend and stored marker prefab", checks);
+        var cardPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/ShelterCharacterCard.prefab");
+        var card = (RectTransform)cardPrefab.transform.Find("Viewport 1920x1080/Character card");
+        Check(legend.anchoredPosition.x >= face.rect.width &&
+            face.anchoredPosition.x + legend.anchoredPosition.x + legend.rect.width < ((RectTransform)panel).anchoredPosition.x &&
+            -card.anchoredPosition.y >= -face.anchoredPosition.y + face.rect.height + 16,
+            "Legend, development gauges and character card all clear the clock in the shared 16:9 viewport", checks);
 
         var survivor = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Shelter/Survivor.prefab");
         var identity = survivor.GetComponent<CharacterIdentity>();
@@ -101,6 +118,49 @@ public static class GameDevChecks
             mental.GetComponentInParent<Canvas>(true) is Canvas canvas && canvas.renderMode == RenderMode.WorldSpace,
             "Survivor world-space mental gauge is bound", checks);
         return string.Join("\n", checks);
+    }
+
+    // Check the rendered positions and visibility at any stage, including a paused event on its due tick.
+    public static string CheckClockScheduleInPlay()
+    {
+        if (!EditorApplication.isPlaying) throw new InvalidOperationException("Enter shelter Play mode first.");
+        var ui = UnityEngine.Object.FindFirstObjectByType<DevGageUI>();
+        var simulation = UnityEngine.Object.FindFirstObjectByType<BunkerSimulation>();
+        if (!ui || !simulation || !simulation.IsReady) throw new InvalidOperationException("Wait for the shelter simulation.");
+        ui.SendMessage("LateUpdate");
+        Canvas.ForceUpdateCanvases();
+        var bound = new SerializedObject(ui);
+        var face = ((Image)bound.FindProperty("clockFill").objectReferenceValue).rectTransform;
+        var waves = ((Image)bound.FindProperty("clockMarkerPrefab").objectReferenceValue).sprite;
+        var presentations = (Sprite)bound.FindProperty("presentationMarkerSprite").objectReferenceValue;
+        var rules = simulation.Rules;
+        int visible = 0;
+        void Verify(string kind, int tick, Sprite expectedSprite, int lastDispatched)
+        {
+            var expected = tick > lastDispatched;
+            var mark = face.Find(kind + " " + tick) as RectTransform;
+            if (!mark || mark.GetComponent<Image>().sprite != expectedSprite || mark.gameObject.activeSelf != expected)
+                throw new InvalidOperationException($"Wrong {kind} marker state at scheduled tick {tick}, last dispatched {lastDispatched}.");
+            var direction = (Vector2)face.InverseTransformPoint(mark.TransformPoint(mark.rect.center)) - face.rect.center;
+            float angle = Vector2.SignedAngle(direction, Vector2.up);
+            if (Mathf.Abs(Mathf.DeltaAngle(angle, 360f * tick / rules.TotalTicks)) > 0.1f)
+                throw new InvalidOperationException($"Wrong clock angle for {kind} at tick {tick}.");
+            if (expected) visible++;
+        }
+        for (long tick = rules.FirstInvasionTick; tick < rules.TotalTicks; tick += rules.InvasionEveryTicks)
+            Verify("Invasion", (int)tick, waves, simulation.LastWaveTick);
+        foreach (int tick in rules.PresentationTicks)
+            if (tick > 0 && tick < rules.TotalTicks) Verify("Presentation", tick, presentations, simulation.LastPresentationTick);
+        var active = face.Cast<RectTransform>().Where(mark => mark.gameObject.activeSelf).ToArray();
+        if (active.Length != visible) throw new InvalidOperationException("Unexpected clock marker count.");
+        for (int i = 0; i < active.Length; i++)
+        {
+            var first = RectTransformUtility.CalculateRelativeRectTransformBounds(face, active[i]);
+            for (int j = i + 1; j < active.Length; j++)
+                if (first.Intersects(RectTransformUtility.CalculateRelativeRectTransformBounds(face, active[j])))
+                    throw new InvalidOperationException($"Clock markers overlap: {active[i].name}, {active[j].name}.");
+        }
+        return $"PASS tick {simulation.CurrentTick}: {visible} upcoming markers, wave dispatched {simulation.LastWaveTick}, presentation dispatched {simulation.LastPresentationTick}.";
     }
 
     public static async Task<string> RunPlay()

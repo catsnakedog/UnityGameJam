@@ -18,6 +18,8 @@ namespace UnityGameJam.Shelter
         public int PendingWaveHpModifier { get; private set; }
         public int CurrentWaveHpModifier { get; private set; }
         public int LastWaveTick { get; private set; }
+        public int LastPresentationTick { get; private set; }
+        public event Action<int, double, BunkerRules.PresentationGrade> PresentationDue;
         public void SetPendingWaveHpModifier(int value) => PendingWaveHpModifier=value;
         public int GetCurrentWaveEnemyHp(int baseHp)
         {
@@ -67,6 +69,7 @@ namespace UnityGameJam.Shelter
             foreach (var actor in roster.Characters) if (actor) { actor.ConfigureMental(Rules); actor.ResetMental(); actor.ResetSupplies(); }
             pendingPostEventTick=0;
             PendingWaveHpModifier=CurrentWaveHpModifier=LastWaveTick=0;
+            LastPresentationTick=0;
             clock = new BunkerTickClock(Rules);
             clock.Tick += ProcessTick;
             Paused = false;
@@ -91,13 +94,22 @@ namespace UnityGameJam.Shelter
                 if (actor) { actor.AdvanceMentalTick(); actor.AdvanceHungerTick(tick); }
             // All due work on the last tick precedes submission of the final progress snapshot.
             if (tick % Rules.WorkEveryTicks == 0) { ProcessWork(); WorkProcessed?.Invoke(tick); }
-            if (tick % Rules.RandomEventEveryTicks == 0) RandomEventDue?.Invoke(tick);
+            if (Rules.IsPresentationTick(tick))
+            {
+                double score = GameDevScoreCalculator.Calculate(development.Progress, Rules.EvaluationTargetProgress, tick, Rules.TotalTicks);
+                var grade = Rules.GradePresentation(score);
+                LastPresentationTick = tick;
+                foreach (var actor in roster.Characters)
+                    if (actor) actor.SetMental(actor.ClampMental((long)actor.CurrentMental + grade.MentalDelta));
+                PresentationDue?.Invoke(tick, score, grade);
+            }
+            else if (tick < Rules.TotalTicks && tick % Rules.RandomEventEveryTicks == 0) RandomEventDue?.Invoke(tick);
             if(IsPaused) { pendingPostEventTick=tick; clock.Paused=true; return; }
             CompleteTick(tick);
         }
         void CompleteTick(int tick)
         {
-            if (tick % Rules.InvasionEveryTicks == 0)
+            if (Rules.IsInvasionTick(tick))
             {
                 CurrentWaveHpModifier=PendingWaveHpModifier; PendingWaveHpModifier=0; LastWaveTick=tick;
                 ZombieInvasionDue?.Invoke(tick);

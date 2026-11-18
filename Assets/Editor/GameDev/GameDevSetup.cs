@@ -33,6 +33,7 @@ public static class GameDevSetup
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play mode before authoring.");
         EnsurePrefab();
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(CardPath)) UpdatePrefab(CardPath, MakeRoomForClock);
         var original = SceneManager.GetActiveScene();
         var scene = SceneManager.GetSceneByPath(GameDevKeys.ShelterScene);
         bool opened = !scene.IsValid() || !scene.isLoaded;
@@ -76,6 +77,10 @@ public static class GameDevSetup
     const string CardPath = "Assets/Prefabs/UI/ShelterCharacterCard.prefab";
     const string ClockDial = "Assets/Art/UI/ShelterClockDial.png";
     const string ClockArc = "Assets/Art/UI/ShelterClockElapsed.png";
+    const string WaveMark = "Assets/Art/UI/ShelterClockInvasion.png";
+    const string PresentationMark = "Assets/Art/UI/ShelterClockPresentation.png";
+    const string MarkerPrefabPath = "Assets/Prefabs/UI/ShelterClockMarker.prefab";
+    const int ClockDiameter = 176;
     static readonly Vector2 TopLeft = new Vector2(0, 1);
 
     [MenuItem("Tools/Game Dev/Update Shelter HUD")]
@@ -91,6 +96,10 @@ public static class GameDevSetup
     {
         ImportClockSprite(ClockDial);
         ImportClockSprite(ClockArc);
+        ImportClockSprite(WaveMark);
+        ImportClockSprite(PresentationMark);
+        Directory.CreateDirectory(Path.GetDirectoryName(PrefabPath));
+        EnsureMarkerPrefab();
         font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/FarmingKorean.asset");
         if (!font) throw new InvalidOperationException("The shared Korean TMP font is missing.");
         if (AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath))
@@ -98,7 +107,6 @@ public static class GameDevSetup
             UpdatePrefab(PrefabPath, ConfigureDevelopmentHud);
             return;
         }
-        Directory.CreateDirectory(Path.GetDirectoryName(PrefabPath));
         var root = new GameObject("DevGageUI", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(DevGageUI));
         try
         {
@@ -110,6 +118,22 @@ public static class GameDevSetup
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         }
         finally { UnityEngine.Object.DestroyImmediate(root); }
+    }
+
+    static void EnsureMarkerPrefab()
+    {
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(MarkerPrefabPath)) return;
+        var marker = new GameObject("ShelterClockMarker", typeof(RectTransform), typeof(Image));
+        try
+        {
+            var image = marker.GetComponent<Image>();
+            image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(WaveMark);
+            if (!image.sprite) throw new InvalidOperationException("Missing clock marker Sprite.");
+            image.raycastTarget = false;
+            image.rectTransform.sizeDelta = new Vector2(16, 16);
+            PrefabUtility.SaveAsPrefabAsset(marker, MarkerPrefabPath);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(marker); }
     }
 
     static void ImportClockSprite(string path)
@@ -141,8 +165,50 @@ public static class GameDevSetup
     static bool ConfigureDevelopmentHud(GameObject root)
     {
         var ui = new SerializedObject(root.GetComponent<DevGageUI>());
-        if (ui.FindProperty("clockFill").objectReferenceValue) return false;
+        if (ui.FindProperty("clockMarkerPrefab").objectReferenceValue && ui.FindProperty("presentationMarkerSprite").objectReferenceValue) return false;
         var viewport = root.transform.Find("Viewport 1920x1080");
+        if (!ui.FindProperty("clockFill").objectReferenceValue) ConfigureDevelopmentPanel(ui, viewport);
+        var dial = Picture("Shelter clock", viewport, 24, -20, ClockDiameter, ClockDiameter, ClockDial);
+        dial.type = Image.Type.Simple;
+        var arc = Picture("Elapsed day", dial.transform, 0, 0, ClockDiameter, ClockDiameter, ClockArc);
+        StretchToParent(arc.rectTransform);
+        arc.type = Image.Type.Filled;
+        arc.fillMethod = Image.FillMethod.Radial360;
+        arc.fillOrigin = (int)Image.Origin360.Top;
+        arc.fillClockwise = true;
+        arc.fillAmount = 0;
+        var time = Text("Time", dial.transform, 0, 0, ClockDiameter, ClockDiameter, 26);
+        StretchToParent(time.rectTransform);
+        time.alignment = TextAlignmentOptions.Center;
+        time.text = "00:00";
+        var legend = Picture("Event legend", dial.transform, ClockDiameter + 12, -50, 136, 76, ArtRoot + "panel.png");
+        LegendEntry(legend.transform, "Invasion", "좀비 습격", WaveMark, -8);
+        LegendEntry(legend.transform, "Presentation", "중간 발표", PresentationMark, -40);
+        ui.FindProperty("clockFill").objectReferenceValue = arc;
+        ui.FindProperty("clockTime").objectReferenceValue = time;
+        ui.FindProperty("clockMarkerPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(MarkerPrefabPath).GetComponent<Image>();
+        ui.FindProperty("presentationMarkerSprite").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(PresentationMark);
+        ui.ApplyModifiedPropertiesWithoutUndo();
+        return true;
+    }
+
+    static void StretchToParent(RectTransform rect)
+    {
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = rect.offsetMax = Vector2.zero;
+    }
+
+    static void LegendEntry(Transform legend, string kind, string title, string sprite, float y)
+    {
+        Picture(kind + " mark", legend, 12, y - 6, 16, 16, sprite).type = Image.Type.Simple;
+        var label = Text(kind + " label", legend, 36, y, 96, 28, 18);
+        label.alignment = TextAlignmentOptions.MidlineLeft;
+        label.text = title;
+    }
+
+    static void ConfigureDevelopmentPanel(SerializedObject ui, Transform viewport)
+    {
         var panel = Rect("Development panel", viewport, 486, -24, 748, 68);
         var oldBackground = panel.GetComponent<Image>();
         if (oldBackground) oldBackground.enabled = false;
@@ -162,22 +228,6 @@ public static class GameDevSetup
         status.alignment = TextAlignmentOptions.Top;
         status.textWrappingMode = TextWrappingModes.Normal;
         ui.FindProperty("status").objectReferenceValue = status;
-
-        var dial = Picture("Shelter clock", viewport, 24, -20, 100, 100, ClockDial);
-        dial.type = Image.Type.Simple;
-        var arc = Picture("Elapsed day", dial.transform, 0, 0, 100, 100, ClockArc);
-        arc.type = Image.Type.Filled;
-        arc.fillMethod = Image.FillMethod.Radial360;
-        arc.fillOrigin = (int)Image.Origin360.Top;
-        arc.fillClockwise = true;
-        arc.fillAmount = 0;
-        var time = Text("Time", dial.transform, 0, 0, 100, 100, 20);
-        time.alignment = TextAlignmentOptions.Center;
-        time.text = "00:00";
-        ui.FindProperty("clockFill").objectReferenceValue = arc;
-        ui.FindProperty("clockTime").objectReferenceValue = time;
-        ui.ApplyModifiedPropertiesWithoutUndo();
-        return true;
     }
 
     static void Field(SerializedProperty fields, int index, Transform panel, GameDevField field, string name, string title)
@@ -203,8 +253,8 @@ public static class GameDevSetup
     static bool MakeRoomForClock(GameObject root)
     {
         var card = (RectTransform)root.transform.Find("Viewport 1920x1080/Character card");
-        if (card.anchoredPosition != new Vector2(24, -32)) return false;
-        card.anchoredPosition = new Vector2(24, -136);
+        if (card.anchoredPosition != new Vector2(24, -32) && card.anchoredPosition != new Vector2(24, -136)) return false;
+        card.anchoredPosition = new Vector2(24, -(20 + ClockDiameter + 16));
         return true;
     }
 

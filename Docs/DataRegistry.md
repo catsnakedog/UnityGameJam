@@ -6,6 +6,10 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 ## 등록된 데이터
 
+중간 발표의 시각·등급별 멘탈과 첫 좀비 습격 틱은 기존 `data.bunker.rules`에서 편집한다. 시계·팝업은 이 규칙과 시뮬레이션의 회차 상태를 읽는다. [필드 명세](DataSpecs/BunkerRules.md) · [원문 대조와 검증](DataHistory/20261119-midterm-clock.md)
+
+수면실 정원은 기존 `data.bunker.rules.sleepingRoomCapacity`가 소유한다. 이동 중 자리 예약과 구조 대상의 병상은 생존자의 회차 상태로 계산한다. [방 규칙](DataSpecs/BunkerRules.md) · [변경 전 조사](DataHistory/20261119-sleep-capacity-plan.md)
+
 수면실·전투방의 틱당 멘탈과 구조 후 각성 기준은 기존 `data.bunker.rules`에서 편집한다. 구조 대상과 운반자는 회차 상태다. [규칙 명세](DataSpecs/BunkerRules.md) · [파밍·벙커 통합 Play 검증](DataHistory/20261119-farming-shelter-play-verified.md)
 
 벙커 생존자의 피곤한 표정 전환 기준은 기존 `data.bunker.rules`에서 담당한다. 캐릭터 식별과 현재 멘탈은 기존 `data.characters` 및 CharacterIdentity를 사용한다. [멘탈 표시 명세](DataSpecs/BunkerRules.md) · [번들·Play 검증](DataHistory/20261119-survivor-animation-verified.md)

@@ -34,10 +34,14 @@ namespace UnityGameJam.GameDev
             if (currentTick == null) return false;
             int tick = currentTick();
             if (tick <= 0) return false;
-            double expected = targetProgress * ((double)tick / referenceTicks);
-            totalScore = ((double)progress.Planning + progress.Programming + progress.Graphics) / expected;
+            totalScore = Calculate(progress, targetProgress, tick, referenceTicks);
             GameDevEnding.ValidateScore(totalScore);
             return true;
+        }
+        internal static double Calculate(GameDevProgress progress, double targetProgress, int tick, int referenceTicks)
+        {
+            double expected = targetProgress * ((double)tick / referenceTicks);
+            return ((double)progress.Planning + progress.Programming + progress.Graphics) / expected;
         }
     }
 }

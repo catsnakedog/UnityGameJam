@@ -1,0 +1,50 @@
+PASS Shelter scene and three-person roster loaded
+PASS tick 0: 15 upcoming markers, wave dispatched 0, presentation dispatched 0.
+PASS tick 20: 14 upcoming markers, wave dispatched 20, presentation dispatched 0.
+PASS Round 1 dispatched its score and grade once at tick 240
+PASS All three mental values applied before confirming round 1
+PASS tick 240: 11 upcoming markers, wave dispatched 180, presentation dispatched 240.
+PASS Presentation opens directly on its evaluation
+PASS Only Continue is available
+PASS Scheduled tick has a score
+PASS Tick, progress, calculated score, grade color and mental adjustment visible
+PASS Presentation blocks world commands
+PASS Presentation holds its tick
+PASS Presentation remains open beyond the ordinary event timeout
+PASS Y, N and Space leave the evaluation open
+PASS Confirmation releases popup input and preserves external pause
+PASS Popup simulation pause released
+PASS Continuing round 1 finished its tick once and preserved mental
+PASS Round 2 dispatched its score and grade once at tick 480
+PASS All three mental values applied before confirming round 2
+PASS tick 480: 7 upcoming markers, wave dispatched 420, presentation dispatched 480.
+PASS Presentation opens directly on its evaluation
+PASS Only Continue is available
+PASS Scheduled tick has a score
+PASS Tick, progress, calculated score, grade color and mental adjustment visible
+PASS Presentation blocks world commands
+PASS Presentation holds its tick
+PASS Presentation remains open beyond the ordinary event timeout
+PASS Y, N and Space leave the evaluation open
+PASS Confirmation releases popup input and preserves external pause
+PASS Popup simulation pause released
+PASS Continuing round 2 finished its tick once and preserved mental
+PASS Round 3 dispatched its score and grade once at tick 720
+PASS All three mental values applied before confirming round 3
+PASS tick 720: 3 upcoming markers, wave dispatched 660, presentation dispatched 720.
+PASS Presentation opens directly on its evaluation
+PASS Only Continue is available
+PASS Scheduled tick has a score
+PASS Tick, progress, calculated score, grade color and mental adjustment visible
+PASS Presentation blocks world commands
+PASS Presentation holds its tick
+PASS Presentation remains open beyond the ordinary event timeout
+PASS Y, N and Space leave the evaluation open
+PASS Confirmation releases popup input and preserves external pause
+PASS Popup simulation pause released
+PASS Continuing round 3 finished its tick once and preserved mental
+PASS All 20 ordinary hourly events and no random event on a presentation or ending
+PASS All 12 invasions spawned from tick 20 through 900
+PASS All 960 ticks completed once with the final ending
+PASS Restart clears rounds, waves, popups and mental effects
+PASS tick 0: 15 upcoming markers, wave dispatched 0, presentation dispatched 0.

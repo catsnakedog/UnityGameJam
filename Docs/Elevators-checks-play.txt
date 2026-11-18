@@ -39,6 +39,7 @@ PASS Connected rooms 수면 -> 수면
 PASS Rescued character reaches lower floor by elevator
 PASS Two-elevator transfer reaches combat floor
 PASS Three opposite routes through two cabins complete without deadlock
+PASS Third survivor cannot enter the occupied sleeping room
 PASS Two survivors board the same visible cabin in the shelter scene
 PASS Popup pause freezes cabin and both passengers
 PASS Fainted passenger unloads safely and remains unable to walk
@@ -46,7 +47,7 @@ PASS Companion reaches destination independently of fainted rider
 PASS Zombie queue shares cabins with a peak of two riders
 PASS Zombie descent follows spawn order [0, 1, 2, 3, 4, 5]
 PASS Elevator transport preserves six independent HP/state instances
-PASS Ground zombie queue preserves spacing at elevator landings; min=2.4
+PASS Ground zombie queue preserves spacing at elevator landings; min=2.399998
 PASS Elevator-delivered invader still occupies and disables a room
 PASS Another boarding zombie keeps its queue spacing
 PASS A zombie cannot finish its ground route on top of a waiting caller

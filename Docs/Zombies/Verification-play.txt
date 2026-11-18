@@ -41,7 +41,9 @@ PASS The surviving invader retains its occupation
 PASS The group can fight the second invader on the next round and liberate the room
 PASS Real work tick produces no progress in occupied planning room
 PASS Real work tick resumes after liberation
+PASS No early invasion or early HP consumption
 PASS Scheduled wave consumes existing NEXT_WAVE_HP exactly once
+PASS The second invasion waits the full interval after the first
 PASS Next wave returns to catalog HP and independent agents coexist
 PASS Restart clears zombies, occupation, locks, wave and mental state
 PASS Disconnected layout waits without teleporting

@@ -99,6 +99,44 @@ public static class BunkerChecks
             "The delivered survivor regains control at the threshold", checks);
     }
 
+    static void CheckRoomCapacity(BunkerSimulation sim, ShelterRoster roster, ShelterArea[] rooms, List<string> checks)
+    {
+        var common = rooms.Single(room => room.roomType == ShelterRoomType.Common);
+        var bed = rooms.Single(room => room.roomType == ShelterRoomType.Sleeping);
+        var guard = rooms.Single(room => room.roomType == ShelterRoomType.ZombieInvasion);
+        var walkers = roster.Characters.Select(actor => actor.GetComponent<ShelterWalker>()).ToArray();
+        var carrier = walkers[0]; var patient = walkers[1]; var resident = walkers[2];
+        foreach (var walker in walkers) ShelterElevatorChecks.Move(walker, common);
+        var positions = walkers.Select(w => w.transform.position.x).OrderBy(x => x).ToArray();
+        Check(positions.Skip(1).Zip(positions, (right, left) => right - left).All(gap => gap > .96f),
+            "Three survivors stand at separately clickable positions in one room", checks);
+        Check(sim.Rules.SleepingRoomCapacity == 2 && resident.MoveTo(bed) && patient.MoveTo(bed) && !carrier.MoveTo(bed),
+            "Two simultaneous sleeping-room orders reserve the beds before arrival", checks);
+        patient.Stop();
+        Check(carrier.MoveTo(bed), "Stopping a trip immediately releases its sleeping-room place", checks);
+        carrier.Stop();
+        ShelterElevatorChecks.Move(resident, bed);
+        ShelterElevatorChecks.Move(patient, guard);
+        ShelterElevatorChecks.Move(carrier, common);
+        roster.Characters[1].SetMental(0);
+        Check(carrier.TryRescue(patient), "A rescue can use the single remaining bed", checks);
+        carrier.Stop();
+        Check(carrier.MoveTo(bed), "Cancelling pickup releases the patient's reservation", checks);
+        ShelterElevatorChecks.Move(carrier, common);
+        Check(carrier.TryRescue(patient), "The cancelled rescue can be requested again", checks);
+        for (int i = 0; i < 6000 && (carrier.IsRescuing || carrier.IsMoving); i++)
+        {
+            foreach (var lift in carrier.navigation.Elevators) lift.Advance(.02f);
+            carrier.Tick(.02f);
+        }
+        Check(patient.CurrentRoom == bed && resident.CurrentRoom == bed && carrier.CurrentRoom == common &&
+            roster.Characters[1].IsRestingAfterRescue && !carrier.MoveTo(bed) &&
+            Mathf.Abs(patient.transform.position.x - resident.transform.position.x) > .96f,
+            "Last bed takes the patient beside the resident and the carrier returns to their original room", checks);
+        roster.Characters[1].ResetMental();
+        foreach (var walker in walkers) ShelterElevatorChecks.Move(walker, common);
+    }
+
     public static async Task<string> RunPlay()
     {
         if (!EditorApplication.isPlaying) throw new Exception("Play mode required.");
@@ -198,11 +236,13 @@ public static class BunkerChecks
             Check(actor.CanAct && actor.CurrentMental == initialMental, "Restart restores initial mental", checks);
             await Task.Yield(); // Let the input block from the old event controller finish this frame.
             CheckRescue(sim, roster, rooms, checks);
+            CheckRoomCapacity(sim, roster, rooms, checks);
             ShelterElevatorChecks.Move(walker, plan);
             ShelterElevatorChecks.Move(second, plan);
             dev.RestartDevelopment();
-            int random = 0, invasion = 0, work = 0, end = 0;
+            int random = 0, invasion = 0, presentation = 0, work = 0, end = 0;
             sim.RandomEventDue += _ => random++; sim.ZombieInvasionDue += _ => invasion++;
+            sim.PresentationDue += (_, score, grade) => presentation++;
             sim.WorkProcessed += _ => work++; sim.DurationEnded += () => end++;
             sim.Paused = true; sim.Advance(1000); Check(sim.CurrentTick == 0 && actor.CurrentMental == initialMental, "Pause suspends cost and ticks", checks); sim.Paused = false;
             sim.Advance((double)sim.Rules.SecondsPerTick * (sim.Rules.TotalTicks - 1));
@@ -211,7 +251,11 @@ public static class BunkerChecks
             float finalPlanning = Mathf.Min(GameDevProgress.MaximumPercent, dev.Progress.Planning + finalGain);
             sim.Advance((double)sim.Rules.SecondsPerTick * sim.Rules.TotalTicks * 2);
             Check(sim.CurrentTick == sim.Rules.TotalTicks && end == 1, "Ends at N exactly once", checks);
-            Check(random == sim.Rules.TotalTicks / sim.Rules.RandomEventEveryTicks && invasion == sim.Rules.TotalTicks / sim.Rules.InvasionEveryTicks && work == sim.Rules.TotalTicks / sim.Rules.WorkEveryTicks, "Independent event/work periods including final tick", checks);
+            var playableTicks = Enumerable.Range(1, sim.Rules.TotalTicks - 1);
+            Check(random == playableTicks.Count(t => t % sim.Rules.RandomEventEveryTicks == 0 && !sim.Rules.IsPresentationTick(t)) &&
+                presentation == playableTicks.Count(sim.Rules.IsPresentationTick) && invasion == playableTicks.Count(sim.Rules.IsInvasionTick) &&
+                work == sim.Rules.TotalTicks / sim.Rules.WorkEveryTicks,
+                "Presentations replace random events, scheduled popups and waves stop before the final work tick", checks);
             Check(dev.Phase == GameDevPhase.Ended && dev.TotalScore.HasValue && Mathf.Approximately(dev.SubmittedProgress.Planning, finalPlanning), "Final tick work submitted, evaluated and clamped through existing manager", checks);
             sim.Advance(1000); Check(end == 1 && sim.RemainingTicks == 0, "No progress after end", checks);
             var source = AssetDatabase.LoadAssetAtPath<BunkerRules>(BunkerSetup.RulesPath);

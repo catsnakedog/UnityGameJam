@@ -6,11 +6,15 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityGameJam.GameDev;
+using UnityGameJam.Shelter;
 
 namespace UnityGameJam.Events
 {
     public sealed class EventLaptopPopup : MonoBehaviour
     {
+        enum Page { Hidden, Event, EventResult, Presentation }
+
         [SerializeField] GameObject panel;
         [SerializeField] TMP_Text number,title,body,buttonLabel,resultLabel,hint;
         [SerializeField] Button confirm,yesButton,noButton;
@@ -21,15 +25,19 @@ namespace UnityGameJam.Events
         float elapsed,resultElapsed;
         int lastInputFrame=-1;
         GameObject previousSelection;
-        public bool IsOpen { get; private set; }
-        public bool ShowingResult { get; private set; }
-        public bool IsTyping => IsOpen && !ShowingResult && body.maxVisibleCharacters<body.textInfo.characterCount;
-        public bool CanChoose => IsOpen && !IsTyping && !ShowingResult;
+        Page page;
+        Color defaultResultColor;
+        public bool IsOpen => page != Page.Hidden;
+        public bool ShowingPresentation => page == Page.Presentation;
+        public bool ShowingResult => page == Page.EventResult || ShowingPresentation;
+        public bool IsTyping => page == Page.Event && body.maxVisibleCharacters<body.textInfo.characterCount;
+        public bool CanChoose => page == Page.Event && !IsTyping;
         public int VisibleCharacters => body.maxVisibleCharacters;
         public event Action Closed;
         public event Action<bool> ChoiceRequested;
         void Awake()
         {
+            defaultResultColor = resultLabel.color;
             panel.SetActive(false);
             confirm.onClick.AddListener(Confirm); yesButton.onClick.AddListener(Yes); noButton.onClick.AddListener(No);
         }
@@ -44,11 +52,7 @@ namespace UnityGameJam.Events
         void No() => RequestChoice(false);
         public void Show(EventDefinition entry)
         {
-            if(IsOpen) throw new InvalidOperationException("Event popup is already open.");
-            number.text="EVENT / "+entry.Id;
-            title.text=entry.Title; body.richText=false; body.text=entry.Content;
-            body.maxVisibleCharacters=int.MaxValue;
-            panel.SetActive(true); IsOpen=true; ShowingResult=false; resultLabel.text="";
+            Open(Page.Event, "EVENT / "+entry.Id, entry.Title, entry.Content);
             Canvas.ForceUpdateCanvases(); body.ForceMeshUpdate();
             var boundaries=StringInfo.ParseCombiningCharacters(entry.Content);
             visibleSteps.Clear(); int visible=0;
@@ -58,22 +62,44 @@ namespace UnityGameJam.Events
                 while(visible<body.textInfo.characterCount && body.textInfo.characterInfo[visible].index<end) visible++;
                 visibleSteps.Add(visible);
             }
-            elapsed=0; body.maxVisibleCharacters=0; scroll.verticalNormalizedPosition=1;
-            lastInputFrame=Time.frameCount;
+            elapsed=0; body.maxVisibleCharacters=0;
             SetButtons();
+        }
+        public void ShowPresentation(int round, int tick, GameDevProgress progress, double score, BunkerRules.PresentationGrade grade)
+        {
+            string progressLine = $"기획 {Percent(progress.Planning)}   프로그래밍 {Percent(progress.Programming)}   그래픽 {Percent(progress.Graphics)}";
+            string summary = $"{progressLine}\n평가 점수  {score:0.000}\n팀원 1인당 멘탈  {grade.MentalDelta:+0;-0;0}";
+            Open(Page.Presentation, $"{round}차 발표  ·  {tick}틱", "중간 발표", summary);
+            resultLabel.text = grade.Label;
+            resultLabel.color = grade.Color;
+            SetButtons();
+        }
+        static string Percent(float progress) => $"{Mathf.Floor(progress * 10f) / 10f:0.#}%";
+
+        void Open(Page nextPage, string heading, string caption, string content)
+        {
+            if(IsOpen) throw new InvalidOperationException("Event popup is already open.");
+            page=nextPage;
+            number.text=heading; title.text=caption; body.richText=false; body.text=content;
+            body.maxVisibleCharacters=int.MaxValue;
+            resultLabel.text=string.Empty; resultLabel.color=defaultResultColor;
+            panel.SetActive(true);
+            scroll.StopMovement(); scroll.verticalNormalizedPosition=1;
+            lastInputFrame=Time.frameCount;
             if(EventSystem.current) { previousSelection=EventSystem.current.currentSelectedGameObject; EventSystem.current.SetSelectedGameObject(null); }
         }
         void SetButtons()
         {
             confirm.gameObject.SetActive(IsTyping || ShowingResult);
             buttonLabel.text=ShowingResult?"계속":"전체 보기";
-            hint.text=ShowingResult?"결과 확인 후 계속됩니다":IsTyping?"ENTER 또는 SPACE · 전체 보기":"Y / N · 선택";
+            if (ShowingPresentation) hint.text = "ENTER · 계속";
+            else hint.text=ShowingResult?"결과 확인 후 계속됩니다":IsTyping?"ENTER 또는 SPACE · 전체 보기":"Y / N · 선택";
             yesButton.gameObject.SetActive(CanChoose); noButton.gameObject.SetActive(CanChoose);
         }
         void Update()
         {
             if(!IsOpen) return;
-            if(ShowingResult)
+            if(page == Page.EventResult)
             {
                 resultElapsed+=Time.unscaledDeltaTime;
                 if(resultElapsed>=Mathf.Max(0.5f,resultDisplaySeconds)) { Close(); return; }
@@ -87,7 +113,7 @@ namespace UnityGameJam.Events
             }
             var k=Keyboard.current;
             if(k==null) return;
-            if(k.enterKey.wasPressedThisFrame || k.numpadEnterKey.wasPressedThisFrame || k.spaceKey.wasPressedThisFrame) Confirm();
+            if(k.enterKey.wasPressedThisFrame || k.numpadEnterKey.wasPressedThisFrame || (!ShowingPresentation && k.spaceKey.wasPressedThisFrame)) Confirm();
             else if(k.yKey.wasPressedThisFrame) RequestChoice(true);
             else if(k.nKey.wasPressedThisFrame) RequestChoice(false);
         }
@@ -105,16 +131,16 @@ namespace UnityGameJam.Events
         }
         public void ShowResult(string result)
         {
-            if(!IsOpen) return;
+            if(page != Page.Event) return;
             body.maxVisibleCharacters=body.textInfo.characterCount;
-            resultLabel.text=result; ShowingResult=true; resultElapsed=0; lastInputFrame=Time.frameCount; SetButtons();
+            resultLabel.text=result; page=Page.EventResult; resultElapsed=0; lastInputFrame=Time.frameCount; SetButtons();
         }
         public void ShowUnavailable(string message) => ShowResult(message);
         public void ShowChoiceError(string message) { resultLabel.text=message; SetButtons(); }
         public void Close()
         {
             if(!IsOpen) return;
-            IsOpen=false; ShowingResult=false; panel.SetActive(false);
+            page=Page.Hidden; panel.SetActive(false);
             body.text=title.text=number.text=resultLabel.text=string.Empty; visibleSteps.Clear();
             if(EventSystem.current && previousSelection && previousSelection.activeInHierarchy) EventSystem.current.SetSelectedGameObject(previousSelection);
             previousSelection=null; Closed?.Invoke();

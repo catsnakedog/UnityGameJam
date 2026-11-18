@@ -6,8 +6,8 @@
 
 작업 1회 증가량 = 방 소속 캐릭터들의 해당 능력 합 × Percent Per Ability (퍼센트포인트). 예: 프로그래밍 능력 10, 계수 0.1이면 작업마다 프로그래밍 게이지 +1%p. 분야별 최대 100%. 세 분야 모두 채워도 정해진 총 틱까지 진행하며 마지막 작업 이후 종료한다.
 
-GameDevManager 오브젝트의 BunkerSimulation Inspector에서 현재/남은 틱, Pause, Open Bunker Rules를 사용할 수 있다. 랜덤/침공은 `RandomEventDue(int tick)` / `ZombieInvasionDue(int tick)` C# 이벤트만 제공하며 확률 추첨/좀비 생성은 아직 없다. `WorkProcessed`, `TickOccurred`, `DurationEnded`로 후속 기능을 연결한다. `GameDevManager.RestartDevelopment()`는 진행도와 틱을 초기화한다.
+GameDevManager의 BunkerSimulation Inspector에서 현재/남은 틱을 확인하고 시뮬레이션을 일시정지할 수 있다. 현재 시간표에서 첫 습격은 00:30, 중간 발표는 06:00·12:00·18:00이다. 발표 중에는 시간이 멈추고 계속 버튼이나 Enter로 다음 틱을 진행한다. 시계 테두리의 점은 앞으로 남은 습격과 발표를 표시한다. 재시작하면 진행도와 시간표가 초기화된다.
 
-파밍을 마치고 벙커에 진입하면 1번과 추가로 구조한 생존자들이 작업자로 합류한다. 벙커 씬에서 직접 Play하면 파밍 명단이 비어 있다. 현재 점수 공식은 미정이므로 시간 종료 후 기존 AwaitingScore 상태로 넘어간다.
+파밍을 마치고 벙커에 진입하면 1번과 추가로 구조한 생존자들이 합류한다. 같은 방의 생존자는 서로 떨어져 서고 수면실에는 이동 중 예약을 포함해 두 명이 배정된다. 마지막 한 자리를 기절자에게 인계하면 구조자는 원래 구역으로 돌아간다. 24:00에 최종 제출 점수와 엔딩을 결정한다.
 
 [데이터 명세](DataSpecs/BunkerRules.md) · [검증 기록](DataHistory/20261118-bunker-ticks-02-verified.md)

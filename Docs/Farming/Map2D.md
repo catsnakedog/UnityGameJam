@@ -25,7 +25,7 @@
 - 실제 임포트한 30개 이미지의 GUID/local ID/크기/PPU는 [SideViewArtManifest.json](SideViewArtManifest.json)에 기록한다.
 - 벽: 192×256, 바닥: 128×64. Rectangle SpriteRenderer의 Tiled 모드이며 다이아몬드 투영/Isometric Tilemap은 사용하지 않는다.
 - 문/문 강조: 96×192, 테이블: 192×96, 의자: 64×96, 창: 192×128, 벙커 문: 192×192, 포커스: 128×32.
-- 플레이어와 사람은 벙커 Survivor 프리팹이 연결한 Aseprite 원본과 프레임 타이밍을 공유한다. 플레이어는 A/D 방향에 따라 걷고 멈추면 대기한다. 구조 대상은 방에서 자기 ID의 대기 클립을 재생하며 기본 그림만 있는 5·6번은 그 그림을 표시한다. 운반 중인 사람은 수평으로 눕는다.
+- 플레이어와 사람은 벙커 Survivor 프리팹이 연결한 Aseprite 원본과 프레임 타이밍을 공유한다. 플레이어는 A/D 방향에 따라 걷고 멈추면 대기한다. 방 안의 다섯 구조 대상은 각각 자기 ID의 10프레임 대기 동작을 재생한다. 운반 중인 사람은 수평으로 눕는다.
 - 배경 벽 -100, 바닥 -90, 창 -50, 문 0, 의자 5, 테이블 SortingGroup 10, 인물/월드 물자 100, 플레이어 200. 테이블 위 물건은 테이블 그룹 내부 20/21, 운반물은 플레이어 그룹 내부 10부터다. Z는 모두 0이며 Y-Z 아이소메트릭 깊이 계산을 하지 않는다.
 - PNG 바이트만 같은 경로에 덮어쓰고 `.meta`는 유지한다. 새 이미지 규격은 위 크기/PPU/Pivot을 유지한다. 캐릭터의 동작은 `Assets/Art/Shelter/Characters/`에서 편집한다. 플레이어는 `FarmingRules.startingPersonId`가 가리키는 생존자의 동작을 사용한다.
 - HUD 이미지는 기존 `Assets/Art/UI/Farming/`와 `FarmingHud.prefab`을 재사용한다. 안내 문구만 사이드뷰 조작으로 갱신했다.

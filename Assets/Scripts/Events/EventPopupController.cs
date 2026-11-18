@@ -36,6 +36,7 @@ namespace UnityGameJam.Events
             { LastError="Event popup scene references missing."; Debug.LogError(LastError,this); return; }
             simulation.AcquirePause(loadingPause);
             simulation.RandomEventDue+=OnDue;
+            simulation.PresentationDue+=OnPresentationDue;
             development.DevelopmentRestarted+=ResetRun;
             development.Changed+=OnDevelopmentChanged;
             popup.Closed+=OnClosed;
@@ -59,7 +60,12 @@ namespace UnityGameJam.Events
         void OnDisable()
         {
             generation++;
-            if(simulation) { simulation.RandomEventDue-=OnDue; simulation.ReleasePause(loadingPause); }
+            if(simulation)
+            {
+                simulation.RandomEventDue-=OnDue;
+                simulation.PresentationDue-=OnPresentationDue;
+                simulation.ReleasePause(loadingPause);
+            }
             if(development) { development.DevelopmentRestarted-=ResetRun; development.Changed-=OnDevelopmentChanged; }
             if(popup) { popup.Close(); popup.Closed-=OnClosed; popup.ChoiceRequested-=Choose; }
             OnClosed(); catalog=null;
@@ -70,19 +76,34 @@ namespace UnityGameJam.Events
             var entry=catalog.Pick(previousId,supplies);
             if(entry!=null && ShowEvent(entry.Id)==EventShowResult.Shown) LastEventTick=tick;
         }
+        void OnPresentationDue(int tick, double score, BunkerRules.PresentationGrade grade)
+        {
+            if (!popup.isActiveAndEnabled || popup.IsOpen || development.Phase != GameDevPhase.Developing) return;
+            int round = 0;
+            foreach (int scheduledTick in simulation.Rules.PresentationTicks)
+                if (scheduledTick <= tick) round++;
+            choiceApplied = false;
+            LastResult = null;
+            OpenPopup(() => popup.ShowPresentation(round, tick, development.Progress, score, grade));
+        }
         public EventShowResult ShowEvent(string id)
         {
-            if(!isActiveAndEnabled || !IsReady || !roster.IsReady || development.Phase!=GameDevPhase.Developing) return EventShowResult.NotReady;
+            if(!isActiveAndEnabled || !IsReady || !roster.IsReady || !popup.isActiveAndEnabled || development.Phase!=GameDevPhase.Developing) return EventShowResult.NotReady;
             if(popup.IsOpen) return EventShowResult.Busy;
             var entry=catalog.Find(id);
             if(entry==null) return EventShowResult.NotFound;
             if(!entry.Eligible(supplies)) return EventShowResult.Ineligible;
-            simulation.AcquirePause(popupPause); commander.AcquireInputBlock(popupPause);
             current=entry; choiceApplied=false; LastResult=null;
-            try { popup.Show(entry); }
-            catch { popup.Close(); OnClosed(); throw; }
+            OpenPopup(() => popup.Show(entry));
             previousId=id;
             return EventShowResult.Shown;
+        }
+        void OpenPopup(Action show)
+        {
+            simulation.AcquirePause(popupPause);
+            commander.AcquireInputBlock(popupPause);
+            try { show(); }
+            catch { popup.Close(); OnClosed(); throw; }
         }
         public void Choose(bool yes)
         {

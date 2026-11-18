@@ -12,10 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbee8b8f5c7f842419ef3294824dabec, type: 3}
   m_Name: BunkerRules
   m_EditorClassIdentifier: Assembly-CSharp::UnityGameJam.Shelter.BunkerRules
-  totalTicks: 120
+  totalTicks: 960
   secondsPerTick: 1
-  randomEventEveryTicks: 10
-  invasionEveryTicks: 30
+  randomEventEveryTicks: 40
+  invasionEveryTicks: 80
+  firstInvasionTick: 20
+  presentationTicks: f0000000e0010000d0020000
+  presentationGrades:
+  - minimumScore: 0
+    label: "\uB9DD\uAC9C"
+    mentalDelta: -15
+    color: {r: 0.972549, g: 0.44313726, b: 0.44313726, a: 1}
+  - minimumScore: 0.7
+    label: "\uD760"
+    mentalDelta: 0
+    color: {r: 0.6862745, g: 0.72156864, b: 0.7176471, a: 1}
+  - minimumScore: 1
+    label: "\uAD7F"
+    mentalDelta: 10
+    color: {r: 0.4392157, g: 0.85490197, b: 0.6, a: 1}
+  - minimumScore: 1.2
+    label: "\uAC13\uAC9C"
+    mentalDelta: 20
+    color: {r: 1, g: 0.81960785, b: 0.35686275, a: 1}
   invasionApproachTicks: 6
   guardVolleyEveryTicks: 2
   invasionMentalLoss: 2
@@ -27,6 +46,7 @@ MonoBehaviour:
   mentalMaximum: 100
   tiredMentalThreshold: 50
   sleepMentalPerTick: 5
+  sleepingRoomCapacity: 2
   wakeMental: 50
   hungerEveryTicks: 5
   hungerLoss: 1

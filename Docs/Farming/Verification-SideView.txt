@@ -1,4 +1,4 @@
-2026-11-19T02:02:00.7142112+09:00
+2026-11-19T02:45:52.5250943+09:00
 Passed
 PASS: Starts in corridor
 PASS: Three rooms with paired entrance/exit doors
@@ -8,6 +8,7 @@ PASS: No isometric tilemaps in scene
 PASS: No 3D collision geometry
 PASS: All world sprites use side-view artwork
 PASS: Six people and four carry slots
+PASS: Survivor 1 is the player and the rooms hold two, two, and one other survivors
 PASS: The player starts empty-handed with all four slots free
 PASS: The starting survivor is already secured
 PASS: Only the five other survivors exist as pickups
@@ -39,8 +40,8 @@ PASS: Walking to door does not auto-enter 325호
 PASS: E enters 325호
 PASS: Timer continues through door
 PASS: Only current room is visible
-PASS: person_05 uses its authored standing sprite
-PASS: person_02 displays its shelter idle clip
+PASS: person_03 displays its shelter idle clip
+PASS: person_06 displays its shelter idle clip
 PASS: W/S cannot leave horizontal walk line
 PASS: Large step stops before right boundary
 PASS: Can leave right wall immediately
@@ -52,8 +53,8 @@ PASS: Walking to door does not auto-enter 324호
 PASS: E enters 324호
 PASS: Timer continues through door
 PASS: Only current room is visible
-PASS: person_04 displays its shelter idle clip
-PASS: person_06 uses its authored standing sprite
+PASS: person_05 displays its shelter idle clip
+PASS: person_02 displays its shelter idle clip
 PASS: W/S cannot leave horizontal walk line
 PASS: Large step stops before right boundary
 PASS: Can leave right wall immediately
@@ -65,7 +66,7 @@ PASS: Walking to door does not auto-enter 323호
 PASS: E enters 323호
 PASS: Timer continues through door
 PASS: Only current room is visible
-PASS: person_03 displays its shelter idle clip
+PASS: person_04 displays its shelter idle clip
 PASS: W/S cannot leave horizontal walk line
 PASS: Large step stops before right boundary
 PASS: Can leave right wall immediately
@@ -75,7 +76,7 @@ PASS: Door reaches 복도
 PASS: Room exit returns to corridor
 PASS: Door reaches 325호
 PASS: Door reaches 복도
-PASS: Door reaches 324호
+PASS: Door reaches 323호
 PASS: Focus person_04
 PASS: Two-slot person carried
 PASS: Person carried horizontally
@@ -85,7 +86,7 @@ PASS: Actual keyboard movement while carrying
 PASS: Walks in front of all tables without getting trapped
 PASS: Door reaches 복도
 PASS: Door preserves held person and visibility
-PASS: Door reaches 325호
+PASS: Door reaches 324호
 PASS: Focus person_05
 PASS: Capacity overflow still rejected
 PASS: Door reaches 복도
@@ -96,8 +97,8 @@ PASS: Door reaches 복도
 PASS: Bunker records the rescued person and item alongside the starter
 PASS: Deposit fades out
 PASS: Deposited person and item disappear
-PASS: Door reaches 324호
-PASS: Focus person_06
+PASS: Door reaches 325호
+PASS: Focus person_03
 PASS: Four-slot person can be carried
 PASS: Door reaches 복도
 PASS: Empty corridor interaction throws held target
@@ -105,7 +106,7 @@ PASS: Door reaches 324호
 PASS: Thrown person stands in the source area when player changes rooms
 PASS: Cannot interact with another area
 PASS: Door reaches 복도
-PASS: Focus person_06
+PASS: Focus person_03
 PASS: Dropped person can be retrieved and deposited
 PASS: Door reaches 325호
 PASS: Focus canfood
@@ -121,6 +122,8 @@ PASS: Door preserves full item inventory
 PASS: Items reach bunker
 PASS: Door reaches 325호
 PASS: Re-entering room does not respawn looted targets
+PASS: Door reaches 복도
+PASS: Door reaches 324호
 PASS: Focus person_05
 PASS: Configured 30s flow finishes at zero after 30.00s
 PASS: Deadline freezes movement/interactions and excludes unbanked carry

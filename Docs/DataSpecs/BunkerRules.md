@@ -1,10 +1,23 @@
 # 벙커 틱·작업 규칙
 
+## 중간 발표와 첫 좀비 습격
+
+기존 `data.bunker.rules` 정본 [BunkerRules.asset](../../Assets/Settings/Shelter/BunkerRules.asset)에 다음 필드를 둔다. 현재 회차의 개발 진척과 발표 결과는 런타임 상태다.
+
+| 필드 | 타입과 단위 | 값과 제약 |
+|---|---|---|
+| firstInvasionTick | 양의 int, 첫 습격 틱 | 20. 이후 기존 invasionEveryTicks마다 발생하며 종료 틱은 제외한다. |
+| presentationTicks | int 배열, 회차 내 틱 | 240·480·720. 양의 틱을 오름차순으로 중복 없이 설정한다. 종료 틱 이후의 예약은 실행하지 않는다. |
+| presentationGrades | 등급 배열 | 최저 점수 minimumScore(double, 0부터 오름차순), 표시 label(필수), 전원 mentalDelta(int, 포인트), 연출 color(RGBA)를 갖는다. 0부터 망겜 −15 빨강, 0.7부터 흠 0 회색, 1.0부터 굿 +10 초록, 1.2부터 갓겜 +20 금색. |
+
+발표 점수는 세 진척 합 ÷ (기존 evaluationTargetProgress × 현재 틱 / totalTicks)이다. 발표 틱에는 방 작업 후 전원의 멘탈을 한 번 반영하고 일반 사건을 대체한다. 기존 최종 엔딩의 별도 기준 틱과 분기는 유지한다. 시뮬레이션과 시계는 같은 일정과 실행 기록을 읽는다. 설정을 이전하거나 제거하면 두 소비자를 함께 전환한다. [노션 중간평가](https://app.notion.com/p/41caca30f5dc801c873be391bddeeade) · [시간표](https://app.notion.com/p/41caca30f5dc8065a8aae3eccbbd09c0)
+
 ## 방 멘탈과 기절 구조
 
 | 필드 | 타입 · 단위 | 필수 · 초기값 · 제약 |
 |---|---|---|
 | sleepMentalPerTick | int · 수면실 1인당 멘탈 포인트/틱 | 필수 5, 1 이상 |
+| sleepingRoomCapacity | int · 수면실 한 개의 생존자 정원(명) | 필수 2, 1 이상. 일반 이동과 기절자 구조가 함께 사용하며 암묵 기본값 없음 |
 | guardMentalLossPerTick | int · 전투방 1인당 멘탈 포인트/틱 | 필수 2, 0 이상 |
 | wakeMental | int · 수면실에 인계된 기절자의 각성 기준(이상) | 필수 50, 1 이상 mentalMaximum 이하 |
 
@@ -55,14 +68,14 @@ Windows 번들로 불러온 값 50과 6인의 51·50·0 전환을 확인했다. 
 
 | 필드 | 타입 | 의미/단위 | 필수·기본값·제약 |
 |---|---|---|---|
-| totalTicks | int | 벙커 게임 길이/틱 | 필수 >0, 초기 임시 120 |
+| totalTicks | int | 벙커 게임 길이/틱 | 필수 >0, 현재 960 |
 | secondsPerTick | float | 틱 길이/게임 시간 초 | 필수 유한 >0, 초기 임시 1 |
-| randomEventEveryTicks | int | 랜덤 이벤트 알림 간격/틱 | 필수 >0, 초기 임시 10 |
-| invasionEveryTicks | int | 침공 알림 간격/틱 | 필수 >0, 초기 임시 30 |
+| randomEventEveryTicks | int | 랜덤 이벤트 알림 간격/틱 | 필수 >0, 현재 40. 발표와 종료 틱 제외 |
+| invasionEveryTicks | int | 첫 습격 이후 침공 간격/틱 | 필수 >0, 현재 80 |
 | workEveryTicks | int | 작업 간격/틱 | 필수 >0, 초기 임시 1 |
 | percentPerAbility | float | 작업 1회 능력 1당 퍼센트포인트 | 필수 유한 >=0, 초기 임시 0.1 |
 
-모든 필드는 Validate에서 검사한다. 초기값은 플레이 확인용이며 확정 밸런스는 미정. 첫 발생은 간격에 도달한 틱, 틱 0에는 발생 없음. 마지막 틱의 작업/알림 처리 후 FinishDevelopment 호출. 완료된 개발도 재시작 시 틱 0으로 초기화한다. 일시정지와 Time.timeScale을 따른다. 세 분야 100%는 시간 종료를 앞당기지 않는다.
+모든 필드는 Validate에서 검사한다. 첫 습격은 firstInvasionTick에, 일반 사건은 첫 정시에 발생한다. 마지막 틱의 작업 처리 후 FinishDevelopment를 호출한다. 재시작하면 시계와 발행 기록을 초기화한다. 일시정지와 Time.timeScale을 따른다. 세 분야가 모두 100%에 도달해도 설정된 종료 틱까지 진행한다.
 
 방 분류는 닫힌 기술 분류 `ShelterRoomType` (Common=0, Programming=1, Graphics=2, Planning=3, Sleeping=4, ZombieInvasion=5). 씬의 기존 ShelterArea.roomType이 방별 배치 정본이다. 캐릭터 능력을 복제하지 않는다. 시작 시 위치한 방/이동 도착 방에 소속되며 이동 지시가 수락되면 소속 해제. 복도·이동·사다리·비활성·닫힌 방은 작업 제외. 공용/수면/침공은 작업 없음. 여러 작업자는 합산; 분야별 100% 상한은 기존 GameDevProgress 사용.
 

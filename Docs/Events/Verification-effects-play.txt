@@ -1,7 +1,7 @@
 PASS Built catalog and rescued character roster loaded
-PASS Room path Programming
-PASS Room path Planning
-PASS Room path Graphics
+PASS Assigned effect fixture to Programming
+PASS Assigned effect fixture to Planning
+PASS Assigned effect fixture to Graphics
 PASS ev_door Yes exact effects
 PASS Single line actual result
 PASS ev_door No exact effects
@@ -61,7 +61,8 @@ PASS Party mental applies once
 PASS Result auto-closes before time resumes
 PASS Tick interval event
 PASS Consecutive tick events differ
-PASS Same-tick invasion deferred while event is open
+PASS Ordinary event opens before the first scheduled invasion
+PASS Open event pauses the clock before the first invasion
 PASS Next wave consumes adjustment once and HP floor
 PASS HP modifier does not leak to later waves
 PASS Restart resets runtime effects without modifying DB

@@ -238,9 +238,13 @@ public static class ZombieChecks
             plan.SetOccupied(checks, false); sim.Advance(sim.Rules.SecondsPerTick * sim.Rules.WorkEveryTicks);
             Check(dev.Progress.Planning > progress, "Real work tick resumes after liberation");
 
-            Reset(); sim.SetPendingWaveHpModifier(4); sim.Advance(sim.Rules.InvasionEveryTicks * sim.Rules.SecondsPerTick);
+            Reset(); sim.SetPendingWaveHpModifier(4); Ticks(sim.Rules.FirstInvasionTick - 1);
+            Check(ctrl.Wave == 0 && sim.PendingWaveHpModifier == 4, "No early invasion or early HP consumption");
+            Ticks(1);
             Check(ctrl.Zombies.Count == 1 && ctrl.Zombies[0].Hp == 6 && sim.PendingWaveHpModifier == 0, "Scheduled wave consumes existing NEXT_WAVE_HP exactly once");
-            sim.Advance(sim.Rules.InvasionEveryTicks * sim.Rules.SecondsPerTick);
+            Ticks(sim.Rules.InvasionEveryTicks - 1);
+            Check(ctrl.Wave == 1, "The second invasion waits the full interval after the first");
+            Ticks(1);
             Check(ctrl.Zombies.Count == 2 && ctrl.Zombies[1].InitialHp == 2, "Next wave returns to catalog HP and independent agents coexist");
             dev.RestartDevelopment();
             Check(ctrl.Zombies.Count == 0 && ctrl.Wave == 0 && ctrl.SceneRooms().All(r => !r.IsOccupied) && actors.All(c => c.CurrentMental == 60), "Restart clears zombies, occupation, locks, wave and mental state");
@@ -252,7 +256,7 @@ public static class ZombieChecks
             Reset();
             sim.Advance((sim.Rules.TotalTicks - volley) * sim.Rules.SecondsPerTick);
             ctrl.ResetRun();
-            foreach (var actor in actors) Move(actor, guard);
+            foreach (var actor in actors) { actor.ResetMental(); Move(actor, guard); }
             z = ctrl.SpawnWave(); var follower = ctrl.SpawnWave();
             ScriptRolls(ctrl, 1, 6, 6, 6, 6);
             sim.Advance(volley * sim.Rules.SecondsPerTick); await Frame();
