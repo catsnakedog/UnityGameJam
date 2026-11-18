@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2749606771a15394498dc9e0d47a5718, type: 3}
+  m_Name: FarmingDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::ShelterRun.FarmingDatabase
+  records:
+  - id: person_01
+    type: 0
+    weight: 2
+  - id: person_02
+    type: 0
+    weight: 3
+  - id: person_03
+    type: 0
+    weight: 4
+  - id: person_04
+    type: 0
+    weight: 2
+  - id: person_05
+    type: 0
+    weight: 3
+  - id: person_06
+    type: 0
+    weight: 4
+  - id: water
+    type: 1
+    weight: 1
+  - id: food
+    type: 1
+    weight: 1
+  - id: medkit
+    type: 1
+    weight: 2
+  - id: radio
+    type: 1
+    weight: 2
+  - id: toolbox
+    type: 1
+    weight: 2
+  - id: blanket
+    type: 1
+    weight: 1
+  sourceHash: 06a54cb5f6f84b982b05637c08b787306252df9de01691ac9eafd452b40b8571

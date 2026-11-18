@@ -1,0 +1,18 @@
+PASS: 17 Play checks
+Addressable catalog loaded and fresh run starts at zero
+Reject score before development closes
+Independent field API updates
+UI does not round unfinished work up to 100%
+Deferred formula waits without a fabricated zero-score ending
+Submission freezes progress
+Repeated finish is ignored
+Invalid score preserves pending state
+External total resolves actual CSV ending
+Ending fires once; duplicate result is ignored
+Ending title and total reach the UI
+Restart clears result and all progress
+Two completed fields do not finish the project
+All fields at 100% still wait for an explicit development-end rule
+Explicit finish hook submits full progress for evaluation
+Replacement score calculator receives the submission
+Re-enabled UI refreshes missed changes

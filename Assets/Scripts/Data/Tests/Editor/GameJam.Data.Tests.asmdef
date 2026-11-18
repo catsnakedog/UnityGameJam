@@ -1,0 +1,6 @@
+{
+  "name": "GameJam.Data.Tests",
+  "references": ["GameJam.Data", "GameJam.Data.Editor"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

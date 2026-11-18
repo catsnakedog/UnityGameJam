@@ -1,0 +1,11 @@
+using System.Reflection;
+var assembly = typeof(UnityEditor.Editor).Assembly;
+var viewType = assembly.GetType("UnityEditor.GameView");
+var view = UnityEditor.EditorWindow.GetWindow(viewType);
+viewType.GetProperty("selectedSizeIndex",BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic).SetValue(view,UnityEditor.SessionState.GetInt("EndingPopup.PreviousViewSize",0));
+var sizesType = assembly.GetType("UnityEditor.GameViewSizes");
+var singleton = typeof(UnityEditor.ScriptableSingleton<>).MakeGenericType(sizesType).GetProperty("instance").GetValue(null);
+var group = sizesType.GetMethod("GetGroup").Invoke(singleton,new object[] { UnityEditor.GameViewSizeGroupType.Standalone });
+group.GetType().GetMethod("RemoveCustomSize").Invoke(group,new object[] { UnityEditor.SessionState.GetInt("EndingPopup.QAViewSize",-1) });
+view.Repaint();
+return "Restored Game View size";

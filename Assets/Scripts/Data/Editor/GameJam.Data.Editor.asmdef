@@ -1,0 +1,6 @@
+{
+  "name": "GameJam.Data.Editor",
+  "rootNamespace": "GameJam.Data.Editor",
+  "references": ["GameJam.Data", "Unity.Addressables", "Unity.Addressables.Editor", "Unity.ResourceManager"],
+  "includePlatforms": ["Editor"]
+}

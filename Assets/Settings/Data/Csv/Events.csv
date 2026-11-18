@@ -1,0 +1,15 @@
+﻿사건 ID,제목,본문,Yes 효과 (| 구분),No 효과 (| 구분),필요 아이템 ID,최소 필요 수량
+string,string,string,string[],string[],string,int
+id,title,content,yesEffects,noEffects,requiredItem,requiredCount
+ev_door,문 두드리는 소리,생존자가 문을 두드린다. 열어 줄까?,"ITEM(choco, +1)|NEXT_WAVE_HP(+4)","MENTAL(all, -5)",,0
+ev_radio,주최측 방송,"""마감 연장은 없습니다."" 끝까지 들을까?","MENTAL(all, -5)|PROGRESS(open, +1)",NONE,,0
+ev_blackout,정전,비상 배터리를 노트북에 몰아줄까?,"MENTAL(all, -5)","PROGRESS(open, -2)",,0
+ev_vending,지하 자판기,자판기를 털까? 소리가 날 텐데.,"ITEM(monster, +2)|NEXT_WAVE_HP(+4)",NONE,,0
+ev_fight,팀 내 언쟁,기획 방과 아트 방이 싸운다. 말릴까?,"MENTAL(room:plan, -5)|MENTAL(room:art, -5)","MENTAL(room:plan, -10)|MENTAL(room:art, -10)|PROGRESS(art, +2)",,0
+ev_bug,치명적 버그,지금 고칠까?,"PROGRESS(prog, -2)|MENTAL(room:prog, +5)","MENTAL(all, -5)",,0
+ev_sns,바깥 소식,휴대폰으로 바깥 상황을 볼까?,"MENTAL(random1, -15)|NEXT_WAVE_HP(-4)",NONE,,0
+ev_idea,번뜩이는 아이디어,기획을 바꿀까?,"PROGRESS(plan, +3)|PROGRESS(art, -2)|PROGRESS(prog, -2)","MENTAL(room:plan, -10)",,0
+ev_bacchus,박카스 상자,상자를 열어 볼까? 함정일 수도.,"ITEM(bacchus, +2)|MENTAL(random1, -10)",NONE,,0
+ev_barricade,문 보강,다 같이 문을 보강할까?,"NEXT_WAVE_HP(-6)|PROGRESS(open, -1)",NONE,,0
+ev_party,야식 파티,초콜렛을 다 같이 나눠 먹을까?,"MENTAL(all, +5)|ITEM(choco, -1)",NONE,choco,1
+ev_commit,커밋 안 함,지금이라도 저장할까?,"PROGRESS(open, -1)|MENTAL(all, +5)","MENTAL(all, -5)",,0

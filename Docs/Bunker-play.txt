@@ -1,0 +1,21 @@
+PASS Addressables settings, character catalog and scene wiring loaded
+PASS Common loader shares settings instance
+PASS Moving order clears membership immediately
+PASS Destination alone produces no work
+PASS Arrival establishes work membership
+PASS Development restart resets clock
+PASS Programming ability contributes proportional percentage
+PASS Graphics uses art ability
+PASS Planning uses planning ability
+PASS Multiple members sum once per actor
+PASS Closed room excluded
+PASS Inactive actors excluded
+PASS Non-work room excluded: Common
+PASS Non-work room excluded: Sleeping
+PASS Non-work room excluded: ZombieInvasion
+PASS Simulation pause
+PASS Ends at N exactly once
+PASS Independent event/work periods including final tick
+PASS Final tick work submitted and clamped through existing manager
+PASS No progress after end
+PASS Runtime preserves settings

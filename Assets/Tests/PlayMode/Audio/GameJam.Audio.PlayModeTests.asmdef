@@ -1,0 +1,6 @@
+{
+  "name": "GameJam.Audio.PlayModeTests",
+  "rootNamespace": "GameJam.Audio.Tests",
+  "references": ["GameJam.Audio"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

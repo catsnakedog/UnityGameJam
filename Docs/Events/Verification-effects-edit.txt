@@ -1,0 +1,12 @@
+PASS All 12 user event rows
+PASS Party chocolate eligibility is CSV data
+PASS No accidental conditions on other events
+PASS Events.csv BOM
+PASS ShelterItems.csv BOM
+PASS Reject malformed effect MENTAL(everyone, -5)
+PASS Reject malformed effect PROGRESS(other, +1)
+PASS Reject malformed effect NEXT_WAVE_HP(4)
+PASS Reject malformed effect ITEM(choco, NaN)
+PASS Reject malformed effect System.Exit()
+PASS Reject malformed effect MENTAL(all, -5)junk
+PASS NONE cannot mix with mutations

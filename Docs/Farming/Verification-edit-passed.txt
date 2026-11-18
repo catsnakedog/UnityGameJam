@@ -1,0 +1,14 @@
+2026-11-18T17:07:21.1686128+09:00
+PASS: CSV contains exactly six people
+PASS: CSV weights respect type ranges
+PASS: CSV supports BOM, CRLF and quoted comma
+PASS: CSV supports escaped quotes
+PASS: Invalid CSV rejected: id,type,weight/a,Item,1/a,Item,2
+PASS: Invalid CSV rejected: id,type,weight/a,Person,1
+PASS: Invalid CSV rejected: id,type,weight/a,Item,3
+PASS: Invalid CSV rejected: id,type,weight/a,Other,1
+PASS: Invalid CSV rejected: id,type,weight/a,Item,NaN
+PASS: Invalid CSV rejected: id,type,weight/a,Item,1.5
+PASS: Invalid CSV rejected: id,type,weight/"broken,Item,1
+PASS: Invalid CSV rejected: id,type,weight/"line/break",Item,1
+PASS: Saved SO defaults: 60 seconds / 4 slots

@@ -1,0 +1,5 @@
+PASS: CSV UTF-8 BOM
+PASS: Reject negative/Item ID/missing Person/duplicate ID fixture
+PASS: Reject negative/Item ID/missing Person/duplicate ID fixture
+PASS: Reject negative/Item ID/missing Person/duplicate ID fixture
+PASS: Reject negative/Item ID/missing Person/duplicate ID fixture

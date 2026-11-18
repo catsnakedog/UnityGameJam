@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Farming Local
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Farming Local
+  m_GUID: 760e63243fc089f46a43fb9624f889fa
+  m_SerializeEntries:
+  - m_GUID: 117bb726d48c1a0439f32806bea7df2d
+    m_Address: data/farming/database
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - farming
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 22168f09c24cbfb49aeb55b136dd0298
+    m_Address: data/farming/rules
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - farming
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 4a649a900fce4d44baa73fa8893a88f3, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: e2fe6e2aca4da814588f6f58443cc95b, type: 2}
+    - {fileID: 11400000, guid: b3ed4613c6acbdb4086aa01b9ca2b182, type: 2}
+    m_SchemaDisplayOrder:
+    - Farming Local_BundledAssetGroupSchema
+    - Farming Local_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

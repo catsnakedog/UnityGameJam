@@ -1,0 +1,18 @@
+PASS Built Addressables event data loaded
+PASS No popup before configured tick
+PASS Popup opens on configured tick
+PASS Title and multiline content match CSV
+PASS Reading popup pauses tick progression
+PASS Modal blocks world command boundary
+PASS Busy cannot replace current event
+PASS Typing advances while timeScale is zero
+PASS First confirm reveals complete content
+PASS Same-frame duplicate confirm ignored
+PASS Close preserves external manual pause
+PASS Next tick interval opens different event
+PASS Restart clears popup and its pause
+PASS Missing id leaves no pause
+PASS Frame catch-up stops at event boundary
+PASS Disable releases popup pause
+PASS Final tick ends development without new popup
+PASS Re-enabled controller receives tick once

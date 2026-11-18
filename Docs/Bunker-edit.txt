@@ -1,0 +1,9 @@
+PASS No early tick
+PASS Pause discards elapsed time
+PASS Fractional time retained
+PASS Catch-up exact ordered ticks, no overrun
+PASS Completion emitted once
+PASS Non-finite time rejected
+PASS SO tempo changes ticks without code edits
+PASS Zero interval rejected
+PASS Original SO unchanged by tests

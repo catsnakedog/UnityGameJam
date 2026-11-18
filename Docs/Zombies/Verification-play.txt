@@ -1,0 +1,42 @@
+PASS Built Addressables + rescued roster + scene wiring
+PASS Shared settings loader cache
+PASS Two guards snapshot six resolved battles
+PASS Current fighter movement locked
+PASS No combat before fifth tick
+PASS Human win deals one HP
+PASS Zombie death ends event
+PASS Defense reward +5 only current guard room occupants
+PASS Death releases locks
+PASS Kill on final allowed roll wins before breach check
+PASS One exhausted defender does not breach while another remains
+PASS All defenders at zero breach with remaining HP
+PASS Zero mental cannot move
+PASS Faint lasts full 40 ticks
+PASS Wake restores 30 mental
+PASS Shared mental maximum applied
+PASS Tie spends no attempt or HP
+PASS Always-tied RNG yields each frame without hanging
+PASS Pending tie resolves exactly once
+PASS Still defending before n times three
+PASS Breach immediately at n times three, no extra fourth roll
+PASS Partial damage survives defense-to-invasion transition
+PASS Invader intercepts physical guard in its route
+PASS Forced battle resolves once then resumes invasion
+PASS Encounter releases actor without discarding its order
+PASS Empty combat room chooses connected noncombat target
+PASS Existing ladder graph reaches target and occupies without blocking entry
+PASS Occupied room stops work
+PASS Entering occupied room automatically starts combat
+PASS Popup-style simulation pause freezes combat and movement
+PASS Clearing occupant restores room functionality
+PASS Invasion kill rewards combat participant once
+PASS One removal cannot clear another occupier
+PASS Last occupier restores room
+PASS Real work tick produces no progress in occupied planning room
+PASS Real work tick resumes after liberation
+PASS Scheduled wave consumes existing NEXT_WAVE_HP exactly once
+PASS Next wave returns to catalog HP and independent agents coexist
+PASS Restart clears zombies, occupation, locks, wave and mental state
+PASS Disconnected layout waits without teleporting
+PASS Reconnecting designer ladder automatically restores route
+PASS Ending clears live invasion safely

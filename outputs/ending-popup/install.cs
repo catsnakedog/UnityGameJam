@@ -1,0 +1,10 @@
+var rules = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityGameJam.Shelter.BunkerRules>(BunkerSetup.RulesPath);
+var s = new UnityEditor.SerializedObject(rules);
+s.FindProperty("evaluationTargetProgress").doubleValue = 96;
+s.FindProperty("evaluationReferenceTicks").intValue = 24;
+s.ApplyModifiedPropertiesWithoutUndo();
+rules.Validate();
+UnityEditor.EditorUtility.SetDirty(rules);
+UnityEditor.AssetDatabase.SaveAssets();
+GameDevEndingPopupSetup.Install();
+return "Saved scoring parameters and ending popup";

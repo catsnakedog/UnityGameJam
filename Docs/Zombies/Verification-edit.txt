@@ -1,0 +1,6 @@
+PASS Four Notion tiers at waves 1/4/7/10
+PASS Final tier extends to custom longer runs
+PASS Human winning dice
+PASS Zombie winning dice
+PASS Tie remains unresolved
+PASS Duplicate zombie ID rejected

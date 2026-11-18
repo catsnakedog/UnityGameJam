@@ -1,0 +1,38 @@
+PASS Three CSV sample records validated
+PASS CSV UTF-8 BOM
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Immediate previous event excluded
+PASS Invalid id rejected
+PASS Blank content rejected
+PASS Saved editable popup prefab
+PASS Authored Sprite reference: Laptop
+PASS Authored Sprite reference: Confirm
+PASS No other CSV table removed

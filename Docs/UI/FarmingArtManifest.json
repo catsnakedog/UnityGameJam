@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "button_hover",
+      "path": "Assets/Art/UI/Farming/button_hover.png",
+      "stage": "prototype",
+      "pixelWidth": 64,
+      "pixelHeight": 64,
+      "guid": "55bfdb18676ee1f47af1d7316f8bc155",
+      "localId": 21300000,
+      "borderLTRB": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "textureType": "Sprite",
+      "spriteMode": "Single",
+      "pixelsPerUnit": 100,
+      "filterMode": "Bilinear",
+      "compression": "Uncompressed",
+      "mipmaps": false,
+      "usage": "Assets/Prefabs/Farming/FarmingHud.prefab"
+    },
+    {
+      "id": "button_normal",
+      "path": "Assets/Art/UI/Farming/button_normal.png",
+      "stage": "prototype",
+      "pixelWidth": 64,
+      "pixelHeight": 64,
+      "guid": "186c03fd50d271e4c9b7606c67772fa0",
+      "localId": 21300000,
+      "borderLTRB": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "textureType": "Sprite",
+      "spriteMode": "Single",
+      "pixelsPerUnit": 100,
+      "filterMode": "Bilinear",
+      "compression": "Uncompressed",
+      "mipmaps": false,
+      "usage": "Assets/Prefabs/Farming/FarmingHud.prefab"
+    },
+    {
+      "id": "button_pressed",
+      "path": "Assets/Art/UI/Farming/button_pressed.png",
+      "stage": "prototype",
+      "pixelWidth": 64,
+      "pixelHeight": 64,
+      "guid": "39b9299a23dcd51489c425400aeb07fe",
+      "localId": 21300000,
+      "borderLTRB": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "textureType": "Sprite",
+      "spriteMode": "Single",
+      "pixelsPerUnit": 100,
+      "filterMode": "Bilinear",
+      "compression": "Uncompressed",
+      "mipmaps": false,
+      "usage": "Assets/Prefabs/Farming/FarmingHud.prefab"
+    },
+    {
+      "id": "gauge",
+      "path": "Assets/Art/UI/Farming/gauge.png",
+      "stage": "prototype",
+      "pixelWidth": 64,
+      "pixelHeight": 16,
+      "guid": "b7ef226803a28ab4ab4bff472a5b6c67",
+      "localId": 21300000,
+      "borderLTRB": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "textureType": "Sprite",
+      "spriteMode": "Single",
+      "pixelsPerUnit": 100,
+      "filterMode": "Bilinear",
+      "compression": "Uncompressed",
+      "mipmaps": false,
+      "usage": "Assets/Prefabs/Farming/FarmingHud.prefab"
+    },
+    {
+      "id": "panel",
+      "path": "Assets/Art/UI/Farming/panel.png",
+      "stage": "prototype",
+      "pixelWidth": 64,
+      "pixelHeight": 64,
+      "guid": "3a153a4aac619734595107192bd960bc",
+      "localId": 21300000,
+      "borderLTRB": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "textureType": "Sprite",
+      "spriteMode": "Single",
+      "pixelsPerUnit": 100,
+      "filterMode": "Bilinear",
+      "compression": "Uncompressed",
+      "mipmaps": false,
+      "usage": "Assets/Prefabs/Farming/FarmingHud.prefab"
+    },
+    {
+      "id": "slot_empty",
+      "path": "Assets/Art/UI/Farming/slot_empty.png",
+      "stage": "prototype",
+      "pixelWidth": 64,
+      "pixelHeight": 64,
+      "guid": "64e1513df3772ec4aadc94c3146d596c",
+      "localId": 21300000,
+      "borderLTRB": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "textureType": "Sprite",
+      "spriteMode": "Single",
+      "pixelsPerUnit": 100,
+      "filterMode": "Bilinear",
+      "compression": "Uncompressed",
+      "mipmaps": false,
+      "usage": "Assets/Prefabs/Farming/CarrySlot.prefab"
+    },
+    {
+      "id": "slot_item",
+      "path": "Assets/Art/UI/Farming/slot_item.png",
+      "stage": "prototype",
+      "pixelWidth": 64,
+      "pixelHeight": 64,
+      "guid": "8c7250c4d2e274a4cbbb6659350cfcee",
+      "localId": 21300000,
+      "borderLTRB": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "textureType": "Sprite",
+      "spriteMode": "Single",
+      "pixelsPerUnit": 100,
+      "filterMode": "Bilinear",
+      "compression": "Uncompressed",
+      "mipmaps": false,
+      "usage": "Assets/Prefabs/Farming/CarrySlot.prefab"
+    },
+    {
+      "id": "slot_person",
+      "path": "Assets/Art/UI/Farming/slot_person.png",
+      "stage": "prototype",
+      "pixelWidth": 64,
+      "pixelHeight": 64,
+      "guid": "2348f6875d4b1a3418717cdbda96e040",
+      "localId": 21300000,
+      "borderLTRB": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "textureType": "Sprite",
+      "spriteMode": "Single",
+      "pixelsPerUnit": 100,
+      "filterMode": "Bilinear",
+      "compression": "Uncompressed",
+      "mipmaps": false,
+      "usage": "Assets/Prefabs/Farming/CarrySlot.prefab"
+    }
+  ]
+}

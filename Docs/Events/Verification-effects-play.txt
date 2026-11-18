@@ -1,0 +1,67 @@
+PASS Built catalog and rescued character roster loaded
+PASS Room path Programming
+PASS Room path Planning
+PASS Room path Graphics
+PASS ev_door Yes exact effects
+PASS Single line actual result
+PASS ev_door No exact effects
+PASS Single line actual result
+PASS ev_radio Yes exact effects
+PASS Single line actual result
+PASS ev_radio No exact effects
+PASS Single line actual result
+PASS ev_blackout Yes exact effects
+PASS Single line actual result
+PASS ev_blackout No exact effects
+PASS Single line actual result
+PASS ev_vending Yes exact effects
+PASS Single line actual result
+PASS ev_vending No exact effects
+PASS Single line actual result
+PASS ev_fight Yes exact effects
+PASS Single line actual result
+PASS ev_fight No exact effects
+PASS Single line actual result
+PASS ev_bug Yes exact effects
+PASS Single line actual result
+PASS ev_bug No exact effects
+PASS Single line actual result
+PASS ev_sns Yes exact effects
+PASS Single line actual result
+PASS ev_sns No exact effects
+PASS Single line actual result
+PASS ev_idea Yes exact effects
+PASS Single line actual result
+PASS ev_idea No exact effects
+PASS Single line actual result
+PASS ev_bacchus Yes exact effects
+PASS Single line actual result
+PASS ev_bacchus No exact effects
+PASS Single line actual result
+PASS ev_barricade Yes exact effects
+PASS Single line actual result
+PASS ev_barricade No exact effects
+PASS Single line actual result
+PASS ev_party Yes exact effects
+PASS Single line actual result
+PASS ev_party No exact effects
+PASS Single line actual result
+PASS ev_commit Yes exact effects
+PASS Single line actual result
+PASS ev_commit No exact effects
+PASS Single line actual result
+PASS Party cannot open without chocolate
+PASS Picker excludes previous and ineligible events
+PASS Insufficient stock rejects whole choice atomically
+PASS Open axes only with percent bounds
+PASS Mental lower bound
+PASS Eligible party opens
+PASS Yes button applies once and result retains pause
+PASS Party mental applies once
+PASS Result auto-closes before time resumes
+PASS Tick interval event
+PASS Consecutive tick events differ
+PASS Same-tick invasion deferred while event is open
+PASS Next wave consumes adjustment once and HP floor
+PASS HP modifier does not leak to later waves
+PASS Restart resets runtime effects without modifying DB

@@ -1,0 +1,71 @@
+2026-11-18T17:33:06.3325269+09:00
+Passed
+PASS: Starts in corridor with three left rooms
+PASS: Corridor rises from lower-left toward upper-right
+PASS: Rooms extend to the upper-left of the corridor
+PASS: Actual Isometric Grid / XY Tilemap
+PASS: Isometric depth axis cancels visual height (Y-Z)
+PASS: Wall tiles interleave with world sprites in Individual mode
+PASS: Table-top items sort inside their table group above its surface
+PASS: No 3D colliders / CharacterController
+PASS: No 3D mesh geometry in farming scene
+PASS: Consistent tile format: floor_border
+PASS: Consistent tile format: floor_door
+PASS: Consistent tile format: floor_hall
+PASS: Consistent tile format: floor_room
+PASS: Consistent tile format: roof
+PASS: Consistent tile format: wall
+PASS: Consistent tile format: wall_hall
+PASS: Existing six people / twelve items / 60 sec / four slots preserved
+PASS: All room occupants hidden in corridor
+PASS: Cannot pick up a nearby person through a closed room wall
+PASS: Keyboard W moves in screen direction
+PASS: Keyboard A moves in screen direction
+PASS: Keyboard S moves in screen direction
+PASS: Keyboard D moves in screen direction
+PASS: Walk through room 0 doorway
+PASS: Room 0 wall transition is gradual
+PASS: Only entered room 0 is revealed
+PASS: Walk back out of room 0
+PASS: Room 0 hides after leaving
+PASS: Walk through room 1 doorway
+PASS: Room 1 wall transition is gradual
+PASS: Only entered room 1 is revealed
+PASS: Walk back out of room 1
+PASS: Room 1 hides after leaving
+PASS: Walk through room 2 doorway
+PASS: Room 2 wall transition is gradual
+PASS: Only entered room 2 is revealed
+PASS: Walk back out of room 2
+PASS: Room 2 hides after leaving
+PASS: Front wall blocks large movement step outside doorway
+PASS: Outer hallway wall blocks escape
+PASS: Table Collider2D blocks movement
+PASS: Target person_01
+PASS: E picks up two-slot person once
+PASS: Carried person sorts with the player group
+PASS: Person switches to horizontal two-hand carry sprite
+PASS: Target person_02
+PASS: 2+3 capacity overflow rejected
+PASS: Target person_04
+PASS: Two two-slot people fill inventory
+PASS: Carried people remain visible after leaving room
+PASS: Bunker interaction deposits all carried people
+PASS: Deposit visibly fades sprite alpha
+PASS: Deposited people disappear
+PASS: Duplicate deposit has no additional credit
+PASS: Target person_03
+PASS: Four-slot person can be carried alone
+PASS: Empty corridor selects ground throw
+PASS: Ground throw remains available on walkable floor
+PASS: Target person_03
+PASS: Dropped person can be picked up again
+PASS: Target water
+PASS: Target food
+PASS: Target medkit
+PASS: Item combination 1+1+2 fills four slots
+PASS: People and item ledger retained
+PASS: Target person_02
+PASS: Real configured 60-second timer ends at zero
+PASS: Deadline freezes actions and excludes unbanked carry
+PASS: Gameplay leaves authoritative data unchanged

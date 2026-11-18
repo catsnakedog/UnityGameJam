@@ -1,0 +1,11 @@
+var dev = UnityEngine.Object.FindFirstObjectByType<UnityGameJam.GameDev.GameDevManager>();
+var sim = UnityEngine.Object.FindFirstObjectByType<UnityGameJam.Shelter.BunkerSimulation>();
+await sim.InitializeAsync();
+dev.SetScoreCalculator(new UnityGameJam.GameDev.GameDevScoreCalculator());
+dev.RestartDevelopment();
+dev.SetProgress(UnityGameJam.GameDev.GameDevField.Planning,80);
+dev.SetProgress(UnityGameJam.GameDev.GameDevField.Programming,80);
+dev.SetProgress(UnityGameJam.GameDev.GameDevField.Graphics,80);
+dev.FinishDevelopment();
+dev.SubmitFinalScore(UnityGameJam.GameDev.GameDevEndingCatalog.FromTable(GameJam.Data.GameData.GetTable(UnityGameJam.GameDev.GameDevKeys.EndingsTable)).Active.Last().MinimumScore);
+return new { width = UnityEngine.Screen.width, height = UnityEngine.Screen.height, ended = dev.Ending.Id };

@@ -1,0 +1,28 @@
+PASS: Restart hides prior ending
+PASS: Pending score does not invent an ending
+PASS: Boundary opens ending_unfinished
+PASS: Popup uses actual catalog text
+PASS: Popup blocks simulation and world commands
+PASS: Repeated completion is ignored
+PASS: Confirm closes and releases owned locks
+PASS: Confirmed result stays dismissed after re-enable
+PASS: Restart hides prior ending
+PASS: Pending score does not invent an ending
+PASS: Boundary opens ending_released
+PASS: Popup uses actual catalog text
+PASS: Popup blocks simulation and world commands
+PASS: Repeated completion is ignored
+PASS: Confirm closes and releases owned locks
+PASS: Confirmed result stays dismissed after re-enable
+PASS: Restart hides prior ending
+PASS: Pending score does not invent an ending
+PASS: Boundary opens ending_breakthrough
+PASS: Popup uses actual catalog text
+PASS: Popup blocks simulation and world commands
+PASS: Repeated completion is ignored
+PASS: Confirm closes and releases owned locks
+PASS: Confirmed result stays dismissed after re-enable
+PASS: Actual final bunker tick evaluates and opens popup automatically
+PASS: Final ending emitted once
+PASS: Disable releases popup pause
+PASS: Unconfirmed result restores after re-enable

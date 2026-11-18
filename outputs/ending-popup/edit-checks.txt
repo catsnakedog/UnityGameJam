@@ -1,0 +1,45 @@
+PASS: 96 progress / 24 ticks = 1 without x100
+PASS: 300 progress / 120 ticks = 0.625
+PASS: Zero progress is a valid baseline score after time passes
+PASS: Tick zero defers evaluation without division by zero
+PASS: Stored popup reference: panel
+PASS: Stored popup reference: title
+PASS: Stored popup reference: body
+PASS: Stored popup reference: score
+PASS: Stored popup reference: confirm
+PASS: Stored popup reference: scroll
+PASS: Korean font and literal data text
+PASS: Real button state sprites
+PASS: No missing prefab scripts
+PASS: 29 Edit checks
+Clamp each discipline to 0..100 independently
+Progress snapshots remain immutable
+Reject NaN progress
+Reject infinite progress
+Reject unknown discipline
+Deferred calculator does not invent a score
+Baseline and below-threshold scores
+Inclusive minimum and disabled row excluded
+Highest ending includes boundary and scores above final threshold
+Reject negative total
+Reject NaN total
+Reject infinite total
+Require active zero-score baseline
+Reject all-disabled catalog
+Reject ambiguous active thresholds
+Reject duplicate IDs
+Reject missing ending title
+Reject negative threshold
+CSV and generated DB fingerprints match
+Shared database matches every current CSV table
+Imported boundary: ending_unfinished
+Imported boundary: ending_released
+Imported boundary: ending_breakthrough
+Changed CSV threshold changes branch without code changes (in-memory fixture)
+Serialized UI prefab exists outside Play
+Every UI Image has a real Sprite
+All labels have the Korean font
+Three stored horizontal progress fills
+No missing scripts in prefab
+PASS: Reinstall twice preserves a single popup
+PlayMode: BuildScriptPackedPlayMode

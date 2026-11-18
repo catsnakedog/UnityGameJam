@@ -1,0 +1,13 @@
+var settings = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
+int packed = settings.DataBuilders.FindIndex(b => b is UnityEditor.AddressableAssets.Build.DataBuilders.BuildScriptPackedPlayMode);
+settings.ActivePlayModeDataBuilderIndex = packed;
+UnityEditor.EditorUtility.SetDirty(settings);
+UnityEditor.AssetDatabase.SaveAssets();
+var before = UnityEngine.Object.FindObjectsByType<UnityGameJam.GameDev.GameDevEndingPopup>(UnityEngine.FindObjectsInactive.Include, UnityEngine.FindObjectsSortMode.None).Length;
+GameDevEndingPopupSetup.Install();
+GameDevEndingPopupSetup.Install();
+var after = UnityEngine.Object.FindObjectsByType<UnityGameJam.GameDev.GameDevEndingPopup>(UnityEngine.FindObjectsInactive.Include, UnityEngine.FindObjectsSortMode.None).Length;
+if (before != 1 || after != 1) throw new Exception("Duplicate ending popup after installation.");
+string report = GameDevEndingPopupChecks.RunEdit() + "\n" + GameDevChecks.RunEdit() + "\nPASS: Reinstall twice preserves a single popup\nPlayMode: " + settings.DataBuilders[packed].GetType().Name;
+System.IO.File.WriteAllText("outputs/ending-popup/edit-checks.txt", report);
+return report;

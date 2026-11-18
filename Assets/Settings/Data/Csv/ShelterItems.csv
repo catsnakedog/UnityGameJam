@@ -1,0 +1,6 @@
+﻿물자 ID,표시 이름,소비 분류 (정의만),멘탈 회복량,획득 이벤트 ID
+string,string,string,int,string
+id,displayName,useKind,mentalRestore,sourceEvent
+choco,초콜렛,mental,10,ev_door
+monster,몬스터,mental,10,ev_vending
+bacchus,박카스,mental,10,ev_bacchus

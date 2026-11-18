@@ -1,0 +1,29 @@
+{
+  "scene": "Assets/Scenes/ShelterPrototype.unity",
+  "phase": "Developing",
+  "zeroAfterSceneReentry": true,
+  "managers": 1,
+  "uis": 1,
+  "serializedManagerReference": true,
+  "panelBlocks": true,
+  "worldPasses": true,
+  "builtPlayMode": 1,
+  "sourceHash": "4f36a4a86f99ee7fb76df8582f5d655952022fea8279b9b1fed466710652e093",
+  "assets": [
+    {
+      "path": "Assets/Art/UI/Farming/panel.png",
+      "guid": "3a153a4aac619734595107192bd960bc",
+      "fileId": 2800000
+    },
+    {
+      "path": "Assets/Art/UI/Farming/gauge.png",
+      "guid": "b7ef226803a28ab4ab4bff472a5b6c67",
+      "fileId": 2800000
+    },
+    {
+      "path": "Assets/Prefabs/UI/DevGageUI.prefab",
+      "guid": "6e70d210995c7134dad415b09132670e",
+      "fileId": 4282062912259454368
+    }
+  ]
+}

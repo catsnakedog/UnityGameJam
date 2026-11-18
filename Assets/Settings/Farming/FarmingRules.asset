@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ee448c218a4af24ebefd7976cfdfd23, type: 3}
+  m_Name: FarmingRules
+  m_EditorClassIdentifier: Assembly-CSharp::ShelterRun.FarmingRules
+  duration: 60
+  capacity: 4
+  moveSpeed: 5.8
+  interactionRadius: 2
+  dropDistance: 1.6
+  throwDuration: 0.45
+  fadeDuration: 0.5
+  throwArc: 1.5
+  warningSeconds: 10
+  mapHalfExtents: {x: 11, y: 8}
+  roomRevealDuration: 0.5

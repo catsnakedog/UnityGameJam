@@ -1,0 +1,188 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using GameJam.Data;
+using GameJam.Data.Editor;
+using TMPro;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityGameJam.GameDev;
+
+public static class GameDevChecks
+{
+    [MenuItem("Tools/Game Dev/Validate Ending Rules and UI")]
+    public static void RunMenu() => Debug.Log(RunEdit());
+
+    public static string RunEdit()
+    {
+        var checks = new List<string>();
+        var p = new GameDevProgress(-5, 47.5f, 123);
+        Check(p.Planning == 0 && p.Programming == 47.5f && p.Graphics == 100, "Clamp each discipline to 0..100 independently", checks);
+        Check(p.With(GameDevField.Planning, 30).Programming == 47.5f && p.Planning == 0, "Progress snapshots remain immutable", checks);
+        Reject(() => new GameDevProgress(float.NaN, 0, 0), "Reject NaN progress", checks);
+        Reject(() => new GameDevProgress(0, float.PositiveInfinity, 0), "Reject infinite progress", checks);
+        Reject(() => p.Get((GameDevField)99), "Reject unknown discipline", checks);
+        Check(!new GameDevScoreCalculator().TryCalculate(default, out _), "Deferred calculator does not invent a score", checks);
+
+        var catalog = new GameDevEndingCatalog(new[] { Ending("high", 200), Ending("off", 150, false), Ending("low", 0), Ending("mid", 100) });
+        Check(catalog.Select(0).Id == "low" && catalog.Select(99.999).Id == "low", "Baseline and below-threshold scores", checks);
+        Check(catalog.Select(100).Id == "mid" && catalog.Select(199.999).Id == "mid", "Inclusive minimum and disabled row excluded", checks);
+        Check(catalog.Select(200).Id == "high" && catalog.Select(double.MaxValue).Id == "high", "Highest ending includes boundary and scores above final threshold", checks);
+        Reject(() => catalog.Select(-1), "Reject negative total", checks);
+        Reject(() => catalog.Select(double.NaN), "Reject NaN total", checks);
+        Reject(() => catalog.Select(double.PositiveInfinity), "Reject infinite total", checks);
+        Reject(() => new GameDevEndingCatalog(new[] { Ending("x", 10) }), "Require active zero-score baseline", checks);
+        Reject(() => new GameDevEndingCatalog(new[] { Ending("x", 0, false) }), "Reject all-disabled catalog", checks);
+        Reject(() => new GameDevEndingCatalog(new[] { Ending("a", 0), Ending("b", 0) }), "Reject ambiguous active thresholds", checks);
+        Reject(() => new GameDevEndingCatalog(new[] { Ending("a", 0), Ending("a", 100) }), "Reject duplicate IDs", checks);
+        Reject(() => new GameDevEnding("a", " ", "body", 0, true), "Reject missing ending title", checks);
+        Reject(() => Ending("a", -1), "Reject negative threshold", checks);
+
+        var plan = DataImporter.Preview(DataToolSettings.instance.csvFolder);
+        var actual = GameDevEndingCatalog.FromTable(plan.Tables.Single(t => t.Name == GameDevKeys.EndingsTable));
+        var database = AssetDatabase.LoadAssetAtPath<GameDatabase>(DataImporter.DatabasePath);
+        Check(database != null && database.SourceHash == plan.SourceHash, "CSV and generated DB fingerprints match", checks);
+        database.Initialize();
+        Check(database.Tables.Count == plan.Tables.Count && plan.Tables.All(t => database.GetTable(t.Name).Count == t.Count), "Shared database matches every current CSV table", checks);
+        var compiled = GameDevEndingCatalog.FromTable(database.GetTable(GameDevKeys.EndingsTable));
+        foreach (var ending in actual.Active)
+            Check(compiled.Select(ending.MinimumScore).Id == ending.Id, "Imported boundary: " + ending.Id, checks);
+        var edited = CsvTableReader.Read("GameDevEndings.csv", "id:string,displayName:string,description:string,minimumScore:double,enabled:bool\na,가,설명,0,true\nb,나,설명,125,true\n");
+        Check(GameDevEndingCatalog.FromTable(edited).Select(124).Id == "a" && GameDevEndingCatalog.FromTable(edited).Select(125).Id == "b", "Changed CSV threshold changes branch without code changes (in-memory fixture)", checks);
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GameDevSetup.PrefabPath);
+        Check(prefab != null && prefab.GetComponent<DevGageUI>() != null, "Serialized UI prefab exists outside Play", checks);
+        Check(prefab.GetComponentsInChildren<Image>(true).All(i => i.sprite != null), "Every UI Image has a real Sprite", checks);
+        Check(prefab.GetComponentsInChildren<TMP_Text>(true).All(t => t.font != null), "All labels have the Korean font", checks);
+        Check(prefab.GetComponentsInChildren<Image>(true).Count(i => i.type == Image.Type.Filled) == 3, "Three stored horizontal progress fills", checks);
+        Check(prefab.GetComponentsInChildren<Transform>(true).All(t => GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject) == 0), "No missing scripts in prefab", checks);
+        return Report("Edit", checks);
+    }
+
+    public static async Task<string> RunPlay()
+    {
+        if (!EditorApplication.isPlaying) throw new InvalidOperationException("Enter Play mode first.");
+        var checks = new List<string>();
+        var manager = UnityEngine.Object.FindFirstObjectByType<GameDevManager>();
+        if (!manager) throw new InvalidOperationException("Open ShelterPrototype before Play checks.");
+        await manager.InitializeAsync();
+        var simulation = UnityEngine.Object.FindFirstObjectByType<UnityGameJam.Shelter.BunkerSimulation>();
+        if (simulation) await simulation.InitializeAsync();
+        manager.SetScoreCalculator(new GameDevScoreCalculator()); // Explicitly test the external/deferred score contract.
+        manager.RestartDevelopment();
+        Check(manager.Phase == GameDevPhase.Developing && manager.Progress.Planning == 0 && !manager.TotalScore.HasValue, "Addressable catalog loaded and fresh run starts at zero", checks);
+        Check(!manager.SubmitFinalScore(123), "Reject score before development closes", checks);
+        manager.AddProgress(GameDevField.Planning, 22.5f);
+        manager.SetProgress(GameDevField.Programming, 61);
+        manager.SetProgress(GameDevField.Graphics, 99.999f);
+        var ui = UnityEngine.Object.FindFirstObjectByType<DevGageUI>();
+        ui.Bind(manager); ui.Bind(manager);
+        Check(manager.Progress.Planning == 22.5f && manager.Progress.Programming == 61 && manager.Progress.Graphics > 99, "Independent field API updates", checks);
+        Check(ui.GetComponentsInChildren<TMP_Text>().Any(t => t.name == "Percentage" && t.text == "99.9%"), "UI does not round unfinished work up to 100%", checks);
+        int endings = 0;
+        Action<GameDevEnding, double> onEnding = (_, __) => endings++;
+        manager.EndingReached += onEnding;
+        try
+        {
+            Check(manager.FinishDevelopment() && manager.Phase == GameDevPhase.AwaitingScore && !manager.TotalScore.HasValue, "Deferred formula waits without a fabricated zero-score ending", checks);
+            Check(!manager.SetProgress(GameDevField.Planning, 100) && manager.SubmittedProgress.Planning == 22.5f, "Submission freezes progress", checks);
+            Check(!manager.FinishDevelopment(), "Repeated finish is ignored", checks);
+            Reject(() => manager.SubmitFinalScore(double.NaN), "Invalid score preserves pending state", checks);
+            double threshold = GameDevEndingCatalog.FromTable(GameData.GetTable(GameDevKeys.EndingsTable)).Active.Last().MinimumScore;
+            Check(manager.SubmitFinalScore(threshold) && manager.Phase == GameDevPhase.Ended && manager.TotalScore == threshold, "External total resolves actual CSV ending", checks);
+            Check(endings == 1 && !manager.SubmitFinalScore(0) && endings == 1, "Ending fires once; duplicate result is ignored", checks);
+            Check(ui.GetComponentsInChildren<TMP_Text>().Any(t => t.name == "Status" && t.text.Contains(manager.Ending.DisplayName)), "Ending title and total reach the UI", checks);
+            manager.RestartDevelopment();
+            Check(manager.Ending == null && !manager.TotalScore.HasValue && manager.Progress.Graphics == 0, "Restart clears result and all progress", checks);
+            manager.SetProgress(GameDevField.Planning, 100);
+            manager.SetProgress(GameDevField.Programming, 100);
+            Check(manager.Phase == GameDevPhase.Developing, "Two completed fields do not finish the project", checks);
+            manager.AddProgress(GameDevField.Graphics, float.MaxValue);
+            Check(manager.Phase == GameDevPhase.Developing && manager.Progress.IsComplete && !manager.TotalScore.HasValue && manager.Ending == null,
+                "All fields at 100% still wait for an explicit development-end rule", checks);
+            Check(manager.FinishDevelopment() && manager.Phase == GameDevPhase.AwaitingScore,
+                "Explicit finish hook submits full progress for evaluation", checks);
+            manager.SetScoreCalculator(new TestCalculator());
+            Check(manager.TryEvaluateScore() && manager.TotalScore == 123, "Replacement score calculator receives the submission", checks);
+            manager.SetScoreCalculator(new GameDevScoreCalculator());
+            manager.RestartDevelopment();
+            ui.enabled = false;
+            manager.SetProgress(GameDevField.Planning, 17);
+            ui.enabled = true;
+            Check(ui.GetComponentsInChildren<TMP_Text>().Any(t => t.name == "Percentage" && t.text == "17%"), "Re-enabled UI refreshes missed changes", checks);
+        }
+        finally
+        {
+            manager.EndingReached -= onEnding;
+            manager.SetScoreCalculator(simulation
+                ? new GameDevScoreCalculator(simulation.Rules.EvaluationTargetProgress, simulation.Rules.EvaluationReferenceTicks, () => simulation.CurrentTick)
+                : new GameDevScoreCalculator());
+            manager.RestartDevelopment();
+            ui.Bind(manager);
+        }
+        return Report("Play", checks);
+    }
+
+    public static string CheckSpriteReplacement()
+    {
+        if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode first.");
+        const string path = "Assets/Art/UI/Farming/gauge.png";
+        byte[] original = File.ReadAllBytes(path);
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        AssetDatabase.TryGetGUIDAndLocalFileIdentifier(sprite, out string guid, out long localId);
+        var texture = new Texture2D(2, 2);
+        try
+        {
+            texture.LoadImage(original);
+            texture.SetPixel(0, 0, Color.magenta);
+            texture.Apply();
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            var updated = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            AssetDatabase.TryGetGUIDAndLocalFileIdentifier(updated, out string updatedGuid, out long updatedId);
+            if (guid != updatedGuid || localId != updatedId) throw new InvalidOperationException("Sprite identity changed.");
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GameDevSetup.PrefabPath);
+            if (prefab.GetComponentsInChildren<Image>(true).Where(i => i.type == Image.Type.Filled).Any(i => i.sprite != updated))
+                throw new InvalidOperationException("A progress fill lost its Sprite reference.");
+        }
+        finally
+        {
+            File.WriteAllBytes(path, original);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            UnityEngine.Object.DestroyImmediate(texture);
+        }
+        return "PASS: actual PNG byte replacement/reimport preserved GUID " + guid + " / local ID " + localId + "; restored original bytes.";
+    }
+
+    sealed class TestCalculator : IGameDevScoreCalculator
+    {
+        public bool TryCalculate(GameDevProgress progress, out double totalScore)
+        {
+            if (!progress.IsComplete) throw new InvalidOperationException("Expected full submitted snapshot.");
+            totalScore = 123; return true;
+        }
+    }
+    static GameDevEnding Ending(string id, double score, bool enabled = true) => new GameDevEnding(id, id, "test description", score, enabled);
+    static void Check(bool condition, string description, List<string> checks)
+    {
+        if (!condition) throw new InvalidOperationException("FAIL: " + description);
+        checks.Add(description);
+    }
+    static void Reject(Action action, string description, List<string> checks)
+    {
+        try { action(); }
+        catch (ArgumentException) { checks.Add(description); return; }
+        catch (FormatException) { checks.Add(description); return; }
+        throw new InvalidOperationException("FAIL: " + description);
+    }
+    static string Report(string mode, List<string> checks)
+    {
+        string report = "PASS: " + checks.Count + " " + mode + " checks\n" + string.Join("\n", checks);
+        Directory.CreateDirectory("Docs/GameDev");
+        File.WriteAllText("Docs/GameDev/Verification-" + mode.ToLowerInvariant() + ".txt", report);
+        return report;
+    }
+}

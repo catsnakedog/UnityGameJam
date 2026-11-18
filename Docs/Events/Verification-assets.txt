@@ -1,0 +1,3 @@
+PASS PNG replacement/restoration preserves GUID, local ID and prefab Sprite reference
+PASS Repeated installer preserves one controller and popup
+Sprite GUID: a6a8960dbec98a44d92a1054566768b4 / local ID: 21300000

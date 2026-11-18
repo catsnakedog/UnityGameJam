@@ -1,0 +1,26 @@
+[
+  {
+    "key": "W",
+    "moved": 1.02164984,
+    "used": 2,
+    "frames": 51
+  },
+  {
+    "key": "A",
+    "moved": 0.7023921,
+    "used": 2,
+    "frames": 53
+  },
+  {
+    "key": "S",
+    "moved": 0.7100245,
+    "used": 2,
+    "frames": 55
+  },
+  {
+    "key": "D",
+    "moved": 0.6971917,
+    "used": 2,
+    "frames": 54
+  }
+]

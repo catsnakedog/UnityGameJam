@@ -1,0 +1,15 @@
+﻿파밍 대상 ID,종류 (Person/Item),운반 비용 (칸)
+string,string,int
+id,type,weight
+person_01,Person,2
+person_02,Person,3
+person_03,Person,4
+person_04,Person,2
+person_05,Person,3
+person_06,Person,4
+water,Item,1
+food,Item,1
+medkit,Item,2
+radio,Item,2
+toolbox,Item,2
+blanket,Item,1

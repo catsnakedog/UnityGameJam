@@ -1,0 +1,6 @@
+PASS Unknown item reference rejected at catalog validation
+PASS Empty eligible room skips mental effect
+PASS No eligible nonprevious event skips instead of repeating
+PASS Stock condition rechecked at choice before any effects
+PASS Deferred tick completes exactly once and preserves external pause
+PASS Final tick ends without new event

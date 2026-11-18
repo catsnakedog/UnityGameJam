@@ -1,0 +1,55 @@
+2026-11-18T14:25:42.8571245+09:00
+PASS: CSV contains exactly six people
+PASS: CSV weights respect type ranges
+PASS: CSV supports BOM, CRLF and quoted comma
+PASS: CSV supports escaped quotes
+PASS: Invalid CSV rejected: id,type,weight/a,Item,1/a,Item,2
+PASS: Invalid CSV rejected: id,type,weight/a,Person,1
+PASS: Invalid CSV rejected: id,type,weight/a,Item,3
+PASS: Invalid CSV rejected: id,type,weight/a,Other,1
+PASS: Invalid CSV rejected: id,type,weight/a,Item,NaN
+PASS: Invalid CSV rejected: id,type,weight/a,Item,1.5
+PASS: Invalid CSV rejected: id,type,weight/"broken,Item,1
+PASS: Invalid CSV rejected: id,type,weight/"line/break",Item,1
+PASS: Saved SO defaults: 60 seconds / 4 slots
+PASS: Saved scene has six people and twelve item instances
+PASS: Ready state does not consume time or capacity
+PASS: Keyboard W moves relative to isometric screen
+PASS: Keyboard A moves relative to isometric screen
+PASS: Keyboard S moves relative to isometric screen
+PASS: Keyboard D moves relative to isometric screen
+PASS: Table collision blocks walking through table
+PASS: Room collision keeps player inside rectangle
+PASS: Can target person_01
+PASS: E picks up a two-slot person exactly once while held
+PASS: Carried person lies horizontally across hands
+PASS: Can target person_02
+PASS: 2 + 3 is refused without changing inventory or target
+PASS: Can target person_04
+PASS: Two two-slot people exactly fill four slots
+PASS: Bunker E throws all carried people and clears slots
+PASS: Deposited people animate in flight before disappearing
+PASS: Bunker deposit visibly fades alpha between one and zero
+PASS: Deposited objects finish faded and hidden
+PASS: Duplicate deposit cannot increase count twice
+PASS: Can target person_03
+PASS: Four-slot person can be carried alone
+PASS: Empty ground selects drop action
+PASS: Ground throw releases capacity
+PASS: Ground throw stays available without bunker credit
+PASS: Can target person_03
+PASS: Dropped person can be picked up again
+PASS: Can target water
+PASS: Can target medkit
+PASS: Can target food
+PASS: Table-top item combination 1 + 2 + 1 fills four slots
+PASS: Can target person_02
+PASS: Full inventory rejects further pickups
+PASS: Bunker ledger stores correct people, item and ID counts
+PASS: Can target person_02
+PASS: Unbanked carried person retained for deadline test
+PASS: Real 60-second clock finishes at zero
+PASS: Completion fires once and stays in farming finish state
+PASS: Carried but unbanked person is excluded from bunker totals
+PASS: Movement and interaction are blocked after deadline
+PASS: Gameplay preserves source SOs

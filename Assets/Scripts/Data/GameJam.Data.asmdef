@@ -1,0 +1,5 @@
+{
+  "name": "GameJam.Data",
+  "rootNamespace": "GameJam.Data",
+  "references": ["Unity.Addressables", "Unity.ResourceManager"]
+}
