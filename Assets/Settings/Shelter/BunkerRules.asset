@@ -48,7 +48,7 @@ MonoBehaviour:
   sleepMentalPerTick: 5
   sleepingRoomCapacity: 2
   wakeMental: 50
-  hungerEveryTicks: 5
+  hungerEveryTicks: 60
   hungerLoss: 1
   emptyHungerMentalLossMultiplier: 2
   foodRestore: 5
