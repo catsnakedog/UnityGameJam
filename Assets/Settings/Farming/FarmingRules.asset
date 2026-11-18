@@ -23,8 +23,9 @@ MonoBehaviour:
   warningSeconds: 10
   mapHalfExtents: {x: 11, y: 8}
   roomRevealDuration: 0.5
+  startingPersonId: person_01
   roomSpawns:
-  - people: 3
+  - people: 2
     legendWeight: 1
   - people: 2
     legendWeight: 2

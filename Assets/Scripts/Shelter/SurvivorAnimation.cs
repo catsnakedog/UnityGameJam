@@ -63,6 +63,9 @@ namespace UnityGameJam.Shelter
         ShelterArea workingRoom;
         float seatedTime, shotRemaining;
         bool shotFacesLeft;
+        Vector3 standingPosition;
+        Quaternion standingRotation;
+        bool wasCarried;
         readonly Playback playback = new Playback();
 
         public Artwork FindArtwork(string characterId) => Array.Find(characters, entry => entry.characterId == characterId);
@@ -71,6 +74,8 @@ namespace UnityGameJam.Shelter
         {
             actor = owner;
             walker = movement;
+            standingPosition = image.transform.localPosition;
+            standingRotation = image.transform.localRotation;
             art = FindArtwork(owner.Id);
             if (art == null) { Debug.LogError("Missing survivor artwork for " + owner.Id, this); return; }
             if (walker.visual) walker.visual.gameObject.SetActive(false);
@@ -121,6 +126,19 @@ namespace UnityGameJam.Shelter
             image.flipX = pose == Pose.RangedAttack ? shotFacesLeft : walker.FacingLeft;
             shotRemaining = Mathf.Max(0f, shotRemaining - dt);
             playback.Sample(art, pose, idle, image, dt);
+            // With only a standing drawing available, show the patient lying across the rescuer's arms.
+            bool carried = walker.IsBeingCarried && art.Get(Pose.Faint)?.firstFrame == null;
+            if (carried && image.sprite)
+            {
+                image.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                image.transform.localPosition = -(image.transform.localRotation * image.sprite.bounds.center);
+            }
+            else if (wasCarried)
+            {
+                image.transform.localPosition = standingPosition;
+                image.transform.localRotation = standingRotation;
+            }
+            wasCarried = carried;
         }
     }
 }

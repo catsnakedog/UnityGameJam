@@ -1,4 +1,4 @@
-2026-11-18T23:59:11.2785358+09:00
+2026-11-19T01:30:01.7108373+09:00
 Passed
 PASS: Starts in corridor
 PASS: Three rooms with paired entrance/exit doors
@@ -9,6 +9,7 @@ PASS: No 3D collision geometry
 PASS: All world sprites use side-view artwork
 PASS: Six people and four carry slots
 PASS: Every roster ID spawns once, with one can per room
+PASS: Starting person is carried at normal cost and has not yet been rescued
 PASS: 325호 person quota and aisle placement
 PASS: 325호 can and items on tabletops
 PASS: 325호 unique reachable positions
@@ -19,7 +20,13 @@ PASS: 323호 person quota and aisle placement
 PASS: 323호 can and items on tabletops
 PASS: 323호 unique reachable positions
 PASS: Ready timer matches the saved FarmingRules duration (30s)
-PASS: Room contents hidden from corridor
+PASS: Room contents hidden and carried person visible in corridor
+PASS: Player displays authored Idle frames
+PASS: Player displays authored Walk frames
+PASS: Player faces left while walking left
+PASS: Player faces right while walking right
+PASS: Starting person can be thrown
+PASS: Starting person stands on landing
 PASS: Keyboard D moves horizontally
 PASS: Keyboard A moves horizontally
 PASS: W/S cannot leave horizontal walk line
@@ -31,6 +38,8 @@ PASS: Walking to door does not auto-enter 325호
 PASS: E enters 325호
 PASS: Timer continues through door
 PASS: Only current room is visible
+PASS: person_03 displays its shelter idle clip
+PASS: person_02 displays its shelter idle clip
 PASS: W/S cannot leave horizontal walk line
 PASS: Large step stops before right boundary
 PASS: Can leave right wall immediately
@@ -42,6 +51,8 @@ PASS: Walking to door does not auto-enter 324호
 PASS: E enters 324호
 PASS: Timer continues through door
 PASS: Only current room is visible
+PASS: person_06 uses its authored standing sprite
+PASS: person_05 uses its authored standing sprite
 PASS: W/S cannot leave horizontal walk line
 PASS: Large step stops before right boundary
 PASS: Can leave right wall immediately
@@ -53,6 +64,7 @@ PASS: Walking to door does not auto-enter 323호
 PASS: E enters 323호
 PASS: Timer continues through door
 PASS: Only current room is visible
+PASS: person_04 displays its shelter idle clip
 PASS: W/S cannot leave horizontal walk line
 PASS: Large step stops before right boundary
 PASS: Can leave right wall immediately
@@ -61,22 +73,24 @@ PASS: Invalid overlap/position recovers onto safe walk line
 PASS: Door reaches 복도
 PASS: Room exit returns to corridor
 PASS: Door reaches 325호
+PASS: Door reaches 복도
 PASS: Focus person_01
 PASS: Two-slot person carried
 PASS: Person carried horizontally
+PASS: Door reaches 325호
 PASS: Actual keyboard movement while carrying
 PASS: Walks in front of all tables without getting trapped
 PASS: Door reaches 복도
 PASS: Door preserves held person and visibility
 PASS: Door reaches 325호
-PASS: Focus person_05
+PASS: Focus person_02
 PASS: Capacity overflow still rejected
 PASS: Door reaches 복도
-PASS: Door reaches 324호
+PASS: Door reaches 323호
 PASS: Focus person_04
 PASS: Two people fill four slots
 PASS: Door reaches 복도
-PASS: Bunker takes all carried people
+PASS: Bunker takes both carried people and records starter once
 PASS: Deposit fades out
 PASS: Deposited people disappear
 PASS: Door reaches 325호
@@ -95,6 +109,8 @@ PASS: Focus canfood
 PASS: Door reaches 복도
 PASS: Door reaches 324호
 PASS: Focus canfood
+PASS: Door reaches 복도
+PASS: Door reaches 323호
 PASS: Focus nailbat
 PASS: Item combination fills four slots
 PASS: Door reaches 복도
@@ -102,8 +118,9 @@ PASS: Door preserves full item inventory
 PASS: Items reach bunker
 PASS: Door reaches 325호
 PASS: Re-entering room does not respawn looted targets
-PASS: Focus person_05
+PASS: Focus person_02
 PASS: Configured 30s flow finishes at zero after 30.00s
 PASS: Deadline freezes movement/interactions and excludes unbanked carry
 PASS: Doors disabled after deadline
+PASS: Transfer includes deposited starter and excludes unbanked person
 PASS: Authoritative farming data unchanged

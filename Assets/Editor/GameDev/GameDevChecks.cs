@@ -87,6 +87,8 @@ public static class GameDevChecks
         var dial = viewport.Find("Shelter clock");
         var arc = dial.Find("Elapsed day").GetComponent<Image>();
         var time = dial.Find("Time").GetComponent<TMP_Text>();
+        Check(time.rectTransform.rect.size == ((RectTransform)dial).rect.size && time.alignment == TextAlignmentOptions.Center,
+            "Time label is centred within the clock face", checks);
         var ui = new SerializedObject(hud.GetComponent<DevGageUI>());
         Check(arc.sprite && arc.type == Image.Type.Filled && arc.fillMethod == Image.FillMethod.Radial360 &&
             arc.fillOrigin == (int)Image.Origin360.Top && arc.fillClockwise && ui.FindProperty("clockFill").objectReferenceValue == arc &&
@@ -96,7 +98,8 @@ public static class GameDevChecks
         var identity = survivor.GetComponent<CharacterIdentity>();
         var mental = (Image)new SerializedObject(identity).FindProperty("mentalFill").objectReferenceValue;
         Check(mental && mental.sprite && mental.type == Image.Type.Filled && mental.fillMethod == Image.FillMethod.Horizontal &&
-            mental.GetComponentInParent<Canvas>().renderMode == RenderMode.WorldSpace, "Survivor world-space mental gauge is bound", checks);
+            mental.GetComponentInParent<Canvas>(true) is Canvas canvas && canvas.renderMode == RenderMode.WorldSpace,
+            "Survivor world-space mental gauge is bound", checks);
         return string.Join("\n", checks);
     }
 

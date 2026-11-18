@@ -4,9 +4,11 @@ PASS: 2 rescued: exact IDs, no items/unbanked/duplicate survivors
 PASS: No fixed example characters: 2
 PASS: CSV abilities and mental on person_01
 PASS: Runtime mental does not mutate DB
+PASS: Exhausted survivor cannot move
 PASS: Spawned survivor can navigate to combat room
 PASS: CSV abilities and mental on person_02
 PASS: Runtime mental does not mutate DB
+PASS: Exhausted survivor cannot move
 PASS: Spawned survivor can navigate to combat room
 PASS: Shelter reload preserves IDs without duplicate spawns
 PASS: Fresh farming clears previous roster
@@ -20,21 +22,27 @@ PASS: 6 rescued: exact IDs, no items/unbanked/duplicate survivors
 PASS: No fixed example characters: 6
 PASS: CSV abilities and mental on person_01
 PASS: Runtime mental does not mutate DB
+PASS: Exhausted survivor cannot move
 PASS: Spawned survivor can navigate to combat room
 PASS: CSV abilities and mental on person_02
 PASS: Runtime mental does not mutate DB
+PASS: Exhausted survivor cannot move
 PASS: Spawned survivor can navigate to combat room
 PASS: CSV abilities and mental on person_03
 PASS: Runtime mental does not mutate DB
+PASS: Exhausted survivor cannot move
 PASS: Spawned survivor can navigate to combat room
 PASS: CSV abilities and mental on person_04
 PASS: Runtime mental does not mutate DB
+PASS: Exhausted survivor cannot move
 PASS: Spawned survivor can navigate to combat room
 PASS: CSV abilities and mental on person_05
 PASS: Runtime mental does not mutate DB
+PASS: Exhausted survivor cannot move
 PASS: Spawned survivor can navigate to combat room
 PASS: CSV abilities and mental on person_06
 PASS: Runtime mental does not mutate DB
+PASS: Exhausted survivor cannot move
 PASS: Spawned survivor can navigate to combat room
 PASS: Shelter reload preserves IDs without duplicate spawns
 PASS: Direct shelter start has no fabricated survivors

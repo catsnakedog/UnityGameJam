@@ -210,12 +210,12 @@ public static class GameDevSetup
 
     static bool ConfigureMentalGauge(GameObject root)
     {
-        var identity = root.GetComponent<CharacterIdentity>() ?? root.AddComponent<CharacterIdentity>();
+        if (!root.TryGetComponent<CharacterIdentity>(out var identity)) identity = root.AddComponent<CharacterIdentity>();
         var data = new SerializedObject(identity);
         if (data.FindProperty("mentalFill").objectReferenceValue) return false;
         var label = root.GetComponent<ShelterWalker>().nameLabel;
         var rect = Rect("Mental gauge", root.transform, 0, 0, 104, 14);
-        var canvas = rect.gameObject.GetComponent<Canvas>() ?? rect.gameObject.AddComponent<Canvas>();
+        if (!rect.TryGetComponent<Canvas>(out var canvas)) canvas = rect.gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.sizeDelta = new Vector2(104, 14);
@@ -251,7 +251,7 @@ public static class GameDevSetup
     static Image Picture(string name, Transform parent, float x, float y, float width, float height, string spritePath)
     {
         var rect = Rect(name, parent, x, y, width, height);
-        var image = rect.GetComponent<Image>() ?? rect.gameObject.AddComponent<Image>();
+        if (!rect.TryGetComponent<Image>(out var image)) image = rect.gameObject.AddComponent<Image>();
         image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
         if (!image.sprite) throw new InvalidOperationException("Missing UI Sprite at " + spritePath);
         image.type = Image.Type.Sliced;
@@ -262,7 +262,9 @@ public static class GameDevSetup
     static TMP_Text Text(string name, Transform parent, float x, float y, float width, float height, float fontSize)
     {
         var rect = Rect(name, parent, x, y, width, height);
-        var label = rect.GetComponent<TextMeshProUGUI>() ?? rect.gameObject.AddComponent<TextMeshProUGUI>();
+        if (!rect.TryGetComponent<TextMeshProUGUI>(out var label)) label = rect.gameObject.AddComponent<TextMeshProUGUI>();
+        // TextMeshPro installs its default RectTransform size when first added.
+        rect.sizeDelta = new Vector2(width, height);
         label.font = font;
         label.fontSize = fontSize;
         label.color = new Color32(244, 235, 217, 255);

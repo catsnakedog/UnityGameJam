@@ -17,15 +17,30 @@ PASS Only the two workers pay
 PASS Occupied room suspends work and cost
 PASS Closed room excluded
 PASS Inactive actors excluded
-PASS Non-work room excluded: Common
-PASS Non-work room excluded: Sleeping
-PASS Non-work room excluded: ZombieInvasion
+PASS Room changes mental without producing development: Common
+PASS Room changes mental without producing development: Sleeping
+PASS Room changes mental without producing development: ZombieInvasion
 PASS Last work interval can exhaust a worker
 PASS Fainted worker contributes no progress
 PASS Restart restores initial mental
+PASS Elapsed ticks and external mental gain cannot replace a rescue
+PASS Selecting a survivor and clicking the patient starts a rescue
+PASS Only one rescuer can claim the patient
+PASS The rescuer picks up the patient, carries them in the elevator and delivers them to the sleeping room
+PASS Bed rest observes the shared pause
+PASS Still unconscious after bed tick 1
+PASS Still unconscious after bed tick 2
+PASS Still unconscious after bed tick 3
+PASS Still unconscious after bed tick 4
+PASS Still unconscious after bed tick 5
+PASS Still unconscious after bed tick 6
+PASS Still unconscious after bed tick 7
+PASS Still unconscious after bed tick 8
+PASS Still unconscious after bed tick 9
+PASS The delivered survivor regains control at the threshold
 PASS Pause suspends cost and ticks
 PASS Ends at N exactly once
 PASS Independent event/work periods including final tick
 PASS Final tick work submitted, evaluated and clamped through existing manager
 PASS No progress after end
-PASS Runtime preserves settings
+PASS Built work and room mental settings match the authored SO

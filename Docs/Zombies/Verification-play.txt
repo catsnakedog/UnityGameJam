@@ -9,15 +9,15 @@ PASS No early attack or breach at tick one
 PASS Four guards fire on tick two without distant retaliation
 PASS No additional volley on tick three
 PASS The second volley on tick four can stop the zombie before it breaches
-PASS Every guard loses one mental after eight assigned ticks
+PASS Every guard loses two mental per assigned tick
 PASS Two volleys before tick six and no early entry
 PASS At tick six the last volley hits, breach costs everyone two, then melee hits one guard immediately
 PASS Melee does not repeat at the shorter ranged interval
 PASS Melee repeats five ticks after the breach
 PASS A living guard holds after three melee rounds and the same breach is charged only once
 PASS When the last guarding survivor faints the invader continues with its remaining HP
-PASS Fainted guard wakes at the configured mental value
-PASS Leaving guard duty resets its personal seven-tick remainder
+PASS Fainted guard waits for rescue beyond the former timer
+PASS One sleep tick and fourteen guard ticks use the respective room rates
 PASS Guard duty drains while no zombies are present
 PASS A lethal final volley prevents both entry and shelter-wide mental loss
 PASS One guard can hit while a teammate ties
