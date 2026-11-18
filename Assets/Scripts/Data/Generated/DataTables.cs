@@ -50,6 +50,8 @@ namespace GameJam.Data.Generated
             public global::System.Collections.Generic.IReadOnlyList<string> @noEffects => _dataRow.Get<global::System.Collections.Generic.IReadOnlyList<string>>("noEffects");
             public string @requiredItem => _dataRow.Get<string>("requiredItem");
             public int @requiredCount => _dataRow.Get<int>("requiredCount");
+            public string @yesResult => _dataRow.Get<string>("yesResult");
+            public string @noResult => _dataRow.Get<string>("noResult");
         }
     }
     namespace @GameDevEndings
