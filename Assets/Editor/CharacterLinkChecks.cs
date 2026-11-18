@@ -58,6 +58,7 @@ public static class CharacterLinkChecks
                 if (additional == 0)
                 {
                     session.Begin();
+                    session.Tick(session.PreparationRemaining);
                     await Until(() => session.CanAct);
                     Deliver(session, session.Pickups.First(p => p.Record.Type == FarmingObjectType.Person));
                     session.Tick(session.Rules.Duration);
@@ -71,6 +72,7 @@ public static class CharacterLinkChecks
                 Check(session.Player.Inventory.Used == 0 && session.SecuredIds.SequenceEqual(new[] { starter }) &&
                       session.Pickups.All(p => p.RecordId != starter), "A fresh run starts empty-handed with only the player secured");
                 session.Begin();
+                session.Tick(session.PreparationRemaining);
                 await Until(() => session.CanAct);
                 var people = session.Pickups.Where(p => p.Record.Type == FarmingObjectType.Person).OrderBy(p => p.RecordId).Take(additional).ToArray();
                 foreach (var person in people) Deliver(session, person);

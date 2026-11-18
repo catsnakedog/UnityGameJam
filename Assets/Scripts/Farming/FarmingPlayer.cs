@@ -37,7 +37,7 @@ namespace ShelterRun
         }
         void Update()
         {
-            if (!session || !session.CanAct)
+            if (!session || !session.CanExplore)
             {
                 if (session && session.Phase == FarmingPhase.Ready) AnimatePose(false, Time.deltaTime);
                 return;
@@ -50,7 +50,7 @@ namespace ShelterRun
         }
         public void Move(Vector2 input, float deltaTime)
         {
-            if (session == null || !session.CanAct) return;
+            if (session == null || !session.CanExplore) return;
             float horizontal = Mathf.Clamp(input.x, -1, 1);
             if (horizontal != 0) { facing = new Vector2(Mathf.Sign(horizontal), 0); sprite.flipX = horizontal < 0; }
             Vector3 next = transform.position + Vector3.right * (horizontal * session.Rules.MoveSpeed * Mathf.Max(0, deltaTime));
@@ -80,7 +80,7 @@ namespace ShelterRun
             var map = FarmingMap2D.Instance;
             FocusedDoor = map.NearestDoor(transform.position, session.Rules.InteractionRadius);
             if (FocusedDoor) FocusedDoor.SetFocused(true);
-            else
+            else if (session.CanAct)
             {
                 float best = session.Rules.InteractionRadius;
                 foreach (var item in session.Pickups)
@@ -96,8 +96,15 @@ namespace ShelterRun
         }
         public void Interact()
         {
-            if (session == null || !session.CanAct) return;
+            if (session == null || !session.CanExplore) return;
             RefreshFocus();
+            if (FocusedDoor && !(AtBunker && Inventory.Used > 0))
+            {
+                FarmingMap2D.Instance.Traverse(FocusedDoor);
+                RefreshFocus();
+                return;
+            }
+            if (!session.CanAct) return;
             if (AtBunker && Inventory.Used > 0)
             {
                 while (Inventory.Carried.Count > 0)
@@ -106,11 +113,6 @@ namespace ShelterRun
                     item.Throw(session.Bunker.LandingPosition, true, session.Rules);
                 }
                 session.Notify("벙커에 투입했습니다");
-            }
-            else if (FocusedDoor)
-            {
-                FarmingMap2D.Instance.Traverse(FocusedDoor);
-                RefreshFocus(); return;
             }
             else if (Focused)
             {

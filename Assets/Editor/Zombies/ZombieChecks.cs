@@ -136,10 +136,12 @@ public static class ZombieChecks
             var commander = UnityEngine.Object.FindFirstObjectByType<ShelterCommander>();
             var landing = ctrl.Navigation.Areas.First(r => r.kind == ShelterArea.AreaKind.Corridor && Mathf.Approximately(r.FloorY, guard.FloorY));
             Vector2 overlap = new Vector2((Mathf.Max(guard.Left, landing.Left) + Mathf.Min(guard.Right, landing.Right)) / 2, guard.FloorY + 1);
-            Check(commander.ClickWorld(actors[0].transform.position + Vector3.up) && commander.ClickWorld(overlap) && commander.Selected.Destination == guard, "Clicking the shared landing and guard-room area assigns the guard room");
-            ShelterElevatorChecks.Move(commander.Selected, guard);
+            Check(commander.ClickWorld(actors[0].transform.position + Vector3.up), "Select a guard for the landing command");
+            var firstGuard = commander.Selected;
+            Check(commander.ClickWorld(overlap) && firstGuard.Destination == guard && !commander.Selected, "Clicking the shared landing and guard-room area assigns the guard room and clears selection");
+            ShelterElevatorChecks.Move(firstGuard, guard);
             foreach (var actor in actors)
-                if (actor.GetComponent<ShelterWalker>() != commander.Selected) Move(actor, guard);
+                if (actor.GetComponent<ShelterWalker>() != firstGuard) Move(actor, guard);
             int period = ctrl.Data.CombatEveryTicks;
             int volley = sim.Rules.GuardVolleyEveryTicks;
             int travel = sim.Rules.InvasionApproachTicks;

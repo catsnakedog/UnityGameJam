@@ -27,10 +27,12 @@ namespace ShelterRun
         public IReadOnlyList<FarmingPickup> Pickups => pickups;
         public IReadOnlyList<string> SecuredIds => securedIds.AsReadOnly();
         public float Remaining { get; private set; }
+        public float PreparationRemaining { get; private set; }
         public int PeopleSaved { get; private set; }
         public int ItemsSaved { get; private set; }
         public int PeopleTotal { get; private set; }
         public bool CanAct => Phase == FarmingPhase.Running && Time.frameCount > startFrame;
+        public bool CanExplore => (Phase == FarmingPhase.Preparing || Phase == FarmingPhase.Running) && Time.frameCount > startFrame;
         public event Action<FarmingSession> Completed;
 
         async void Start()
@@ -86,7 +88,7 @@ namespace ShelterRun
         {
             var keyboard = Keyboard.current;
             if (Phase == FarmingPhase.Ready && keyboard != null && keyboard.eKey.wasPressedThisFrame) Begin();
-            else if (Phase == FarmingPhase.Running) Tick(Time.deltaTime);
+            else if (Phase == FarmingPhase.Preparing || Phase == FarmingPhase.Running) Tick(Time.deltaTime);
             else if (Phase == FarmingPhase.Finished && keyboard != null && keyboard.rKey.wasPressedThisFrame) Restart();
         }
 
@@ -94,13 +96,24 @@ namespace ShelterRun
         {
             if (Phase != FarmingPhase.Ready) return;
             startFrame = Time.frameCount;
-            Phase = FarmingPhase.Running;
+            PreparationRemaining = Rules.PreparationDuration;
+            Phase = FarmingPhase.Preparing;
         }
 
         public void Tick(float deltaTime)
         {
+            deltaTime = Mathf.Max(0, deltaTime);
+            if (Phase == FarmingPhase.Preparing)
+            {
+                float elapsed = Mathf.Min(PreparationRemaining, deltaTime);
+                PreparationRemaining -= elapsed;
+                if (PreparationRemaining > 0) return;
+                deltaTime -= elapsed;
+                Phase = FarmingPhase.Running;
+                hud.Notify("파밍 시작 · 사람과 물자를 벙커로 옮기세요");
+            }
             if (Phase != FarmingPhase.Running) return;
-            Remaining = Mathf.Max(0, Remaining - Mathf.Max(0, deltaTime));
+            Remaining = Mathf.Max(0, Remaining - deltaTime);
             if (Remaining > 0) return;
             Phase = FarmingPhase.Finished;
             player.StopInteraction();

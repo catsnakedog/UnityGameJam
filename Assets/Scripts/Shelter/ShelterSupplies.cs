@@ -121,7 +121,7 @@ namespace UnityGameJam.Shelter
         }
         public bool TryUse(ShelterStock stock, CharacterIdentity actor, EquippedItemView view)
         {
-            if (!Rules || !actor || !actor.isActiveAndEnabled || actor.Definition == null || actor.gameObject.scene != gameObject.scene) return false;
+            if (!Rules || !actor || !actor.isActiveAndEnabled || !actor.CanAct || actor.Definition == null || actor.gameObject.scene != gameObject.scene) return false;
             var item = stock.Instance;
             var supply = stock.Supply;
             if (supply == null) return false;

@@ -5,14 +5,18 @@ PASS Moving produces no work or mental cost
 PASS Arrival establishes work membership
 PASS Development restart resets clock
 PASS Locked programming costs no mental
+PASS Locked work has no floating feedback
 PASS Programming ability contributes proportional percentage
+PASS Programming icon and actual increase
 PASS Programming charges its worker once
 PASS No cost before the next work interval
 PASS Graphics uses art ability
+PASS Reused feedback shows the graphics icon and increase
 PASS Art charges the same flat cost
 PASS Completed field costs no mental
 PASS Planning uses planning ability
 PASS Multiple members sum once per actor
+PASS Each planning worker shows their share while an idle survivor stays hidden
 PASS Only the two workers pay
 PASS Occupied room suspends work and cost
 PASS Closed room excluded
@@ -22,6 +26,7 @@ PASS Room changes mental without producing development: Sleeping
 PASS Room changes mental without producing development: ZombieInvasion
 PASS Last work interval can exhaust a worker
 PASS Fainted worker contributes no progress
+PASS Capped joint work displays only the actual increase, proportionally per worker
 PASS Restart restores initial mental
 PASS Elapsed ticks and external mental gain cannot replace a rescue
 PASS Selecting a survivor and clicking the patient starts a rescue

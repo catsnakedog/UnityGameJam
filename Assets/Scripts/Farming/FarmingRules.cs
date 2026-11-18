@@ -17,6 +17,7 @@ namespace ShelterRun
         }
 
         [SerializeField] float duration;
+        [SerializeField] float preparationDuration;
         [SerializeField] int capacity;
         [SerializeField] float moveSpeed;
         [SerializeField] float interactionRadius;
@@ -32,6 +33,7 @@ namespace ShelterRun
         [Tooltip("Nearest corridor door to the bunker first.")]
         [SerializeField] RoomSpawnRule[] roomSpawns;
         public float Duration => duration;
+        public float PreparationDuration => preparationDuration;
         public int Capacity => capacity;
         public string StartingPersonId => startingPersonId;
         public float MoveSpeed => moveSpeed;
@@ -47,7 +49,7 @@ namespace ShelterRun
 
         public void Validate()
         {
-            foreach (float value in new[] { duration, moveSpeed, interactionRadius, dropDistance, throwDuration, fadeDuration, throwArc, warningSeconds, mapHalfExtents.x, mapHalfExtents.y, roomRevealDuration })
+            foreach (float value in new[] { duration, preparationDuration, moveSpeed, interactionRadius, dropDistance, throwDuration, fadeDuration, throwArc, warningSeconds, mapHalfExtents.x, mapHalfExtents.y, roomRevealDuration })
                 if (float.IsNaN(value) || float.IsInfinity(value) || value <= 0)
                     throw new InvalidOperationException("FarmingRules requires positive finite values.");
             if (capacity < 1 || warningSeconds > duration)

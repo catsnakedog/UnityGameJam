@@ -178,9 +178,11 @@ public static class BunkerChecks
             dev.SetProgress(GameDevField.Planning, sim.Rules.PlanningUnlockPercent);
             sim.Advance(sim.Rules.SecondsPerTick * sim.Rules.WorkEveryTicks);
             Check(dev.Progress.Programming == 0 && actor.CurrentMental == initialMental, "Locked programming costs no mental", checks);
+            Check(!actor.transform.Find("Work feedback").gameObject.activeSelf, "Locked work has no floating feedback", checks);
             dev.SetProgress(GameDevField.Planning, sim.Rules.PlanningUnlockPercent + 0.1f);
             sim.Advance(sim.Rules.SecondsPerTick * sim.Rules.WorkEveryTicks);
             Check(Mathf.Approximately(dev.Progress.Programming, actor.Definition.Programming * sim.Rules.PercentPerAbility), "Programming ability contributes proportional percentage", checks);
+            Check(WorkProgressFeedbackSetup.Matches(actor, GameDevField.Programming, dev.Progress.Programming), "Programming icon and actual increase", checks);
             Check(actor.CurrentMental == Mathf.Max(0, initialMental - cost), "Programming charges its worker once", checks);
             ShelterElevatorChecks.Move(walker, art);
             int beforeArt = actor.CurrentMental;
@@ -188,6 +190,7 @@ public static class BunkerChecks
             Check(actor.CurrentMental == beforeArt, "No cost before the next work interval", checks);
             sim.Advance(workSeconds / 2);
             Check(Mathf.Approximately(dev.Progress.Graphics, actor.Definition.Art * sim.Rules.PercentPerAbility), "Graphics uses art ability", checks);
+            Check(WorkProgressFeedbackSetup.Matches(actor, GameDevField.Graphics, dev.Progress.Graphics), "Reused feedback shows the graphics icon and increase", checks);
             Check(actor.CurrentMental == Mathf.Max(0, beforeArt - cost), "Art charges the same flat cost", checks);
             dev.SetProgress(GameDevField.Graphics, GameDevProgress.MaximumPercent);
             beforeArt = actor.CurrentMental;
@@ -200,6 +203,10 @@ public static class BunkerChecks
             dev.RestartDevelopment(); sim.Advance(sim.Rules.SecondsPerTick * sim.Rules.WorkEveryTicks);
             float expected = (actor.Definition.Planning + roster.Characters[1].Definition.Planning) * sim.Rules.PercentPerAbility;
             Check(Mathf.Approximately(dev.Progress.Planning, expected), "Multiple members sum once per actor", checks);
+            Check(WorkProgressFeedbackSetup.Matches(actor, GameDevField.Planning, actor.Planning * sim.Rules.PercentPerAbility) &&
+                WorkProgressFeedbackSetup.Matches(roster.Characters[1], GameDevField.Planning, roster.Characters[1].Planning * sim.Rules.PercentPerAbility) &&
+                !roster.Characters[2].transform.Find("Work feedback").gameObject.activeSelf,
+                "Each planning worker shows their share while an idle survivor stays hidden", checks);
             Check(roster.Characters.Take(2).All(a => a.CurrentMental == Mathf.Max(0, a.Definition.Mental - cost)) &&
                 roster.Characters[2].CurrentMental == roster.Characters[2].Definition.Mental, "Only the two workers pay", checks);
             int beforeIdle = actor.CurrentMental;
@@ -232,6 +239,15 @@ public static class BunkerChecks
                 float partnerGain = sim.Rules.WorkEveryTicks == 1 ? roster.Characters[1].Definition.Planning * sim.Rules.PercentPerAbility : 0;
                 Check(!actor.CanAct && Mathf.Approximately(dev.Progress.Planning, beforeFaint + partnerGain), "Fainted worker contributes no progress", checks);
             }
+            dev.RestartDevelopment();
+            dev.SetProgress(GameDevField.Planning, 99.99f);
+            float remaining = GameDevProgress.MaximumPercent - dev.Progress.Planning;
+            sim.Advance(workSeconds);
+            int combined = actor.Planning + roster.Characters[1].Planning;
+            Check(dev.Progress.Planning == GameDevProgress.MaximumPercent &&
+                WorkProgressFeedbackSetup.Matches(actor, GameDevField.Planning, remaining * actor.Planning / combined) &&
+                WorkProgressFeedbackSetup.Matches(roster.Characters[1], GameDevField.Planning, remaining * roster.Characters[1].Planning / combined),
+                "Capped joint work displays only the actual increase, proportionally per worker", checks);
             dev.RestartDevelopment();
             Check(actor.CanAct && actor.CurrentMental == initialMental, "Restart restores initial mental", checks);
             await Task.Yield(); // Let the input block from the old event controller finish this frame.

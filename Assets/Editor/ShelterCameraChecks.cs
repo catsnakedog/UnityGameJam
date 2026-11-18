@@ -97,19 +97,25 @@ public static class ShelterCameraChecks
                 return new Vector3(point.x, point.y, camera.transform.position.z);
             }
 
+            var card = UnityEngine.Object.FindFirstObjectByType<ShelterCharacterCard>();
             for (int slot = 1; slot <= 6; slot++)
             {
+                var expected = camera.GetCharacterSlot(Math.Min(slot, 4));
                 camera.Unlock();
                 KeyPress((Key)((int)Key.Digit1 + slot - 1));
                 Check(!camera.IsFollowing && Near(camera.transform.position, Centre(slot)), "Digit " + slot + " centres existing person ID without locking");
+                Check(camera.commander.Selected == expected.GetComponent<ShelterWalker>() && card.SelectedCharacter == expected,
+                    "Digit " + slot + " leaves movement selection and card on " + expected.Id);
                 KeyPress((Key)((int)Key.Digit1 + slot - 1));
                 Check(camera.IsFollowing && camera.FollowTarget.Id == "person_" + slot.ToString("00"), "Digit " + slot + " double tap locks correct character");
                 KeyPress(Key.Y);
                 Check(!camera.IsFollowing, "Y unlocks slot " + slot);
+                if (slot <= 4) camera.Pan(Vector2.right, 0.1f);
                 KeyPress((Key)((int)Key.Numpad1 + slot - 1));
                 Check(!camera.IsFollowing && Near(camera.transform.position, Centre(slot)), "Numpad " + slot + " centres correct character");
+                Check(camera.commander.Selected == expected.GetComponent<ShelterWalker>() && card.SelectedCharacter == expected,
+                    "Numpad " + slot + " leaves movement selection and card on " + expected.Id);
             }
-            Check(camera.commander.Selected == null, "Camera shortcuts leave movement selection unchanged");
             camera.Unlock(); KeyPress(Key.Digit1); KeyPress(Key.Digit2);
             Check(!camera.IsFollowing && Near(camera.transform.position, Centre(2)), "Different digits do not count as a double tap");
             camera.Unlock(); KeyPress(Key.Digit1);
@@ -136,7 +142,8 @@ public static class ShelterCameraChecks
             camera.SendMessage("LateUpdate");
             Check(Near(camera.transform.position, lockedPosition), "Y keeps current view when character moves away");
             KeyPress(Key.RightArrow);
-            Check(camera.transform.position.x > lockedPosition.x, "Arrow input moves free camera");
+            Check(camera.transform.position.x > lockedPosition.x && !camera.commander.Selected && !card.SelectedCharacter,
+                "Arrow input moves free camera, deselects the survivor and closes the card");
             foreach (var input in new[] { (Key.W, Vector2.up), (Key.A, Vector2.left), (Key.S, Vector2.down), (Key.D, Vector2.right) })
             {
                 camera.transform.position = new Vector3(0, 9, -10);
@@ -174,7 +181,8 @@ public static class ShelterCameraChecks
             Wheel(1, view.pixelRect.center);
             Check(view.orthographicSize == blockedSize, "Modal input block suppresses wheel zoom");
             KeyPress(Key.Digit3); KeyPress(Key.RightArrow);
-            Check(Near(camera.transform.position, blockedPosition) && !camera.IsFollowing, "Modal input block suppresses shortcuts and panning");
+            Check(Near(camera.transform.position, blockedPosition) && !camera.IsFollowing && !camera.commander.Selected,
+                "Modal input block suppresses shortcuts, selection and panning");
             camera.commander.ReleaseInputBlock(block);
             await Task.Delay(60);
             field = new GameObject("Temporary camera input check", typeof(RectTransform), typeof(TMP_InputField));

@@ -6,6 +6,10 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 ## 등록된 데이터
 
+벙커 작업 완료 표시는 `data.bunker.rules`의 작업 주기·효율과 `data.characters`의 장비 보정 후 능력을 거쳐 실제로 더해진 분야별 진척을 읽는다. [작업 표시](UI/WorkProgressFeedback.md) · [소비 연결 이력](DataHistory/20261119-work-progress-feedback.md)
+
+파밍을 시작하면 `data.farming.rules.preparationDuration` 동안 방을 둘러볼 수 있다. 물자·사람 획득과 구조 제한시간은 준비 종료 시 시작한다. [파밍 규칙](DataSpecs/FarmingRules.md) · [중복 조사](DataHistory/20261119-farming-preparation-plan.md)
+
 허기가 0인 생존자의 멘탈 감소 배율은 `data.bunker.rules.emptyHungerMentalLossMultiplier`에서 조정한다. [필드 명세](DataSpecs/BunkerRules.md) · [변경 이력](DataHistory/20261119-empty-hunger-mental.md)
 
 중간 발표의 시각·등급별 멘탈과 첫 좀비 습격 틱은 기존 `data.bunker.rules`에서 편집한다. 시계·팝업은 이 규칙과 시뮬레이션의 회차 상태를 읽는다. [필드 명세](DataSpecs/BunkerRules.md) · [원문 대조와 검증](DataHistory/20261119-midterm-clock.md)

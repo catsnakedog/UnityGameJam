@@ -162,7 +162,8 @@ namespace UnityGameJam.Shelter
                 var walker = commander.SurvivorAtScreen(data.position);
                 if (walker) target = walker.GetComponent<CharacterIdentity>();
             }
-            if (target && !supplies.TryUse(item, target, view)) footer.text = "지금은 이 아이템을 사용할 수 없습니다.";
+            if (target && !supplies.TryUse(item, target, view))
+                footer.text = target.IsFainted ? "기절한 생존자는 아이템을 사용할 수 없습니다." : "지금은 이 아이템을 사용할 수 없습니다.";
         }
         void EndDragVisual()
         {

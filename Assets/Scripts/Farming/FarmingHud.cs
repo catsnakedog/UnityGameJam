@@ -25,6 +25,7 @@ namespace ShelterRun
         FarmingSession session;
         float toastUntil;
         string failure;
+        string rescueTitle;
 
         public void Bind(FarmingSession value)
         {
@@ -34,7 +35,7 @@ namespace ShelterRun
         }
         public void Prepare(FarmingRules rules)
         {
-            missionTitle.text = $"{rules.Duration:0.##}초의 구조";
+            rescueTitle = $"{rules.Duration:0.##}초의 구조";
             PrepareSlots(rules.Capacity);
         }
         public void PrepareSlots(int capacity)
@@ -55,16 +56,19 @@ namespace ShelterRun
         {
             if (session == null) return;
             bool running = session.Phase == FarmingPhase.Running;
-            overlay.SetActive(!running);
+            bool preparing = session.Phase == FarmingPhase.Preparing;
+            overlay.SetActive(!running && !preparing);
             actionButton.gameObject.SetActive(session.Phase == FarmingPhase.Ready || session.Phase == FarmingPhase.Finished);
             if (session.Phase == FarmingPhase.Loading)
             { overlayTitle.text = "준비 중"; overlayBody.text = "파밍 데이터를 불러오고 있습니다"; return; }
             if (session.Phase == FarmingPhase.Failed)
             { overlayTitle.text = "데이터를 확인해 주세요"; overlayBody.text = failure; return; }
 
-            timerText.text = Mathf.CeilToInt(session.Remaining).ToString("00");
-            timerText.color = session.Remaining <= session.Rules.WarningSeconds ? new Color(1, 0.38f, 0.28f) : new Color(1, 0.84f, 0.51f);
-            timeFill.fillAmount = session.Remaining / session.Rules.Duration;
+            missionTitle.text = preparing ? "파밍 준비" : rescueTitle;
+            float remaining = preparing ? session.PreparationRemaining : session.Remaining;
+            timerText.text = Mathf.CeilToInt(remaining).ToString("00");
+            timerText.color = !preparing && remaining <= session.Rules.WarningSeconds ? new Color(1, 0.38f, 0.28f) : new Color(1, 0.84f, 0.51f);
+            timeFill.fillAmount = remaining / (preparing ? session.Rules.PreparationDuration : session.Rules.Duration);
             var inventory = session.Player.Inventory;
             capacityText.text = $"운반  {inventory.Used} / {inventory.Capacity}칸";
             rescuedText.text = $"확보   사람 {session.PeopleSaved}/{session.PeopleTotal}   ·   물자 {session.ItemsSaved}";
@@ -73,9 +77,10 @@ namespace ShelterRun
                 for (int i = 0; i < item.Record.Weight && filled < slots.Count; i++) slots[filled++].Show(item.Record.Type);
             while (filled < slots.Count) slots[filled++].Show(null);
 
-            toastText.gameObject.SetActive(running && Time.unscaledTime < toastUntil);
+            toastText.gameObject.SetActive((running || preparing) && Time.unscaledTime < toastUntil);
             if (session.Player.AtBunker && inventory.Used > 0) promptText.text = "[ E ]  들고 있는 대상 모두 벙커에 투입";
             else if (session.Player.FocusedDoor != null) promptText.text = $"[ E ]  {session.Player.FocusedDoor.DestinationLabel} 이동";
+            else if (preparing) promptText.text = "A / D  이동   ·   E  문 열기   ·   준비 후 획득 가능";
             else if (session.Player.Focused != null)
             {
                 var item = session.Player.Focused;
@@ -87,8 +92,8 @@ namespace ShelterRun
             if (session.Phase == FarmingPhase.Ready)
             {
                 overlayTitle.text = $"{session.Rules.Duration:0.##}초, 챙기고 구하라";
-                overlayBody.text = $"당신은 이미 확보된 생존자입니다. 빈손으로 출발해 각 호실의 생존자와 물자를 벙커로 옮기세요.\n문 앞에서 E로 입실 · 출구 문에서 E로 복도 복귀\n\nA / D   좌우 이동       E   문 / 들기 / 내려놓기\n한 번에 {session.Rules.Capacity}칸 · 사람 2~4칸 · 물자 1~2칸\n들고 나온 대상은 복도 왼쪽 벙커에서 E로 투입하세요.";
-                actionText.text = "E   파밍 시작";
+                overlayBody.text = $"당신은 이미 확보된 생존자입니다. 처음 {session.Rules.PreparationDuration:0.##}초 동안 빈손으로 방을 둘러보세요.\n준비가 끝나면 생존자와 물자를 들 수 있습니다.\n\nA / D   좌우 이동       E   문 / 들기 / 내려놓기\n한 번에 {session.Rules.Capacity}칸 · 사람 2~4칸 · 물자 1~2칸\n들고 나온 대상은 복도 왼쪽 벙커에서 E로 투입하세요.";
+                actionText.text = "E   준비 시작";
             }
             else if (session.Phase == FarmingPhase.Finished)
             {

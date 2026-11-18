@@ -1,5 +1,7 @@
 # 캐릭터 능력 명세
 
+작업 완료 시 `BunkerSimulation`은 장비 보정을 포함한 `CharacterIdentity.Planning`, `Art`, `Programming`을 작업 시점에 읽어 같은 분야의 실제 증가량을 개인별로 배분한다. [작업 완료 표시](../UI/WorkProgressFeedback.md)
+
 벙커에서 생존자를 클릭하면 정보 카드가 기본 정의의 ID·이름·직군과 장비를 반영한 CharacterIdentity.Planning, Programming, Art, Combat을 읽는다. [장비 보정](ShelterItems.md) 초상 Sprite는 기존 파밍 Person ID로 연결한다. 멘탈 표시는 `CharacterIdentity.CurrentMental`을 사용한다. [UI와 재현 결과](../UI/ShelterCharacterCard.md)
 
 ## 2026-11-18 벙커 카메라 번호 참조

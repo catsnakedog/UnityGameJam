@@ -1,6 +1,6 @@
 # FarmingRules 명세
 
-- 데이터 ID: `data.farming.rules`; 상태: active; 담당: 파밍; 문서 스키마 v4; 확인일: 2026-11-19.
+- 데이터 ID: `data.farming.rules`; 상태: active; 담당: 파밍; 문서 스키마 v5; 확인일: 2026-11-19.
 - 소유 의미: 한 파밍 세션의 제한시간·운반 용량·이동/상호작용/연출 규칙. 개체별 운반 비용은 [FarmingData](FarmingData.md)가 소유한다.
 - 정본: [FarmingRules.asset](../../Assets/Settings/Farming/FarmingRules.asset), 타입 `ShelterRun.FarmingRules`. CSV 원본 없음.
 - GUID: `22168f09c24cbfb49aeb55b136dd0298`; 주소 `data/farming/rules`; 그룹 `Farming Local`; 라벨 `farming`.
@@ -14,6 +14,7 @@
 | 필드 | 타입 | 의미/단위 | 현재 값 | 추가 제약 / 소비자 |
 |---|---|---|---|---|
 | duration | float | 제한시간 / 초 | 30 | FarmingSession.Remaining 초기화, HUD 제목·남은 시간·게이지 |
+| preparationDuration | float | 시작 입력 후 사전 탐색 시간 / 초 | 15 | 양의 유한값. FarmingSession.PreparationRemaining과 HUD 카운트다운에 사용한다. 이 시간 동안 위치 이동과 문 출입이 가능하며, 종료 시 같은 위치에서 구조를 시작한다. |
 | capacity | int | 최대 운반량 / 칸 | 4 | 1 이상; FarmingInventory 생성, HUD 슬롯 |
 | moveSpeed | float | 플레이어 수평 이동속도 / Unity 거리 단위·초⁻¹ | 5.8 | FarmingPlayer A/D 이동 |
 | interactionRadius | float | 대상 탐색 반경 / Unity 거리 단위 | 2 | 같은 공간에서 FarmingPlayer 대상 및 문 근접 판정 |
@@ -35,6 +36,8 @@
 단일 설정 에셋이다. 시작 인물의 FarmingData ID를 삭제·변경할 때는 시작 인물 참조와 방별 배정 가능 인원도 함께 갱신한다. 구간별 규칙이 필요해지면 먼저 적용 범위와 프로필 선택 계약을 설계한다. 단순한 씬 추가나 난이도 조정 때문에 같은 주소/역할의 Rules 복제본을 만들지 않는다. 삭제/주소 변경은 모든 소비자 전환이 포함된 이전 작업으로 처리한다.
 
 ## 중복 조사와 검증
+
+- 준비 단계의 런타임·HUD 연결과 컴파일 범위는 [준비 단계 변경 이력](../DataHistory/20261119-farming-preparation-code.md)에 기록했다.
 
 - 플레이어 외형·방 배치·벙커 기본 확보 명단이 같은 `startingPersonId`를 참조한다. [시작 인물 변경 이력](../DataHistory/20261119-farming-starting-player.md)
 

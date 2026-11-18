@@ -182,6 +182,8 @@ namespace UnityGameJam.Shelter
             if (InputBlocked()) { previousSlot = 0; return false; }
             var target = GetCharacterSlot(slot);
             if (!target) { previousSlot = 0; return false; }
+            if (slot <= 4 && commander && target.TryGetComponent<ShelterWalker>(out var walker))
+                commander.SelectSurvivor(walker);
             double now = Time.unscaledTimeAsDouble;
             bool doubleTap = previousSlot == slot && now - previousPressTime <= doubleTapSeconds;
             FollowTarget = doubleTap ? target : null;
@@ -201,7 +203,9 @@ namespace UnityGameJam.Shelter
         {
             if (IsFollowing || InputBlocked() || direction.sqrMagnitude == 0f || deltaTime <= 0f) return;
             previousSlot = 0;
-            MoveCentre((Vector2)transform.position + Vector2.ClampMagnitude(direction, 1f) * panSpeed * deltaTime);
+            Vector2 previousCentre = transform.position;
+            MoveCentre(previousCentre + Vector2.ClampMagnitude(direction, 1f) * panSpeed * deltaTime);
+            if (commander && (Vector2)transform.position != previousCentre) commander.DeselectSurvivor();
         }
 
         public Vector2 EdgeDirection(Vector2 pointer, Rect viewport)

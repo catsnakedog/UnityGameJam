@@ -50,7 +50,7 @@ namespace ShelterRun
         }
         public bool Traverse(FarmingDoor2D door)
         {
-            if (!session.CanAct || !door || !door.Target || door.Area != ActiveArea ||
+            if (!session.CanExplore || !door || !door.Target || door.Area != ActiveArea ||
                 Mathf.Abs(player.transform.position.x - door.transform.position.x) > session.Rules.InteractionRadius) return false;
             ActiveArea.Apply(0);
             ActiveArea = door.Target.Area;

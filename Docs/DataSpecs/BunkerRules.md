@@ -1,5 +1,7 @@
 # 벙커 틱·작업 규칙
 
+작업 후 `WorkProgressFeedback`은 `ProcessWork`가 적용한 분야별 실제 증가량을 작업자의 유효 능력에 비례해 표시한다. 진행률 상한·작업 시점·잠금 조건은 이 규칙과 `GameDevManager`가 관리한다. [작업 완료 표시](../UI/WorkProgressFeedback.md)
+
 ## 중간 발표와 첫 좀비 습격
 
 기존 `data.bunker.rules` 정본 [BunkerRules.asset](../../Assets/Settings/Shelter/BunkerRules.asset)에 다음 필드를 둔다. 현재 회차의 개발 진척과 발표 결과는 런타임 상태다.

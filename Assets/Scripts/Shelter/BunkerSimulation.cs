@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GameJam.Data;
 using UnityEngine;
+using UnityGameJam.Characters;
 using UnityGameJam.GameDev;
 
 namespace UnityGameJam.Shelter
@@ -14,6 +15,9 @@ namespace UnityGameJam.Shelter
         [SerializeField] ShelterRoster roster;
         Task initializing;
         BunkerTickClock clock;
+        readonly List<(CharacterIdentity actor, GameDevField field, int ability)> workers = new List<(CharacterIdentity, GameDevField, int)>();
+        readonly double[] totalAbility = new double[3];
+        readonly float[] appliedProgress = new float[3];
         int pendingPostEventTick;
         public int PendingWaveHpModifier { get; private set; }
         public int CurrentWaveHpModifier { get; private set; }
@@ -66,7 +70,14 @@ namespace UnityGameJam.Shelter
         }
         void ResetClock()
         {
-            foreach (var actor in roster.Characters) if (actor) { actor.ConfigureMental(Rules); actor.ResetMental(); actor.ResetSupplies(); }
+            foreach (var actor in roster.Characters)
+            {
+                if (!actor) continue;
+                actor.ConfigureMental(Rules);
+                actor.ResetMental();
+                actor.ResetSupplies();
+                if (actor.TryGetComponent<WorkProgressFeedback>(out var feedback)) feedback.Hide();
+            }
             pendingPostEventTick=0;
             PendingWaveHpModifier=CurrentWaveHpModifier=LastWaveTick=0;
             LastPresentationTick=0;
@@ -135,32 +146,57 @@ namespace UnityGameJam.Shelter
         void ProcessWork()
         {
             if (Rules.PercentPerAbility == 0) return;
-            double programming = 0, graphics = 0, planning = 0;
-            foreach (var actor in roster.Characters)
+            workers.Clear();
+            Array.Clear(totalAbility, 0, totalAbility.Length);
+            var characters = roster.Characters;
+            for (int i = 0; i < characters.Count; i++)
             {
+                var actor = characters[i];
                 if (!actor || !actor.isActiveAndEnabled || actor.Definition == null) continue;
                 var walker = actor.GetComponent<ShelterWalker>();
                 if (!walker || !walker.CanWorkInCurrentRoom || !CanDevelopIn(walker.CurrentRoom.roomType)) continue;
+                GameDevField field;
+                int ability;
                 switch (walker.CurrentRoom.roomType)
                 {
                     case ShelterRoomType.Programming:
-                        programming += actor.Programming;
+                        field = GameDevField.Programming;
+                        ability = actor.Programming;
                         break;
                     case ShelterRoomType.Graphics:
-                        graphics += actor.Art;
+                        field = GameDevField.Graphics;
+                        ability = actor.Art;
                         break;
                     case ShelterRoomType.Planning:
-                        planning += actor.Planning;
+                        field = GameDevField.Planning;
+                        ability = actor.Planning;
                         break;
                     default:
                         continue;
                 }
+                workers.Add((actor, field, ability));
+                totalAbility[(int)field] += ability;
                 if (Rules.MentalCostPerWork > 0)
                     actor.ApplyMentalChange(-Rules.MentalCostPerWork);
             }
-            development.AddProgress(GameDevField.Programming, (float)Math.Min(100, programming * Rules.PercentPerAbility));
-            development.AddProgress(GameDevField.Graphics, (float)Math.Min(100, graphics * Rules.PercentPerAbility));
-            development.AddProgress(GameDevField.Planning, (float)Math.Min(100, planning * Rules.PercentPerAbility));
+            ApplyWork(GameDevField.Programming);
+            ApplyWork(GameDevField.Graphics);
+            ApplyWork(GameDevField.Planning);
+            foreach (var worker in workers)
+            {
+                int index = (int)worker.field;
+                if (appliedProgress[index] <= 0 || worker.ability == 0) continue;
+                float share = (float)(appliedProgress[index] * (double)worker.ability / totalAbility[index]);
+                if (worker.actor.TryGetComponent<WorkProgressFeedback>(out var feedback)) feedback.Show(worker.field, share);
+            }
+        }
+
+        void ApplyWork(GameDevField field)
+        {
+            int index = (int)field;
+            float before = development.Progress.Get(field);
+            development.AddProgress(field, (float)Math.Min(GameDevProgress.MaximumPercent, totalAbility[index] * Rules.PercentPerAbility));
+            appliedProgress[index] = development.Progress.Get(field) - before;
         }
     }
 }

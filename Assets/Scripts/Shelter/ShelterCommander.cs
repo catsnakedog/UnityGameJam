@@ -11,7 +11,7 @@ namespace UnityGameJam.Shelter
         public Camera view;
         public TextMesh statusLabel;
         public ShelterWalker Selected { get; private set; }
-        public event System.Action<ShelterWalker> SurvivorClicked;
+        public event System.Action<ShelterWalker> SelectionChanged;
         public string Message { get; private set; } = "CLICK A SURVIVOR, THEN CLICK A ROOM";
         private ShelterArea rejected;
         private float rejectedUntil;
@@ -90,18 +90,14 @@ namespace UnityGameJam.Shelter
             var hit = SurvivorAt(point);
             if (hit != null)
             {
-                ClearRejected();
                 if (Selected && Selected != hit && !Selected.IsMovementLocked && hit.NeedsRescue)
                 {
+                    ClearRejected();
                     bool accepted = Selected.TryRescue(hit);
                     Message = accepted ? hit.characterName + " 구조 중 · 수면실로 이동" : Selected.RoomOrderFailure ?? "현재 구조할 수 없습니다";
                     return accepted;
                 }
-                if (Selected != null) Selected.SetSelected(false);
-                Selected = hit;
-                Selected.SetSelected(true);
-                Message = hit.characterName + " SELECTED - CLICK A ROOM";
-                SurvivorClicked?.Invoke(hit);
+                SelectSurvivor(hit);
                 return true;
             }
             if (navigation == null) return false;
@@ -124,8 +120,29 @@ namespace UnityGameJam.Shelter
                 Message = Selected.RoomOrderFailure ?? (Selected.IsRescuing ? "부상자를 구조하고 있습니다" : Selected.IsMovementLocked ? "전투 중이거나 탈진하여 이동할 수 없습니다" : "NO ROUTE TO " + destination.displayName);
                 return false;
             }
-            Message = Selected.characterName + "  >  " + destination.displayName;
+            SetSelection(null, Selected.characterName + "  >  " + destination.displayName);
             return true;
+        }
+
+        internal void SelectSurvivor(ShelterWalker survivor)
+        {
+            if (!survivor || !survivor.isActiveAndEnabled || !survivor.playerSelectable) return;
+            SetSelection(survivor, survivor.characterName + " SELECTED - CLICK A ROOM");
+        }
+
+        internal void DeselectSurvivor()
+        {
+            if (Selected) SetSelection(null, "CLICK A SURVIVOR, THEN CLICK A ROOM");
+        }
+
+        void SetSelection(ShelterWalker survivor, string message)
+        {
+            ClearRejected();
+            if (Selected) Selected.SetSelected(false);
+            Selected = survivor;
+            if (Selected) Selected.SetSelected(true);
+            Message = message;
+            SelectionChanged?.Invoke(survivor);
         }
 
         private void ClearRejected()

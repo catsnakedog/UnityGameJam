@@ -31,14 +31,14 @@ namespace UnityGameJam.Shelter
 
         void OnEnable()
         {
-            commander.SurvivorClicked += Select;
+            commander.SelectionChanged += Select;
             closeButton.onClick.AddListener(Close);
             Select(commander.Selected);
         }
 
         void OnDisable()
         {
-            commander.SurvivorClicked -= Select;
+            commander.SelectionChanged -= Select;
             closeButton.onClick.RemoveListener(Close);
             Close();
         }

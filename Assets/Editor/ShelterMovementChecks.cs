@@ -36,7 +36,12 @@ public static class ShelterMovementChecks
             Check(lift.Stops.SequenceEqual(new[] { 0f, 4f, 8f }), "Three floors auto-discovered from area placement");
             Check(!commander.ClickWorld(new Vector2(0, 10)), "Room command needs selected character");
             Check(commander.ClickWorld(new Vector2(-4, 1)) && commander.Selected == a, "Character selection precedes room selection");
-            Check(commander.ClickWorld(new Vector2(0, 10)) && a.Destination == upper, "Click room creates automatic elevator route");
+            var movementLock = new object();
+            a.AcquireMovementLock(movementLock);
+            Check(!commander.ClickWorld(new Vector2(0, 10)) && commander.Selected == a, "Rejected move keeps the survivor selected");
+            a.ReleaseMovementLock(movementLock);
+            Check(commander.ClickWorld(new Vector2(0, 10)) && a.Destination == upper && !commander.Selected,
+                "Accepted room move starts the elevator route and clears selection");
             Check(lift.Owner == a && !lift.TryBoard(b), "An actor without a request cannot board");
             b.MoveTo(lower); c.MoveTo(middle);
             Check(lift.QueueCount == 3 && lift.Owner == a, "Opposite-floor callers queue behind first owner");

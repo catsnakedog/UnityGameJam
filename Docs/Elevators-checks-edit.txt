@@ -1,7 +1,8 @@
 PASS Three floors auto-discovered from area placement
 PASS Room command needs selected character
 PASS Character selection precedes room selection
-PASS Click room creates automatic elevator route
+PASS Rejected move keeps the survivor selected
+PASS Accepted room move starts the elevator route and clears selection
 PASS An actor without a request cannot board
 PASS Opposite-floor callers queue behind first owner
 PASS Owner boards cabin and begins trip

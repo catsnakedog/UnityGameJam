@@ -152,8 +152,31 @@ namespace ShelterRun.Editor
             Check(s.Rules.Duration == duration && s.Remaining == duration,
                 $"Ready timer matches the saved FarmingRules duration ({duration}s)");
             Check(s.Pickups.All(x => ImageOf(x).color.a == 0) && ImageOf(p).color.a == 1, "Only the player is visible in the corridor at startup");
+            float preparationStarted = Time.time;
+            s.Begin();
+            Check(s.Phase == FarmingPhase.Preparing && s.PreparationRemaining == s.Rules.PreparationDuration, "Start opens the configured preparation countdown");
+            yield return null;
+            yield return null;
+            var beforeWalk = p.transform.position;
+            p.Move(Vector2.right, .1f);
+            Check(p.transform.position.x > beforeWalk.x, "Can walk during preparation");
+            Door(p, entrances[0]);
+            foreach (var type in new[] { FarmingObjectType.Person, FarmingObjectType.Item })
+            {
+                var target = s.Pickups.First(x => x.Record.Type == type && map.RoomAt(x.transform.position) == map.ActiveRoom);
+                Place(p, target.transform.position);
+                p.Interact();
+                s.Deposit(target);
+                Check(!p.Focused && target.State == PickupState.Available && p.Inventory.Used == 0 && s.SecuredIds.SequenceEqual(new[] { starter }),
+                    "Preparation blocks pickup and deposit of " + type);
+            }
+            Door(p, entrances[0].Target);
+            Check(s.Remaining == duration && s.PreparationRemaining < s.Rules.PreparationDuration, "Exploring spends only preparation time");
+            var chosenStart = p.transform.position;
+            while (s.Phase == FarmingPhase.Preparing) yield return null;
             float started = Time.time;
-            s.Begin();yield return null;yield return null;
+            Check(Mathf.Abs(started - preparationStarted - s.Rules.PreparationDuration) < 1 && s.Phase == FarmingPhase.Running &&
+                p.transform.position == chosenStart && s.PreparationRemaining == 0, "Preparation ends automatically at the player's chosen position");
             CheckPlayerAnimation(p, starter);
             Place(p, new Vector3(13, map.Corridor.GroundY, 0));
             p.Interact();

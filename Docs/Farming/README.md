@@ -1,6 +1,6 @@
 # 파밍 프로토타입
 
-`Assets/Scenes/Farming.unity`를 열어 Play 후 **E** 또는 시작 버튼으로 파밍을 시작합니다. 시작 화면에 표시되는 제한시간은 [FarmingRules](../DataSpecs/FarmingRules.md)의 Duration에서 읽습니다.
+`Assets/Scenes/Farming.unity`를 열어 Play 후 **E** 또는 시작 버튼을 누르면 준비가 시작됩니다. HUD 제목이 **파밍 준비**로 바뀌고 숫자와 게이지가 남은 준비 시간을 표시합니다. 15초 동안 A / D로 움직이거나 E로 방을 드나들며 경로를 살펴볼 수 있습니다. 준비가 끝나면 현재 위치에서 30초의 구조 시간이 시작되고 사람과 물자를 들 수 있습니다. 두 시간은 [FarmingRules](../DataSpecs/FarmingRules.md)에서 각각 조정합니다.
 
 | 입력 | 동작 |
 | --- | --- |
