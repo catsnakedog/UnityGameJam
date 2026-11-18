@@ -93,6 +93,7 @@ public class CharacterIdentityEditor : Editor
 {
     public override void OnInspectorGUI()
     {
+        DrawDefaultInspector();
         var actor = (CharacterIdentity)target;
         if (actor.Definition == null) { EditorGUILayout.HelpBox("Populated from Characters.csv after rescue.", MessageType.Info); return; }
         EditorGUILayout.LabelField("ID", actor.Id);

@@ -65,11 +65,15 @@ namespace UnityGameJam.Characters
             RefreshStatusLabel();
         }
         public int ClampMental(long value) => (int)System.Math.Max(0, System.Math.Min(rules ? rules.MentalMaximum : int.MaxValue, value));
+        [SerializeField] UnityEngine.UI.Image mentalFill;
+
         public void RefreshStatusLabel()
         {
             var walker = GetComponent<ShelterWalker>();
             if (walker && walker.nameLabel && Definition != null)
-                walker.nameLabel.text = Definition.DisplayName + "\n멘탈 " + CurrentMental + (CanAct ? "" : " · 탈진 " + FaintTicksRemaining + "T");
+                walker.nameLabel.text = CanAct ? Definition.DisplayName : Definition.DisplayName + " · 탈진";
+            if (mentalFill)
+                mentalFill.fillAmount = rules ? (float)CurrentMental / rules.MentalMaximum : 0f;
         }
         public void Initialize(CharacterDefinition definition)
         {

@@ -8,6 +8,10 @@
 
 Windows 번들로 불러온 값 50과 6인의 51·50·0 전환을 확인했다. [원화 반영 방법](../SurvivorAnimation.md) · [검증 기록](../DataHistory/20261119-survivor-animation-verified.md)
 
+## 벙커 시계와 머리 위 멘탈 바
+
+`DevGageUI`는 시뮬레이션의 `CurrentTick`과 `Rules.TotalTicks`에서 하루의 경과 비율을 계산한다. 표시할 분은 `floor(CurrentTick × 1440 / TotalTicks)`이며 마지막 틱은 24:00이다. `CharacterIdentity`는 생존자마다 `CurrentMental / Rules.MentalMaximum`을 머리 위 바에 표시한다. 두 비율은 씬 수명 동안 계산하며 게임 데이터에 저장하지 않는다. [배치·이미지·검수](../UI/DevGageUI.md)
+
 ## 개발 효율과 작업 멘탈
 
 현재 SO 값과 실제 벙커 씬에서의 결과는 [작업 멘탈 검증 기록](../DataHistory/20261118-work-mental-02-verified.md)에 있다.

@@ -10,6 +10,8 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityGameJam.GameDev;
+using UnityGameJam.Characters;
+using UnityGameJam.Shelter;
 
 public static class GameDevChecks
 {
@@ -57,9 +59,45 @@ public static class GameDevChecks
         Check(prefab != null && prefab.GetComponent<DevGageUI>() != null, "Serialized UI prefab exists outside Play", checks);
         Check(prefab.GetComponentsInChildren<Image>(true).All(i => i.sprite != null), "Every UI Image has a real Sprite", checks);
         Check(prefab.GetComponentsInChildren<TMP_Text>(true).All(t => t.font != null), "All labels have the Korean font", checks);
-        Check(prefab.GetComponentsInChildren<Image>(true).Count(i => i.type == Image.Type.Filled) == 3, "Three stored horizontal progress fills", checks);
+        Check(prefab.GetComponentsInChildren<Image>(true).Count(i => i.type == Image.Type.Filled && i.fillMethod == Image.FillMethod.Horizontal) == 3, "Three stored horizontal progress fills", checks);
         Check(prefab.GetComponentsInChildren<Transform>(true).All(t => GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject) == 0), "No missing scripts in prefab", checks);
         return Report("Edit", checks);
+    }
+
+    public static string CheckShelterHud()
+    {
+        var checks = new List<string>();
+        var hud = AssetDatabase.LoadAssetAtPath<GameObject>(GameDevSetup.PrefabPath);
+        var viewport = hud.transform.Find("Viewport 1920x1080");
+        var panel = viewport.Find("Development panel");
+        var fields = new[] { "Planning", "Programming", "Graphics" }
+            .Select(name => (RectTransform)panel.Find(name)).ToArray();
+        for (int i = 0; i < fields.Length; i++)
+        {
+            var field = fields[i];
+            var fill = field.Find("Track/Fill").GetComponent<Image>();
+            Check(fill.sprite && fill.type == Image.Type.Filled && fill.fillMethod == Image.FillMethod.Horizontal,
+                field.name + " has its own horizontal fill", checks);
+            if (i > 0)
+                Check(field.anchoredPosition.y == fields[0].anchoredPosition.y &&
+                    field.anchoredPosition.x > fields[i - 1].anchoredPosition.x + fields[i - 1].rect.width,
+                    field.name + " shares the row with a gap", checks);
+        }
+
+        var dial = viewport.Find("Shelter clock");
+        var arc = dial.Find("Elapsed day").GetComponent<Image>();
+        var time = dial.Find("Time").GetComponent<TMP_Text>();
+        var ui = new SerializedObject(hud.GetComponent<DevGageUI>());
+        Check(arc.sprite && arc.type == Image.Type.Filled && arc.fillMethod == Image.FillMethod.Radial360 &&
+            arc.fillOrigin == (int)Image.Origin360.Top && arc.fillClockwise && ui.FindProperty("clockFill").objectReferenceValue == arc &&
+            time.font && ui.FindProperty("clockTime").objectReferenceValue == time, "Clock artwork, radial fill and time are bound", checks);
+
+        var survivor = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Shelter/Survivor.prefab");
+        var identity = survivor.GetComponent<CharacterIdentity>();
+        var mental = (Image)new SerializedObject(identity).FindProperty("mentalFill").objectReferenceValue;
+        Check(mental && mental.sprite && mental.type == Image.Type.Filled && mental.fillMethod == Image.FillMethod.Horizontal &&
+            mental.GetComponentInParent<Canvas>().renderMode == RenderMode.WorldSpace, "Survivor world-space mental gauge is bound", checks);
+        return string.Join("\n", checks);
     }
 
     public static async Task<string> RunPlay()
@@ -145,7 +183,7 @@ public static class GameDevChecks
             AssetDatabase.TryGetGUIDAndLocalFileIdentifier(updated, out string updatedGuid, out long updatedId);
             if (guid != updatedGuid || localId != updatedId) throw new InvalidOperationException("Sprite identity changed.");
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GameDevSetup.PrefabPath);
-            if (prefab.GetComponentsInChildren<Image>(true).Where(i => i.type == Image.Type.Filled).Any(i => i.sprite != updated))
+            if (prefab.GetComponentsInChildren<Image>(true).Where(i => i.type == Image.Type.Filled && i.fillMethod == Image.FillMethod.Horizontal).Any(i => i.sprite != updated))
                 throw new InvalidOperationException("A progress fill lost its Sprite reference.");
         }
         finally

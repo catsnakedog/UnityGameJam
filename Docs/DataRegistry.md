@@ -22,6 +22,8 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 음식·장비 작업(Codex, 2026-11-18) 완료. 기존 `data.farming.pickups`와 `data.shelter.items`의 공통 행 `canfood`를 독립 통조림으로 연결했다. 허기·회분은 `data.bunker.rules`에서 편집한다. [검증 및 편집 위치](DataHistory/20261118-hunger-02-verified.md).
 
+벙커 HUD의 24시간 시계와 생존자 머리 위 멘탈 바는 기존 `data.bunker.rules`의 전체 틱·멘탈 상한과 플레이 중의 현재 틱·멘탈을 읽는다. [화면 명세](UI/DevGageUI.md) · [소비 연결 이력](DataHistory/20261119-shelter-hud.md)
+
 벙커 캐릭터 정보 카드는 기존 `data.characters`의 이름·직군·네 가지 능력과 `data.bunker.rules`의 멘탈 상한을 읽는다. 현재 멘탈은 선택한 캐릭터의 런타임 상태다. [화면 명세](UI/ShelterCharacterCard.md) · [검증](DataHistory/20261118-shelter-character-card-verified.md)
 
 벙커 가방은 `data.farming.pickups`의 투입 결과와 `data.shelter.items`의 이벤트 재고를 함께 읽는다. 같은 종류를 여러 개 보유하면 개수만큼 슬롯을 표시한다. [가방 UI](UI/ShelterInventory.md) · [연동 검증](DataHistory/20261118-shelter-inventory-verified.md)
