@@ -36,6 +36,10 @@ PASS: Wheel down reverses a wheel-up step
 PASS: Arrow panning cannot break follow lock
 PASS: Y keeps current view when character moves away
 PASS: Arrow input moves free camera
+PASS: W moves free camera
+PASS: A moves free camera
+PASS: S moves free camera
+PASS: D moves free camera
 PASS: Diagonal pan speed is normalized
 PASS: (1920, 1080) maintains 16:9
 PASS: (1920, 1080) pans at rendered viewport edges
@@ -61,5 +65,5 @@ PASS: Zoom out stops at the configured maximum
 PASS: Sparse rescue roster keeps stable slots 2 and 6
 PASS: Reload clears follow state and missing slot is harmless
 PASS: Fresh scene starts in free camera mode
-PASS: A new approaching zombie is inside the playable view on its spawn frame
+PASS: Zombie spawn preserves free camera position and zoom
 PASS: Incoming waves respect an explicit follow lock

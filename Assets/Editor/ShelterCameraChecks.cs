@@ -137,6 +137,13 @@ public static class ShelterCameraChecks
             Check(Near(camera.transform.position, lockedPosition), "Y keeps current view when character moves away");
             KeyPress(Key.RightArrow);
             Check(camera.transform.position.x > lockedPosition.x, "Arrow input moves free camera");
+            foreach (var input in new[] { (Key.W, Vector2.up), (Key.A, Vector2.left), (Key.S, Vector2.down), (Key.D, Vector2.right) })
+            {
+                camera.transform.position = new Vector3(0, 9, -10);
+                var before = camera.transform.position;
+                KeyPress(input.Item1);
+                Check(Vector2.Dot(camera.transform.position - before, input.Item2) > 0, input.Item1 + " moves free camera");
+            }
             camera.transform.position = new Vector3(0, 9, -10);
             camera.Pan(new Vector2(1, 1), 0.1f);
             Check(Mathf.Abs(Vector3.Distance(camera.transform.position, new Vector3(0, 9, -10)) - camera.panSpeed * 0.1f) < 0.001f, "Diagonal pan speed is normalized");
@@ -222,12 +229,13 @@ public static class ShelterCameraChecks
             await invasion.InitializeAsync();
             invasion.Simulation.Paused = false;
             await WaitFor(() => invasion.CanAdvance);
+            camera.Pan(Vector2.right, 1000);
+            var beforeSpawn = camera.transform.position;
+            var beforeSpawnSize = camera.GetComponent<Camera>().orthographicSize;
             var zombie = invasion.SpawnWave();
             camera.SendMessage("LateUpdate");
-            view = camera.GetComponent<Camera>();
-            Vector3 spawnPoint = view.WorldToViewportPoint(zombie.transform.position + Vector3.up);
-            Check(spawnPoint.z > 0 && spawnPoint.x > 0.05f && spawnPoint.x < 0.95f && spawnPoint.y > 0.1f && spawnPoint.y < 0.9f,
-                "A new approaching zombie is inside the playable view on its spawn frame");
+            Check(zombie && Near(camera.transform.position, beforeSpawn) && camera.GetComponent<Camera>().orthographicSize == beforeSpawnSize,
+                "Zombie spawn preserves free camera position and zoom");
             camera.Unlock();
             camera.PressCharacterSlot(1); camera.PressCharacterSlot(1);
             invasion.SpawnWave();

@@ -129,7 +129,6 @@ namespace UnityGameJam.Shelter
             if (item == null && (!counts.TryGetValue(supply.Id, out int count) || count <= 0)) return false;
             if (supply.UseKind == "mental")
             {
-                if (!Rules.IsMentalConsumable(supply.Id)) return false;
                 int mental = actor.ClampMental((long)actor.CurrentMental + supply.MentalRestore);
                 if (mental == actor.CurrentMental) return false;
                 actor.SetMental(mental);

@@ -28,12 +28,10 @@ namespace UnityGameJam.Shelter
         [SerializeField, Range(0, HungerCapacity), Tooltip("감소 시 비우는 칸 수")] int hungerLoss;
         [SerializeField, Range(1, HungerCapacity), Tooltip("통조림 한 입으로 채우는 칸 수")] int foodRestore;
         [SerializeField, Min(1), Tooltip("새 통조림 한 개의 사용 횟수")] int servingsPerCan;
-        [SerializeField] string[] usableMentalSupplyIds;
         public int HungerEveryTicks => hungerEveryTicks;
         public int HungerLoss => hungerLoss;
         public int FoodRestore => foodRestore;
         public int ServingsPerCan => servingsPerCan;
-        public bool IsMentalConsumable(string id) => usableMentalSupplyIds != null && Array.IndexOf(usableMentalSupplyIds, id) >= 0;
         [SerializeField, Min(0.001f)] double evaluationTargetProgress;
         [SerializeField, Min(1)] int evaluationReferenceTicks;
         public double EvaluationTargetProgress => evaluationTargetProgress;

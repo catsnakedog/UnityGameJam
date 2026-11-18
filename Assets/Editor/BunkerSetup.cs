@@ -41,9 +41,6 @@ public static class BunkerSetup
             data.FindProperty("hungerLoss").intValue = 1;
             data.FindProperty("foodRestore").intValue = 5;
             data.FindProperty("servingsPerCan").intValue = 4;
-            var mentalItems = data.FindProperty("usableMentalSupplyIds");
-            mentalItems.arraySize = 1;
-            mentalItems.GetArrayElementAtIndex(0).stringValue = "choco";
             data.FindProperty("faintDurationTicks").intValue = 40;
             data.FindProperty("wakeMental").intValue = 30;
             // Initial authoring only; the existing SO remains the editable source of truth.

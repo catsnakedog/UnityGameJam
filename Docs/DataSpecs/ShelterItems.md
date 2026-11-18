@@ -7,13 +7,13 @@
 | id | string | 필수, 소문자로 시작하고 소문자·숫자·밑줄 사용. 테이블 내 고유, 기본값 없음 |
 | displayName | string | 필수 표시명. 빈 값과 공백만 있는 이름은 거부 |
 | useKind | string | 필수. mental은 멘탈 물자, hunger는 통조림, attack과 buff는 장비 |
-| mentalRestore | int | 필수, 0 이상, 사용 1회당 멘탈 포인트. 실제 사용 대상은 [벙커 규칙](BunkerRules.md)의 usableMentalSupplyIds에서 지정 |
+| mentalRestore | int | 필수, 0 이상. useKind가 mental인 물자를 한 번 사용할 때 회복하는 멘탈 포인트 |
 | sourceEvent | string | 선택, 빈 값은 미정. 게시된 Events.id 또는 같은 ID의 파밍 물자가 있는 경우 예정된 사건 ID를 허용 |
 | rank | string | 등급 표기. 현재 normal, rare, legend. FarmingSpawnLayout이 같은 파밍 ID의 rank를 조회하며 legend에 [거리순 방 가중치](FarmingRules.md)를 적용한다. |
 | plusAttack | int | 필수, 0 이상. 장착자의 전투에 더하는 포인트. 소비 물자는 0 |
 | plusSkill | int | 필수, 0 이상. 장착자의 기획·프로그래밍·아트 각각에 더하는 포인트. 소비 물자는 0 |
 
-수치에 빈 값 또는 암묵적 기본값은 없다. 초콜렛과 카페인 알약은 각각 멘탈 10·20을 회복한다. 몬스터와 박카스는 가방에 보관하고 이벤트가 수량을 참조할 수 있다. 통조림의 허기 회복량과 회분은 벙커 규칙에서 읽는다. 카페인 알약은 파밍으로 얻으며 `ev_caffeine`은 이벤트 기획용 참조다.
+수치에 빈 값 또는 암묵적 기본값은 없다. 가방에서 초콜렛·몬스터·박카스를 사용하면 멘탈 10, 카페인 알약을 사용하면 20을 회복한다. 상한까지 필요한 만큼 회복하며 이미 가득 차면 물자를 보존한다. 이벤트는 남은 수량을 참조한다. 통조림의 허기 회복량과 회분은 벙커 규칙에서 읽는다. 카페인 알약은 파밍으로 얻으며 `ev_caffeine`은 이벤트 기획용 참조다.
 
 ## 조회와 수명
 

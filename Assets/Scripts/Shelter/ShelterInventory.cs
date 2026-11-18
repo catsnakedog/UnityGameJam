@@ -101,7 +101,7 @@ namespace UnityGameJam.Shelter
                 else if (entry.Supply?.IsEquipment == true)
                     detail = "생존자에게 장착 · 교체\n카드에서 두 번 눌러 해제";
                 else if (entry.Supply != null)
-                    detail = (supplies.Rules.IsMentalConsumable(entry.Id) ? $"멘탈 +{entry.Supply.MentalRestore}" : "보관 물자") + $"\n보유 {entry.Count:N0}개";
+                    detail = $"멘탈 +{entry.Supply.MentalRestore}\n보유 {entry.Count:N0}개";
                 else
                     detail = $"운반 비용 {entry.Pickup.Weight}칸\n보관 물자";
                 int visible = (int)Math.Min(entry.Count - skip, slots.Length - cell);

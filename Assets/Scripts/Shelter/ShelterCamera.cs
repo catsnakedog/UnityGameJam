@@ -40,7 +40,6 @@ namespace UnityGameJam.Shelter
 
         Camera view;
         ZombieInvasionController invasion;
-        ZombieAgent pendingSpawn;
         float zoomScale = 1f;
         Rect mapBounds;
         bool hasMapBounds;
@@ -52,7 +51,6 @@ namespace UnityGameJam.Shelter
             view = GetComponent<Camera>();
             zoomScale = 1f;
             ApplyFraming();
-            if (invasion) invasion.ZombieSpawned += OnZombieSpawned;
         }
 
         void Start()
@@ -65,7 +63,6 @@ namespace UnityGameJam.Shelter
                 if (!commander) commander = root.GetComponentInChildren<ShelterCommander>();
                 if (!invasion) invasion = root.GetComponentInChildren<ZombieInvasionController>();
             }
-            if (invasion) invasion.ZombieSpawned += OnZombieSpawned;
             RefreshMapBounds();
         }
 
@@ -82,12 +79,9 @@ namespace UnityGameJam.Shelter
 
         void OnDisable()
         {
-            if (invasion) invasion.ZombieSpawned -= OnZombieSpawned;
-            pendingSpawn = null;
             Unlock();
         }
 
-        void OnZombieSpawned(ZombieAgent zombie) => pendingSpawn = zombie;
         void OnApplicationFocus(bool focused) { if (!focused) previousSlot = 0; }
 
         void Update()
@@ -131,8 +125,10 @@ namespace UnityGameJam.Shelter
             Vector2 direction = Vector2.zero;
             if (keyboard != null)
             {
-                direction.x = (keyboard.rightArrowKey.isPressed ? 1f : 0f) - (keyboard.leftArrowKey.isPressed ? 1f : 0f);
-                direction.y = (keyboard.upArrowKey.isPressed ? 1f : 0f) - (keyboard.downArrowKey.isPressed ? 1f : 0f);
+                direction.x = (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed ? 1f : 0f)
+                            - (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed ? 1f : 0f);
+                direction.y = (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed ? 1f : 0f)
+                            - (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed ? 1f : 0f);
             }
             if (edgePan && inViewport && (!EventSystem.current || !EventSystem.current.IsPointerOverGameObject()))
                 direction += EdgeDirection(pointer, view.pixelRect);
@@ -145,23 +141,6 @@ namespace UnityGameJam.Shelter
             if (!Application.isPlaying) return;
             if (IsFollowing) MoveCentre((Vector2)FollowTarget.transform.position + characterOffset);
             else if (FollowTarget) Unlock();
-            if (pendingSpawn && !InputBlocked())
-            {
-                if (!IsFollowing) RevealSpawn(pendingSpawn);
-                pendingSpawn = null;
-            }
-        }
-
-        void RevealSpawn(ZombieAgent zombie)
-        {
-            Vector2 centre = (Vector2)zombie.transform.position + Vector2.up;
-            Vector3 point = view.WorldToViewportPoint(centre);
-            if (point.x >= 0.1f && point.x <= 0.8f && point.y >= 0.15f && point.y <= 0.85f) return;
-
-            // Leave room ahead of the zombie so its approach is visible at the player's current zoom.
-            float leadLimit = view.orthographicSize * view.aspect * 0.75f;
-            centre.x += Mathf.Clamp((zombie.Doorway.x - centre.x) * 0.5f, -leadLimit, leadLimit);
-            MoveCentre(centre);
         }
 
         void ApplyFraming()

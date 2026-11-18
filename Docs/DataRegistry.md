@@ -12,7 +12,7 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 파밍 무작위 배치는 기존 `data.farming.rules`의 거리순 방별 인원과 레전드 가중치를 사용한다. 생성 대상은 `data.farming.pickups`, 물자 등급은 `data.shelter.items.rank`에서 조회한다. [배치 규칙](DataSpecs/FarmingRules.md) · [3,000회 배치와 Play 검증](DataHistory/20261119-farming-spawns-02-verified.md)
 
-확정 아이템은 기존 `data.shelter.items`의 12종과 `data.farming.pickups`의 물자 12종으로 연결한다. 카페인 알약은 1칸이며 `data.bunker.rules`에서 드래그 사용을 허용한다. 폐기한 파밍 초안 물자 6종의 씬·가방 참조를 제거했다. [변경 및 검증](DataHistory/20261118-item-roster-02-verified.md)
+확정 아이템은 기존 `data.shelter.items`의 12종과 `data.farming.pickups`의 물자 12종으로 연결한다. 멘탈 회복 물자 4종은 ShelterItems의 useKind와 mentalRestore로 가방 사용 효과를 결정한다. 통조림의 회분과 허기 회복량은 `data.bunker.rules`에서 읽는다. [아이템 효과](DataSpecs/ShelterItems.md) · [기존 12종 연결](DataHistory/20261118-item-roster-02-verified.md)
 
 좀비 접근 시간 6틱과 보초 원거리 사격 주기 2틱은 `data.bunker.rules`가 담당한다. `data.zombies`는 좀비의 공용 보행 속도와 근접전 주기를 공급한다. [벙커 규칙](DataSpecs/BunkerRules.md) · [거리·사격 검증](DataHistory/20261119-zombie-volley-02-verified.md)
 

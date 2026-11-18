@@ -75,7 +75,6 @@ Windows 번들로 불러온 값 50과 6인의 51·50·0 전환을 확인했다. 
 | hungerLoss | int · 한 주기에 잃는 칸 | 필수, 임시 1, 0~10 |
 | foodRestore | int · 한 입으로 채우는 칸 | 필수, 5, 1~10 |
 | servingsPerCan | int · 새 통조림 한 개의 사용 횟수 | 필수, 4, 1 이상 |
-| usableMentalSupplyIds | string[] · 벙커 물자 ID | 드래그로 멘탈을 회복할 수 있는 기존 mental 물자. 현재 choco와 caffeine. monster와 bacchus는 보관 전용 |
 
 허기와 남은 회분, 장착물은 플레이 상태다. 시뮬레이션 재시작 시 개인 허기와 파밍에서 가져온 재고로 복원한다. 포만 상태에서는 통조림을 소비하지 않는다. 허기가 0일 때 추가 페널티는 정의하지 않았다. 캐릭터의 멘탈과 초콜릿 회복은 기존 계약을 사용한다.
 
