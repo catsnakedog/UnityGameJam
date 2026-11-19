@@ -52,17 +52,6 @@ public static class ZombieSetup
             Set(ctrl, "simulation", simulation); Set(ctrl, "development", Find<GameDevManager>(scene).Single());
             Set(ctrl, "roster", Find<ShelterRoster>(scene).Single()); Set(ctrl, "navigation", Find<ShelterNavigation>(scene).Single());
             Set(ctrl, "zombiePrefab", AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath).GetComponent<ZombieAgent>());
-            var status = Find<TextMesh>(scene).FirstOrDefault(t => t.name == "Zombie event status");
-            if (!status)
-            {
-                var template = Find<ShelterArea>(scene).First(a => a.isActiveAndEnabled && a.nameLabel).nameLabel;
-                status = UnityEngine.Object.Instantiate(template, ctrl.transform);
-                status.name = "Zombie event status"; status.transform.position = new Vector3(-16.5f, 15.7f, -0.5f);
-                status.anchor = TextAnchor.UpperLeft; status.alignment = TextAlignment.Left;
-                status.characterSize = 0.065f; status.fontSize = 48; status.color = new Color(0.92f, 0.55f, 0.43f);
-                status.text = string.Empty;
-            }
-            Set(ctrl, "statusLabel", status);
             EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
         }
         finally

@@ -25,3 +25,7 @@
 
 행 순서는 자유이며 한 행을 삭제하면 후보 하나가 제거된다. 후보가 없는 조합은 발화하지 않는다. 저장 데이터에서 대사 ID를 참조하지 않는다. Assets, ProjectSettings, Docs와 등록 목록의 예약 항목에서 dialogue·말풍선·대사와 원문을 검색했다. Characters.description은 인물 소개이고 Events는 선택지·효과이므로 양쪽 모두 상황별 대사와 중복되지 않는다. 직군은 Characters.role을 참조한다. 실제 적용 범위는 [이력](../DataHistory/20261119-shelter-dialogue.md)에 기록한다.
 추가 상황 키는 ending_bad(좀비 불평), ending_satisfied(만족한 좀비), ending_joy(개발자 축하)다. 전용 Ending 씬은 해당 후보를 ID 순서로 재생한다. Normal 연출은 기존 invade 행을 사용한다. 기쁜 대사는 같은 직군의 개발자에게 연결한다.
+
+## 주최 측 튜토리얼 방송
+
+기존 role에 `주최측`을 추가한다. 이 역할의 `tutorial_XX` 행 ID는 두 자리 재생 순서다. situation은 tutorial_start(파밍 시작 구도), tutorial_overview(복도 전체), tutorial_entrance(셔터 확대), tutorial_bag(열린 가방), tutorial_clock(시계) 중 하나다. TutorialBriefing이 공용 GameData에서 이 역할의 행만 ID 오름차순으로 읽어 클릭할 때마다 다음 문장을 표시한다. 씬에서 나가면 읽기 위치를 버린다. 순서 변경은 행 ID를 함께 조정하며 저장 키와 외부 참조는 없다. CSV 로컬 정본과 기존 DB 생성 절차를 그대로 사용한다. 등록 목록·Assets·ProjectSettings·Docs에서 튜토리얼, speaker, 원문의 첫 문장과 주최측을 검색했다. Events의 라디오 선택지는 별개이며 튜토리얼 문장이나 순서와 겹치는 원본은 발견되지 않았다.

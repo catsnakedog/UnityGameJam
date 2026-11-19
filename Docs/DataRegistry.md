@@ -6,7 +6,7 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 ## 등록된 데이터
 
-- `data.shelter.dialogue` · active · Codex dialogue-20261119 · 벙커 상황별 발화 후보 · 정본 [ShelterDialogue.csv](../Assets/Settings/Data/Csv/ShelterDialogue.csv) · [명세](DataSpecs/ShelterDialogue.md) · [적용 이력](DataHistory/20261119-shelter-dialogue.md)
+- `data.shelter.dialogue` · active · Codex dialogue-20261119 · 벙커 상황별 발화 후보와 주최 측 튜토리얼 방송·화면 전환 · 정본 [ShelterDialogue.csv](../Assets/Settings/Data/Csv/ShelterDialogue.csv) · [명세](DataSpecs/ShelterDialogue.md) · [적용 이력](DataHistory/20261119-shelter-dialogue.md)
 
 벙커 작업 완료 표시는 `data.bunker.rules`의 작업 주기·효율과 `data.characters`의 장비 보정 후 능력을 거쳐 실제로 더해진 분야별 진척을 읽는다. [작업 표시](UI/WorkProgressFeedback.md) · [소비 연결 이력](DataHistory/20261119-work-progress-feedback.md)
 
@@ -41,6 +41,8 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 벙커 HUD의 24시간 시계와 생존자 머리 위 멘탈 바는 기존 `data.bunker.rules`의 전체 틱·멘탈 상한과 플레이 중의 현재 틱·멘탈을 읽는다. [화면 명세](UI/DevGageUI.md) · [소비 연결 이력](DataHistory/20261119-shelter-hud.md)
 
 벙커 캐릭터 정보 카드는 기존 `data.characters`의 이름·직군·네 가지 능력과 `data.bunker.rules`의 멘탈 상한을 읽는다. 현재 멘탈은 선택한 캐릭터의 런타임 상태다. [화면 명세](UI/ShelterCharacterCard.md) · [검증](DataHistory/20261118-shelter-character-card-verified.md)
+
+튜토리얼은 `data.shelter.dialogue.situation`에 따라 시작 구도와 전체 뷰를 전환하며, 열린 가방의 예시 물자명은 `data.shelter.items`에서 조회한다. [변경 이력](DataHistory/20261119-tutorial-views.md)
 
 벙커 가방은 `data.farming.pickups`의 투입 결과와 `data.shelter.items`의 이벤트 재고를 함께 읽는다. 같은 종류를 여러 개 보유하면 개수만큼 슬롯을 표시한다. [가방 UI](UI/ShelterInventory.md) · [연동 검증](DataHistory/20261118-shelter-inventory-verified.md)
 

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameDatabase
   m_EditorClassIdentifier: GameJam.Data::GameJam.Data.GameDatabase
   schemaVersion: 1
-  sourceHash: 4e3116efca602e7e13244d692828ff3938da0b45d95f60000d90c0d37dad07ac
+  sourceHash: e26a9910b8e6956130eb37092e51f980056660e9caa7772e8201a9b8e1d98dda
   tables:
   - name: Characters
     source: Characters.csv
@@ -1035,6 +1035,102 @@ MonoBehaviour:
       - "\uC544\uD2B8"
       - ending_joy
       - "\uC790 \uB2E4\uB4E4 \uD558\uC774\uD30C\uC774\uBE0C!"
+    - cells:
+      - tutorial_01
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_start
+      - "\uC544\uC544 - \uC8FC\uCD5C\uCE21\uC5D0\uC11C \uC54C\uB824\uB4DC\uB9BD\uB2C8\uB2E4."
+    - cells:
+      - tutorial_02
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_start
+      - "\uC624\uB298 \uAC8C\uC784\uC7BC\uC740 \uC815\uC0C1\uC801\uC73C\uB85C \uC9C4\uD589\uB429\uB2C8\uB2E4."
+    - cells:
+      - tutorial_03
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_start
+      - "\uCC38\uAC00\uC790 \uC5EC\uB7EC\uBD84\uAED8\uC11C\uB294 \uBE44\uAD50\uC801
+        \uC548\uC804\uD55C \uC9C0\uD558 \uBC99\uCEE4\uC5D0\uC11C \uAC8C\uC784\uC7BC\uC744
+        \uC9C4\uD589\uD558\uC2DC\uAC8C \uB429\uB2C8\uB2E4."
+    - cells:
+      - tutorial_04
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_overview
+      - "\uC5EC\uB7EC\uBD84\uB4E4\uC744 \uC704\uD574 \uAC1C\uBC1C\uC744 \uC704\uD55C
+        \uBC29\uC744 \uC138 \uAC1C \uC900\uBE44\uD588\uC2B5\uB2C8\uB2E4. \uAC01 \uD30C\uD2B8\uBCC4
+        \uD300\uC6D0\uC744 \uD074\uB9AD\uD55C \uD6C4 \uBC29\uC744 \uD074\uB9AD\uD574
+        \uC774\uB3D9\uC2DC\uCF1C \uAC1C\uBC1C\uC744 \uC9C4\uD589\uD574 \uC8FC\uC2ED\uC2DC\uC624."
+    - cells:
+      - tutorial_05
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_overview
+      - "\uAC1C\uBC1C \uC911\uC5D0\uB294 \uC815\uC2E0\uB825\uC758 \uC800\uD558\uAC00
+        \uCC3E\uC544\uC62C \uC218 \uC788\uC73C\uB2C8 \uC8FC\uC758\uD574 \uC8FC\uC2ED\uC2DC\uC624.
+        \uAC01 \uD300\uC6D0\uC744 \uD074\uB9AD\uD574 \uC2A4\uD0EF\uC744 \uC218\uC2DC\uB85C
+        \uD655\uC778\uD574 \uC8FC\uC2DC\uB294 \uAC83\uC744 \uCD94\uCC9C\uB4DC\uB9BD\uB2C8\uB2E4."
+    - cells:
+      - tutorial_06
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_overview
+      - "\uC815\uC2E0\uB825\uC758 \uC800\uD558\uAC00 \uCC3E\uC544\uC62C \uB54C\uC5D0\uB294
+        \uC218\uBA74\uC2E4\uC758 \uD150\uD2B8 \uC548\uC5D0\uC11C \uD68C\uBCF5\uD558\uC2E4
+        \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+    - cells:
+      - tutorial_07
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_entrance
+      - "\uAC1C\uBC1C \uC911 \uBC99\uCEE4 \uC785\uAD6C\uC5D0 \uC678\uBD80\uC778\uC774
+        \uCC3E\uC544\uC62C \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uACBD\uBCF4\uC74C\uC774
+        \uC6B8\uB824\uB3C4 \uB2F9\uD669\uD558\uC9C0 \uB9C8\uC2DC\uACE0 \uB300\uC751
+        \uAC00\uB2A5\uD55C \uC778\uB825\uC744 \uBC99\uCEE4 \uC785\uAD6C\uB85C \uBCF4\uB0B4
+        \uB300\uCC98\uD558\uC2ED\uC2DC\uC624."
+    - cells:
+      - tutorial_08
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_entrance
+      - "\uBC99\uCEE4 \uC785\uAD6C\uC5D0 \uC788\uB294 \uAC83\uB9CC\uC73C\uB85C \uC815\uC2E0\uB825\uC758
+        \uC800\uD558\uAC00 \uC2EC\uD558\uAC8C \uCC3E\uC544\uC62C \uC218 \uC788\uC73C\uB2C8
+        \uC8FC\uC758\uD574 \uC8FC\uC2ED\uC2DC\uC624."
+    - cells:
+      - tutorial_09
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_bag
+      - "\uC0C1\uCE35\uC5D0\uC11C \uAC00\uC838\uC624\uC2E0 \uB2E4\uACFC\uB098 \uB3C4\uAD6C\uB294
+        \uBD80\uB514 \uC6B0\uCE21 \uD558\uB2E8 \uAC00\uBC29\uC744 \uD1B5\uD574 \uD3B8\uD558\uAC8C
+        \uC774\uC6A9\uD574 \uC8FC\uC2ED\uC2DC\uC624."
+    - cells:
+      - tutorial_10
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_bag
+      - "\uAC1C\uC911\uC5D0\uB294 \uC815\uC2E0\uB825\uC744 \uB192\uC5EC\uC8FC\uB294
+        \uBB3C\uD488\uC774 \uC788\uACE0, \uC2A4\uD0EF\uC744 \uB192\uC5EC\uC8FC\uB294
+        \uBB3C\uD488\uC774 \uC788\uC73C\uB2C8 \uC0C1\uD669\uC5D0 \uB9DE\uAC8C \uC0AC\uC6A9\uD574
+        \uC8FC\uC2ED\uC2DC\uC624."
+    - cells:
+      - tutorial_11
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_clock
+      - "\uB9C8\uC9C0\uB9C9\uC73C\uB85C \uC88C\uCE21 \uC0C1\uB2E8\uC758 \uC2DC\uACC4\uB97C
+        \uD1B5\uD574 \uAC8C\uC784\uC7BC \uC77C\uC815\uC744 \uC798 \uC219\uC9C0\uD558\uC2DC\uAE30
+        \uBC14\uB78D\uB2C8\uB2E4."
+    - cells:
+      - tutorial_12
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_clock
+      - "\uB9E4 6\uC2DC\uAC04\uB9C8\uB2E4 \uC788\uB294 \uC911\uAC04 \uD3C9\uAC00\uC758
+        \uC810\uC218\uC5D0 \uB530\uB77C \uC815\uC2E0\uB825 \uC218\uCE58\uAC00 \uD06C\uAC8C
+        \uBCC0\uD558\uB2C8 \uC8FC\uC758 \uBD80\uD0C1\uB4DC\uB9BD\uB2C8\uB2E4."
+    - cells:
+      - tutorial_13
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_start
+      - "\uACF5\uC9C0\uC0AC\uD56D\uC740 \uC774\uC0C1\uC785\uB2C8\uB2E4."
+    - cells:
+      - tutorial_14
+      - "\uC8FC\uCD5C\uCE21"
+      - tutorial_start
+      - "24\uC2DC\uAC04 \uD6C4, \uBA4B\uC9C4 \uAC8C\uC784\uACFC \uD568\uAED8 \uB2E4\uC2DC
+        \uBD59\uACA0\uC2B5\uB2C8\uB2E4. \uC218\uACE0\uD558\uC2ED\uC2DC\uC624."
   - name: ShelterItems
     source: ShelterItems.csv
     keyIndex: 0

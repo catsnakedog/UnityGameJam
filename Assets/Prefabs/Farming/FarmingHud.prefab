@@ -2981,6 +2981,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShelterRun.FarmingHud
   missionTitle: {fileID: 2824970782050928397}
+  timerLabel: {fileID: 7944701541217965160}
   timerText: {fileID: 1669007457588693281}
   timeFill: {fileID: 4644934306165255122}
   capacityText: {fileID: 2390083653159401725}

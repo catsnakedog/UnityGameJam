@@ -80,8 +80,6 @@ public static class ShelterPrototypeBuilder
         camera.nearClipPlane = 0.1f;
         camera.farClipPlane = 100f;
 
-        var notes = new GameObject("05 - World-space prototype notes").transform;
-        Label("Arrow instructions", notes, "", -13.2f, -2.1f, 0.12f, Hex("879493"));
 
         ShelterNavigationSetup.ConfigureScene();
         EditorSceneManager.SaveScene(scene, ScenePath);

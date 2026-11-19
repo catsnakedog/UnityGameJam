@@ -9964,38 +9964,6 @@ MonoBehaviour:
     - m_ControlPath: <XRController>
       m_Flags: 0
   m_IsProjectWide: 0
---- !u!1 &267312569
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 267312570}
-  m_Layer: 0
-  m_Name: 05 - World-space prototype notes
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &267312570
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 267312569}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 950740329}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &270075877
 GameObject:
   m_ObjectHideFlags: 0
@@ -16925,7 +16893,7 @@ GameObject:
   m_Component:
   - component: {fileID: 512924132}
   m_Layer: 0
-  m_Name: Workstation - person_04
+  m_Name: Workstation - person_06
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -18953,10 +18921,10 @@ MonoBehaviour:
   roomArtwork: {fileID: 1360525078}
   roomHeader: {fileID: 1309979653}
   workstations:
-  - characterId: person_03
+  - characterId: person_05
     feet: {fileID: 677486091}
     flipArtwork: 0
-  - characterId: person_04
+  - characterId: person_06
     feet: {fileID: 512924132}
     flipArtwork: 1
   backgroundVisual: {fileID: 0}
@@ -21183,7 +21151,7 @@ GameObject:
   m_Component:
   - component: {fileID: 677486091}
   m_Layer: 0
-  m_Name: Workstation - person_03
+  m_Name: Workstation - person_05
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25810,7 +25778,7 @@ GameObject:
   m_Component:
   - component: {fileID: 861586013}
   m_Layer: 0
-  m_Name: Workstation - person_06
+  m_Name: Workstation - person_04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28178,110 +28146,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1 &950740328
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 950740329}
-  - component: {fileID: 950740331}
-  - component: {fileID: 950740330}
-  m_Layer: 0
-  m_Name: Arrow instructions
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &950740329
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 950740328}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -17, y: -1.9, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 267312570}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!102 &950740330
-TextMesh:
-  serializedVersion: 3
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 950740328}
-  m_Text: 
-  m_OffsetZ: 0
-  m_CharacterSize: 0.0336
-  m_LineSpacing: 1
-  m_Anchor: 3
-  m_Alignment: 0
-  m_TabSize: 4
-  m_FontSize: 64
-  m_FontStyle: 0
-  m_RichText: 1
-  m_Font: {fileID: 12800000, guid: 420cde58c72b43a4fb5761bbceca2927, type: 3}
-  m_Color:
-    serializedVersion: 2
-    rgba: 4287861895
---- !u!23 &950740331
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 950740328}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 420cde58c72b43a4fb5761bbceca2927, type: 3}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 30
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &956959775
 GameObject:
   m_ObjectHideFlags: 0
@@ -29391,10 +29255,10 @@ MonoBehaviour:
   roomArtwork: {fileID: 1101801559}
   roomHeader: {fileID: 1934447517}
   workstations:
-  - characterId: person_05
+  - characterId: person_03
     feet: {fileID: 1281939880}
     flipArtwork: 1
-  - characterId: person_06
+  - characterId: person_04
     feet: {fileID: 861586013}
     flipArtwork: 1
   backgroundVisual: {fileID: 0}
@@ -30615,8 +30479,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1633113323}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1042332340
@@ -30680,7 +30543,6 @@ MonoBehaviour:
   roster: {fileID: 2065576283}
   navigation: {fileID: 2065576280}
   zombiePrefab: {fileID: 3304848654683087024, guid: 18da28686bc1349439f96c4fa971a718, type: 3}
-  statusLabel: {fileID: 1633113321}
   entryDoor: {fileID: 1513285128}
   damagePopup: {fileID: 2315895421141546649, guid: c9456d241986e8c42a4e2a115918ca1b, type: 3}
 --- !u!114 &1042332344
@@ -34243,9 +34105,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.125
+    y: 0
     width: 1
-    height: 0.75
+    height: 1
   near clip plane: 0.1
   far clip plane: 100
   field of view: 60
@@ -37125,7 +36987,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1281939880}
   m_Layer: 0
-  m_Name: Workstation - person_05
+  m_Name: Workstation - person_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -46907,110 +46769,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1 &1633113320
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1633113323}
-  - component: {fileID: 1633113322}
-  - component: {fileID: 1633113321}
-  m_Layer: 0
-  m_Name: Zombie event status
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!102 &1633113321
-TextMesh:
-  serializedVersion: 3
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1633113320}
-  m_Text: 
-  m_OffsetZ: 0
-  m_CharacterSize: 0.065
-  m_LineSpacing: 1
-  m_Anchor: 0
-  m_Alignment: 0
-  m_TabSize: 4
-  m_FontSize: 48
-  m_FontStyle: 0
-  m_RichText: 1
-  m_Font: {fileID: 12800000, guid: 420cde58c72b43a4fb5761bbceca2927, type: 3}
-  m_Color:
-    serializedVersion: 2
-    rgba: 4285435115
---- !u!23 &1633113322
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1633113320}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 420cde58c72b43a4fb5761bbceca2927, type: 3}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 30
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!4 &1633113323
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1633113320}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -16.5, y: 15.7, z: -0.5}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1042332339}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1642020281
 GameObject:
   m_ObjectHideFlags: 0
@@ -58380,7 +58138,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6454229005577614352, guid: 2e6a2e71aff6e7f45af124b63e805b0d, type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 4291618270
+      value: 4280559923
       objectReference: {fileID: 0}
     - target: {fileID: 6454229005577614352, guid: 2e6a2e71aff6e7f45af124b63e805b0d, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -59864,7 +59622,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UnityGameJam.Shelter.ShelterCommander
   navigation: {fileID: 2065576280}
   view: {fileID: 1158661292}
-  statusLabel: {fileID: 950740330}
 --- !u!4 &2065576282
 Transform:
   m_ObjectHideFlags: 0
@@ -61139,7 +60896,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.5294118, g: 0.8078432, b: 0.9803922, a: 1}
-  m_Intensity: 0.03
+  m_Intensity: 0.32
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 00000000fb6890fd
@@ -62586,7 +62343,6 @@ SceneRoots:
   - {fileID: 61300724}
   - {fileID: 1682826217}
   - {fileID: 1158661293}
-  - {fileID: 267312570}
   - {fileID: 2065576282}
   - {fileID: 70110845}
   - {fileID: 2037787132}

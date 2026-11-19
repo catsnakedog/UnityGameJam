@@ -1,21 +1,23 @@
 using GameJam.Audio;
-using TMPro;
+using ShelterRun;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 [DefaultExecutionOrder(-1000)]
 public sealed class GameOptions : MonoBehaviour
 {
-    public Button launcher, close, mute;
-    public TMP_Text muteLabel;
+    public Button launcher, close;
+    [FormerlySerializedAs("mute")] public Button mainMenu;
     public Slider master, music, effects, ui, ambience;
     public GameObject modal, fallbackEvents;
     static GameOptions instance;
     GameObject previousFocus;
     float previousScale;
+    bool returningToMain;
     int closedFrame = -1;
     public static bool BlocksInput => instance && (instance.modal.activeSelf || instance.closedFrame == Time.frameCount);
 
@@ -31,12 +33,16 @@ public sealed class GameOptions : MonoBehaviour
         BindButtonSounds(gameObject);
         DontDestroyOnLoad(gameObject);
         var sound = SoundManager.Instance;
-        master.onValueChanged.AddListener(sound.SetMasterVolume);
+        master.onValueChanged.AddListener(value =>
+        {
+            sound.SetMasterVolume(value);
+            if (sound.Muted && value > 0) sound.SetMuted(false);
+        });
         music.onValueChanged.AddListener(sound.SetMusicVolume);
         effects.onValueChanged.AddListener(sound.SetSfxVolume);
         ui.onValueChanged.AddListener(sound.SetUIVolume);
         ambience.onValueChanged.AddListener(sound.SetAmbienceVolume);
-        mute.onClick.AddListener(() => { sound.SetMuted(!sound.Muted); Sync(); });
+        mainMenu.onClick.AddListener(ReturnToMain);
         close.onClick.AddListener(Close);
         launcher.onClick.AddListener(Open);
         SceneManager.sceneLoaded += SceneLoaded;
@@ -46,6 +52,7 @@ public sealed class GameOptions : MonoBehaviour
     void SceneLoaded(Scene scene, LoadSceneMode mode)
     {
         foreach (var root in scene.GetRootGameObjects()) BindButtonSounds(root);
+        if (scene.name == TitleMenu.SceneName) returningToMain = false;
         if (modal.activeSelf) Close();
         fallbackEvents.SetActive(false);
         fallbackEvents.SetActive(!FindFirstObjectByType<EventSystem>());
@@ -73,12 +80,11 @@ public sealed class GameOptions : MonoBehaviour
     void Sync()
     {
         var sound = SoundManager.Instance;
-        master.SetValueWithoutNotify(sound.MasterVolume);
+        master.SetValueWithoutNotify(sound.Muted ? 0f : sound.MasterVolume);
         music.SetValueWithoutNotify(sound.MusicVolume);
         effects.SetValueWithoutNotify(sound.SfxVolume);
         ui.SetValueWithoutNotify(sound.UIVolume);
         ambience.SetValueWithoutNotify(sound.AmbienceVolume);
-        muteLabel.text = sound.Muted ? "음소거 켜짐" : "음소거 꺼짐";
     }
 
     void Open()
@@ -92,8 +98,17 @@ public sealed class GameOptions : MonoBehaviour
         close.Select();
     }
 
+    void ReturnToMain()
+    {
+        if (returningToMain || !modal.activeSelf) return;
+        returningToMain = true;
+        FarmingRunTransfer.Reset();
+        SceneManager.LoadSceneAsync(TitleMenu.SceneName);
+    }
+
     void Close()
     {
+        if (returningToMain) return;
         modal.SetActive(false);
         Time.timeScale = previousScale;
         closedFrame = Time.frameCount;

@@ -79,8 +79,6 @@ public static class ShelterNavigationSetup
         ConfigureActor(third, graph, "NOA", 0.65f);
         TintCoat(third, ColorFrom("B08C78"));
 
-        var status = SetNote("Arrow instructions", "");
-        graph.GetComponent<ShelterCommander>().statusLabel = status;
         graph.GetComponent<ShelterCommander>().view = SceneObjects<Camera>().FirstOrDefault(c => c.CompareTag("MainCamera"));
         graph.Refresh();
         CreatePrefabs(source, SceneObjects<ShelterArea>().First(), SceneObjects<ShelterLadder>().First());
@@ -237,14 +235,6 @@ public static class ShelterNavigationSetup
         var renderer = go.GetComponent<MeshRenderer>();
         renderer.sharedMaterial = label.font.material;
         renderer.sortingOrder = 40;
-        return label;
-    }
-    private static TextMesh SetNote(string name, string text)
-    {
-        var go = GameObject.Find(name);
-        if (go == null) return null;
-        var label = go.GetComponent<TextMesh>();
-        label.text = text;
         return label;
     }
     private static Color ColorFrom(string hex) { ColorUtility.TryParseHtmlString("#" + hex, out var c); return c; }

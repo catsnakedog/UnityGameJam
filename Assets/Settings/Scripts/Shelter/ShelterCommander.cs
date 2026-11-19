@@ -10,7 +10,6 @@ namespace UnityGameJam.Shelter
     {
         public ShelterNavigation navigation;
         public Camera view;
-        public TextMesh statusLabel;
         public ShelterWalker Selected { get; private set; }
         public event System.Action<ShelterWalker> SelectionChanged;
         public string Message { get; private set; } = string.Empty;
@@ -38,7 +37,6 @@ namespace UnityGameJam.Shelter
             if (rejected == null && Selected != null && Selected.Destination != null)
                 Message = Selected.characterName + "  >  " + Selected.Destination.displayName + "  /  " + Selected.Status;
             else if (rejected == null && Selected != null && Selected.Status == "NO ROUTE") Message = "이동할 수 없습니다";
-            if (statusLabel != null) statusLabel.text = Message;
             if (navigation == null) return;
             foreach (var area in navigation.Areas)
                 area.ShowHighlight(Selected != null && Selected.Destination == area || area == rejected && Time.unscaledTime < rejectedUntil,

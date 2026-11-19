@@ -20,7 +20,6 @@ namespace UnityGameJam.Zombies
         [SerializeField] ShelterRoster roster;
         [SerializeField] ShelterNavigation navigation;
         [SerializeField] ZombieAgent zombiePrefab;
-        [SerializeField] TextMesh statusLabel;
         [SerializeField] Transform entryDoor;
         [SerializeField] CombatDamagePopup damagePopup;
 
@@ -296,7 +295,7 @@ namespace UnityGameJam.Zombies
                 foreach (var zombie in zombies.ToArray()) if (zombie) zombie.AdvanceMovement(seconds);
             RememberPositions();
         }
-        public void Report(string message) { Message = message; if (statusLabel) statusLabel.text = message; }
+        public void Report(string message) => Message = message;
         internal void NotifyKilled(ZombieAgent zombie, string attacks)
         {
             if (!zombies.Remove(zombie)) return;

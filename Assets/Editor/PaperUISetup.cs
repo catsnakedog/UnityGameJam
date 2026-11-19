@@ -159,7 +159,7 @@ internal static class PaperUISetup
                 Size(slider.Find("Fill area"),230,12); Size(slider.Find("Handle area"),230,28);
                 slider.Find("Fill area/Volume").GetComponent<Image>().color=Teal;
             }
-            ButtonStyle(Box(t,"Mute",63,389,175,50),null,21,Cream);
+            ButtonStyle(Box(t,"Main menu",63,389,175,50),null,21,Cream);
             ButtonStyle(Box(t,"Close",270,389,153,50),null,22,Cream);
             ButtonStyle(root.transform.Find("Options tab"),"Button2",20,Ink);
         });
@@ -348,7 +348,8 @@ internal static class PaperUISetup
             Caption(saved,"Saved counts",65,10,293,48,23,Ink);
             // The runtime urgency colour is drawn over this dark ink patch.
             var timer=v.Find("Timer");Rect(timer).anchoredPosition=new Vector2(-28,-72);var backing=Pic(timer,"Time backing","Button2",12,30,200,65);backing.color=new Color(.25f,.25f,.24f);backing.transform.SetAsFirstSibling();
-            Caption(timer,"Label",34,8,150,26,18,Ink,TextAlignmentOptions.Center);
+            var timerLabel = Caption(timer,"Label",34,8,150,26,18,Ink,TextAlignmentOptions.Center);
+            Field(r.GetComponent<ShelterRun.FarmingHud>(), "timerLabel", timerLabel);
             Caption(timer,"Seconds",47,35,100,53,40,Cream,TextAlignmentOptions.Center);
             Caption(timer,"Unit",143,46,38,35,20,Cream,TextAlignmentOptions.Center);
             Box(timer,"Time gauge",34,94,152,5);

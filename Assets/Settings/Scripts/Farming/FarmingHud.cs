@@ -8,6 +8,7 @@ namespace ShelterRun
     public sealed class FarmingHud : MonoBehaviour
     {
         [SerializeField] TMP_Text missionTitle;
+        [SerializeField] TMP_Text timerLabel;
         [SerializeField] TMP_Text timerText;
         [SerializeField] Image timeFill;
         [SerializeField] TMP_Text capacityText;
@@ -71,6 +72,7 @@ namespace ShelterRun
             { overlayTitle.text = "데이터를 확인해 주세요"; overlayBody.text = failure; return; }
 
             if (missionTitle) missionTitle.text = preparing ? "파밍 준비" : rescueTitle;
+            timerLabel.text = preparing ? "준비 시간" : "남은 시간";
             float remaining = preparing ? session.PreparationRemaining : session.Remaining;
             timerText.text = Mathf.CeilToInt(remaining).ToString("00");
             timerText.color = !preparing && remaining <= session.Rules.WarningSeconds ? new Color(1, 0.38f, 0.28f) : new Color(1, 0.84f, 0.51f);

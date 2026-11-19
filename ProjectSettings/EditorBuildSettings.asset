@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Ending.unity
     guid: 95685a3b2a1f5b7448227bfb3d0a8428
+  - enabled: 1
+    path: Assets/Scenes/Tutorial.unity
+    guid: 81fcf16c7bb88614aa82d832aa9620a8
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 9c451541dd2430a4c85459b9ab5d7dc3, type: 2}
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}

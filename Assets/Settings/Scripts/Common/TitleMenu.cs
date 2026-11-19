@@ -14,7 +14,7 @@ public sealed class TitleMenu : MonoBehaviour
 {
     public const string SceneName = "Title";
     public GameObject home, selection;
-    public Button start, options, quit, back, confirm;
+    public Button start, tutorial, options, quit, back, confirm;
     public Button[] candidates;
     public Image preview;
     public SpriteRenderer sampler;
@@ -32,6 +32,7 @@ public sealed class TitleMenu : MonoBehaviour
     {
         GameAudio.Music(GameSound.Title);
         start.interactable = false;
+        tutorial.onClick.AddListener(OpenTutorial);
         options.onClick.AddListener(GameOptions.Show);
         quit.onClick.AddListener(Quit);
         back.onClick.AddListener(() => SetSelection(false));
@@ -91,6 +92,13 @@ public sealed class TitleMenu : MonoBehaviour
         preview.sprite = sprite;
         preview.rectTransform.pivot = sprite.pivot / sprite.rect.size;
         preview.rectTransform.sizeDelta = sprite.rect.size * 4;
+    }
+
+    void OpenTutorial()
+    {
+        if (loading || GameOptions.BlocksInput) return;
+        loading = true;
+        SceneManager.LoadSceneAsync(TutorialBriefing.SceneName);
     }
 
     void Launch()
