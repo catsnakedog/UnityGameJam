@@ -1,0 +1,3 @@
+import {identity,sameOrigin,readControl,mutateControl,errorBody,json} from '../../../lib/control-service';
+export async function GET(request:Request){try{const actor=identity(request),query=Object.fromEntries(new URL(request.url).searchParams);return json(await readControl({operation:'context',...query},actor))}catch(e){const x=errorBody(e);return json(x,x.status)}}
+export async function POST(request:Request){try{sameOrigin(request);const actor=identity(request),raw=await request.text();if(raw.length>800000)return json({error:'요청 데이터가 너무 큽니다.'},413);const body=JSON.parse(raw);return json(await mutateControl(body,actor))}catch(e){const x=errorBody(e);return json(x,x.status)}}
