@@ -79,17 +79,21 @@ namespace UnityGameJam.Shelter
             var ray = view.ScreenPointToRay(screen);
             return Mathf.Abs(ray.direction.z) < .001f ? null : SurvivorAt(ray.GetPoint(-ray.origin.z / ray.direction.z));
         }
-        ShelterWalker SurvivorAt(Vector2 point)
+        ShelterWalker SurvivorAt(Vector2 point, bool pickingForRescue = false)
         {
             ShelterWalker hit = null;
             float nearest = float.PositiveInfinity;
+            bool hitIsPatient = false;
             foreach (var actor in FindObjectsByType<ShelterWalker>(FindObjectsSortMode.None))
             {
                 if (actor.gameObject.scene != gameObject.scene || !actor.playerSelectable || !actor.isActiveAndEnabled || !actor.ContainsClick(point)) continue;
                 float distance = Vector2.Distance(point, (Vector2)actor.transform.position + Vector2.up);
-                bool preferPatient = Mathf.Approximately(distance, nearest) && Selected && !Selected.IsMovementLocked &&
-                    actor.NeedsRescue && hit && !hit.NeedsRescue;
-                if (distance < nearest || preferPatient) { hit = actor; nearest = distance; }
+                bool patient = pickingForRescue && actor.CanBePickedUp;
+                if (hitIsPatient && !patient) continue;
+                if (patient == hitIsPatient && distance >= nearest) continue;
+                hit = actor;
+                nearest = distance;
+                hitIsPatient = patient;
             }
             return hit;
         }
@@ -97,7 +101,7 @@ namespace UnityGameJam.Shelter
         public bool ClickWorld(Vector2 point)
         {
             if (InputBlocked) { RegisterPointerSelection(null); return false; }
-            var hit = SurvivorAt(point);
+            var hit = SurvivorAt(point, Selected && !Selected.IsMovementLocked && !Selected.IsRescuing);
             if (hit != null)
             {
                 if (Selected && Selected != hit && !Selected.IsMovementLocked && hit.NeedsRescue)

@@ -28,6 +28,7 @@ namespace UnityGameJam.Events
         GameObject previousSelection;
         Page page;
         Color defaultResultColor;
+        float defaultResultFontMax, defaultResultHeight;
         public bool IsOpen => page != Page.Hidden;
         public bool ShowingPresentation => page == Page.Presentation;
         public bool ShowingResult => page == Page.EventResult || ShowingPresentation;
@@ -39,6 +40,8 @@ namespace UnityGameJam.Events
         void Awake()
         {
             defaultResultColor = resultLabel.color;
+            defaultResultFontMax = resultLabel.fontSizeMax;
+            defaultResultHeight = resultLabel.rectTransform.rect.height;
             panel.SetActive(false);
             confirm.onClick.AddListener(Confirm); yesButton.onClick.AddListener(Yes); noButton.onClick.AddListener(No);
         }
@@ -67,12 +70,12 @@ namespace UnityGameJam.Events
             elapsed=0; body.maxVisibleCharacters=0;
             SetButtons();
         }
-        public void ShowPresentation(int round, int tick, GameDevProgress progress, double score, BunkerRules.PresentationGrade grade)
+        public void ShowPresentation(GameDevProgress progress, double score, BunkerRules.PresentationGrade grade)
         {
             string progressLine = $"기획 {Percent(progress.Planning)}   프로그래밍 {Percent(progress.Programming)}   그래픽 {Percent(progress.Graphics)}";
             string summary = $"{progressLine}\n평가 점수  {score:0.000}\n팀원 1인당 기본 멘탈  {grade.MentalDelta:+0;-0;0}";
             GameAudio.Play(GameSound.Stamp);
-            Open(Page.Presentation, $"{round}차 발표  ·  {tick}틱", "중간 발표", summary);
+            Open(Page.Presentation, string.Empty, "중간 발표", summary);
             resultLabel.text = grade.Label;
             resultLabel.color = grade.Color;
             SetButtons();
@@ -87,6 +90,8 @@ namespace UnityGameJam.Events
             number.text=heading; title.text=caption; body.richText=false; body.text=content;
             body.maxVisibleCharacters=int.MaxValue;
             resultLabel.text=string.Empty; resultLabel.color=defaultResultColor;
+            resultLabel.fontSizeMax = ShowingPresentation ? 56f : defaultResultFontMax;
+            resultLabel.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, ShowingPresentation ? 72f : defaultResultHeight);
             panel.SetActive(true);
             scroll.StopMovement(); scroll.verticalNormalizedPosition=1;
             lastInputFrame=Time.frameCount;
@@ -96,7 +101,7 @@ namespace UnityGameJam.Events
         {
             confirm.gameObject.SetActive(IsTyping || ShowingResult);
             buttonLabel.text=ShowingResult?"계속":"전체 보기";
-            if (ShowingPresentation) hint.text = "ENTER · 계속";
+            if (ShowingPresentation) hint.text = string.Empty;
             else hint.text=ShowingResult?"결과 확인 후 계속됩니다":IsTyping?"ENTER 또는 SPACE · 전체 보기":"Y / N · 선택";
             yesButton.gameObject.SetActive(CanChoose); noButton.gameObject.SetActive(CanChoose);
         }

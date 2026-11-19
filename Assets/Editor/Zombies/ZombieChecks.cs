@@ -164,9 +164,16 @@ public static class ZombieChecks
             sim.Advance(0.5 * sim.Rules.SecondsPerTick);
             Ticks(travel - 2);
             Check(z.ResolvedCombats == 0 && z.Hp == z.InitialHp, "Guards wait until the zombie reaches the door");
+            var display = new SerializedObject(z);
+            var hpLabel = (TextMesh)display.FindProperty("healthLabel").objectReferenceValue;
+            var hpFill = (UnityEngine.UI.Image)display.FindProperty("healthFill").objectReferenceValue;
+            Check(hpFill.isActiveAndEnabled && hpFill.fillAmount == 1f && hpLabel.text == $"{z.Hp}/{z.InitialHp}" &&
+                hpFill.transform.position.y > z.transform.position.y, "Zombie spawns with full overhead bar and numeric HP only");
             Ticks(1);
             Check(z.State == ZombieState.Approaching && z.ResolvedCombats == 1 && !guard.IsOccupied &&
                 z.Hp == z.InitialHp - ctrl.Data.DamageToZombie, "Exactly one guard hits on arrival without breaching");
+            Check(Mathf.Approximately(hpFill.fillAmount, (float)z.Hp / z.InitialHp) && hpLabel.text == $"{z.Hp}/{z.InitialHp}",
+                "Damage updates both the overhead fill and numeric HP");
             var rolls = ScriptRolls(ctrl); // Any door roll would fail this fixture.
             Ticks(volley);
             Check(actors.Select(a => a.transform.position).SequenceEqual(guardPositions), "Door attacks keep each guard at their own post");

@@ -58,10 +58,13 @@ public static class EventPopupChecks
         var grade = sim.Rules.GradePresentation(score);
         var labels = popup.GetComponentsInChildren<TMP_Text>().Where(t => t.name != "Label").ToDictionary(t => t.name);
         string content = labels["Content"].text;
-        Check(labels["Title"].text == "중간 발표" && labels["Number"].text.Contains($"{tick}틱") &&
+        Check(labels["Title"].text == "중간 발표" && string.IsNullOrEmpty(labels["Number"].text) && string.IsNullOrEmpty(labels["Hint"].text) &&
             new[] { "기획", "프로그래밍", "그래픽", $"평가 점수  {score:0.000}", $"멘탈  {grade.MentalDelta:+0;-0;0}" }.All(content.Contains) &&
             labels["Result"].text == grade.Label && ((Color32)labels["Result"].color).Equals((Color32)grade.Color),
-            "Tick, progress, calculated score, grade color and mental adjustment visible", results);
+            "Presentation shows its evaluation without the round, tick or keyboard hint", results);
+        labels["Result"].ForceMeshUpdate();
+        Check(labels["Result"].textInfo.characterInfo[0].pointSize > labels["Title"].fontSize && !labels["Result"].isTextOverflowing,
+            "Grade is larger than the title and fits its label", results);
         Check(sim.IsPaused && commander.InputBlocked && !commander.ClickWorld(Vector2.zero), "Presentation blocks world commands", results);
         sim.Advance(sim.Rules.SecondsPerTick);
         Check(sim.CurrentTick == tick, "Presentation holds its tick", results);

@@ -62,6 +62,7 @@ namespace UnityGameJam.Shelter
         }
 
         [SerializeField] SpriteRenderer image;
+        internal SpriteRenderer BodyRenderer => image;
         [SerializeField] Artwork[] characters;
         CharacterIdentity actor;
         ShelterWalker walker;

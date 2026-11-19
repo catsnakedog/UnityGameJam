@@ -70,9 +70,29 @@ public static class BunkerChecks
         patient.SetMental(sim.Rules.WakeMental);
         Check(!patient.CanAct && fallen.NeedsRescue, "Elapsed ticks and external mental gain cannot replace a rescue", checks);
         patient.SetMental(0);
-        Check(commander.ClickWorld(carrier.transform.position + Vector3.up) && commander.Selected == carrier &&
-            commander.ClickWorld(fallen.transform.position + Vector3.up) && carrier.IsRescuing, "Selecting a survivor and clicking the patient starts a rescue", checks);
         var spare = roster.Characters[2].GetComponent<ShelterWalker>();
+        // Time is frozen during these checks. Advance the fade to the actual prone frame.
+        fallen.GetComponent<SurvivorAnimation>().SendMessage("Refresh", 1f);
+        var bounds = fallen.transform.Find("Character sprite").GetComponent<SpriteRenderer>().bounds;
+        var camera = commander.view;
+        var previousView = camera.transform.position;
+        var previousSpare = spare.transform.position;
+        try
+        {
+            camera.transform.position = new Vector3(bounds.center.x, bounds.center.y, previousView.z);
+            Vector3 bodyEdge = bounds.center + Vector3.right * (bounds.extents.x * .72f);
+            var screenPoint = camera.WorldToScreenPoint(bodyEdge);
+            Check(commander.SurvivorAtScreen(screenPoint) == fallen, "Prone body edge resolves to the patient on screen", checks);
+            Check(commander.ClickWorld(carrier.transform.position + Vector3.up) && commander.Selected == carrier, "Rescuer selected", checks);
+            spare.transform.position = new Vector3(bodyEdge.x, fallen.transform.position.y, previousSpare.z);
+            Check(commander.ClickScreen(screenPoint) && carrier.IsRescuing && commander.Selected == carrier,
+                "Clicking the prone body starts rescue even with another survivor over the click", checks);
+        }
+        finally
+        {
+            spare.transform.position = previousSpare;
+            camera.transform.position = previousView;
+        }
         Check(!spare.TryRescue(fallen) && !carrier.MoveTo(lower), "Only one rescuer can claim the patient", checks);
         bool carriedInLift = false;
         for (int i = 0; i < 6000 && (carrier.IsRescuing || carrier.IsMoving); i++)

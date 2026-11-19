@@ -79,12 +79,9 @@ namespace UnityGameJam.Events
         void OnPresentationDue(int tick, double score, BunkerRules.PresentationGrade grade)
         {
             if (!popup.isActiveAndEnabled || popup.IsOpen || development.Phase != GameDevPhase.Developing) return;
-            int round = 0;
-            foreach (int scheduledTick in simulation.Rules.PresentationTicks)
-                if (scheduledTick <= tick) round++;
             choiceApplied = false;
             LastResult = null;
-            OpenPopup(() => popup.ShowPresentation(round, tick, development.Progress, score, grade));
+            OpenPopup(() => popup.ShowPresentation(development.Progress, score, grade));
         }
         public EventShowResult ShowEvent(string id)
         {

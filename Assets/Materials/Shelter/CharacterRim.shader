@@ -4,6 +4,7 @@ Shader "UnityGameJam/Character Rim 2D"
     {
         [PerRendererData] _MainTex("Character", 2D) = "white" {}
         [PerRendererData] _MaskTex("Rim mask (R)", 2D) = "black" {}
+        _BodyShadowStrength("Body shadow strength", Range(0, 1)) = 0.75
         _RimStrength("Rim strength", Range(0, 2)) = 0.65
     }
     SubShader
@@ -28,6 +29,7 @@ Shader "UnityGameJam/Character Rim 2D"
             TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
             TEXTURE2D(_MaskTex); SAMPLER(sampler_MaskTex);
             CBUFFER_START(UnityPerMaterial)
+                half _BodyShadowStrength;
                 half _RimStrength;
             CBUFFER_END
 
@@ -47,17 +49,19 @@ Shader "UnityGameJam/Character Rim 2D"
             half4 Frag(Varyings i) : SV_Target
             {
                 half4 pixel = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
-                half3 body = pixel.rgb;
+                half3 illumination = 0;
                 #if USE_SHAPE_LIGHT_TYPE_0
-                    half3 ambient = SAMPLE_TEXTURE2D(_ShapeLightTexture0, sampler_ShapeLightTexture0, i.lightingUV).rgb;
-                    body *= lerp(1.0h, ambient, 0.24h);
+                    illumination = SAMPLE_TEXTURE2D(_ShapeLightTexture0, sampler_ShapeLightTexture0, i.lightingUV).rgb;
                 #endif
+                half3 rim = 0;
                 #if USE_SHAPE_LIGHT_TYPE_2
-                    half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
                     half3 light = SAMPLE_TEXTURE2D(_ShapeLightTexture2, sampler_ShapeLightTexture2, i.lightingUV).rgb;
-                    body += light * dot(mask, _ShapeLightMaskFilter2) * _RimStrength;
+                    illumination += light;
+                    half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
+                    rim = light * dot(mask, _ShapeLightMaskFilter2) * _RimStrength;
                 #endif
-                return half4(body, pixel.a) * i.color;
+                half3 body = pixel.rgb * lerp(1.0h, saturate(illumination), _BodyShadowStrength);
+                return half4(body + rim, pixel.a) * i.color;
             }
             ENDHLSL
         }

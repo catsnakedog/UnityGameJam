@@ -37,6 +37,7 @@ public static class ZombieSetup
         var bunker = AssetDatabase.LoadAssetAtPath<BunkerRules>(BunkerSetup.RulesPath);
         bunker.Validate();
         EnsurePrefab();
+        InstallHealthDisplay();
         EnsureSurvivorLabel();
         var original = SceneManager.GetActiveScene();
         var scene = SceneManager.GetSceneByPath(GameDevKeys.ShelterScene);
@@ -105,6 +106,31 @@ public static class ZombieSetup
             PrefabUtility.SaveAsPrefabAsset(instance, PrefabPath);
         }
         finally { UnityEngine.Object.DestroyImmediate(instance); }
+    }
+    public static void InstallHealthDisplay()
+    {
+        var root = PrefabUtility.LoadPrefabContents(PrefabPath);
+        try
+        {
+            var agent = new SerializedObject(root.GetComponent<ZombieAgent>());
+            var slot = agent.FindProperty("healthFill");
+            if (slot.objectReferenceValue) return;
+            var label = (TextMesh)agent.FindProperty("healthLabel").objectReferenceValue;
+            var survivor = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Shelter/Survivor.prefab");
+            var gauge = UnityEngine.Object.Instantiate(survivor.transform.Find("Mental gauge"), label.transform, false);
+            gauge.name = "HP bar";
+            gauge.localPosition = new Vector3(0, -.13f, 0);
+            var fill = gauge.Find("Track/Fill").GetComponent<UnityEngine.UI.Image>();
+            fill.color = new Color32(244, 95, 85, 255);
+            slot.objectReferenceValue = fill;
+            agent.ApplyModifiedPropertiesWithoutUndo();
+            label.name = "HP";
+            label.text = string.Empty;
+            label.color = Color.white;
+            label.gameObject.SetActive(false);
+            PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
     }
     static void EnsureSurvivorLabel()
     {

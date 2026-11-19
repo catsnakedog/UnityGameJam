@@ -3,7 +3,7 @@ string,string,int,int,int,int,string,string,int,string
 id,displayName,programming,art,planning,mental,designId,role,combat,description
 person_01,한지우,3,2,6,60,jiwoo,기획,1,나는 기획의 신
 person_02,강태산,2,2,3,60,taesan,기획,5,"군대 수첩에 그린 게임을, 벙커에서 만든다"
-person_03,윤새벽,2,5,3,60,saebyeok,아트,2,"밤새 그린 그림, 아직 아무도 본 적 없다"
-person_04,오다솜,3,4,2,60,dasom,아트,3,동생이랑 약속했다. 같이 게임 내자고
-person_05,민도현,5,2,3,60,dohyun,개발,2,마지막 잼이라고 정했다
-person_06,백건우,3,2,3,60,gunwoo,개발,4,"벙커를 대비하던 사람이, 벙커에서 게임을 만든다"
+person_03,민도현,5,2,3,60,dohyun,개발,2,마지막 잼이라고 정했다
+person_04,백건우,3,2,3,60,gunwoo,개발,4,"벙커를 대비하던 사람이, 벙커에서 게임을 만든다"
+person_05,윤새벽,2,5,3,60,saebyeok,아트,2,"밤새 그린 그림, 아직 아무도 본 적 없다"
+person_06,오다솜,3,4,2,60,dasom,아트,3,동생이랑 약속했다. 같이 게임 내자고

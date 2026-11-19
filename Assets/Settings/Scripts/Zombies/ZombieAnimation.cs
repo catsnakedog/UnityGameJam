@@ -16,6 +16,7 @@ namespace UnityGameJam.Zombies
 
         [SerializeField] Variant[] variants;
         [SerializeField] SpriteRenderer image;
+        internal float HeadY => image.bounds.max.y;
         readonly SurvivorAnimation.Playback playback = new SurvivorAnimation.Playback();
         ShelterWalker walker;
         Variant art;

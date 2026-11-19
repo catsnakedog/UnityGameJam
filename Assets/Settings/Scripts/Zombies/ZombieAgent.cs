@@ -2,6 +2,7 @@ using GameJam.Audio;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityGameJam.Characters;
 using UnityGameJam.Shelter;
 
@@ -13,6 +14,7 @@ namespace UnityGameJam.Zombies
     public sealed class ZombieAgent : MonoBehaviour
     {
         [SerializeField] TextMesh healthLabel;
+        [SerializeField] Image healthFill;
         ZombieInvasionController owner;
         ShelterWalker walker;
         ZombieAnimation spriteAnimation;
@@ -62,7 +64,9 @@ namespace UnityGameJam.Zombies
             knockedAtDoor = false;
             footsteps = GameAudio.Play(GameSound.ZombieSteps, transform, definition.DisplayName == "거대 좀비" ? .85f : 1f);
             ShelterSpeech.Say(transform, "좀비", "approach");
-            RefreshLabel();
+            healthLabel.transform.position = new Vector3(transform.position.x, spriteAnimation.HeadY + .26f, healthLabel.transform.position.z);
+            healthLabel.gameObject.SetActive(true);
+            RefreshHealth();
         }
         void WalkApproach(double time)
         {
@@ -106,6 +110,7 @@ namespace UnityGameJam.Zombies
                 participants.Add(shooter);
                 int damage = Mathf.Min(Hp, Rules.DamageToZombie);
                 Hp -= damage;
+                RefreshHealth();
                 if (damage > 0) spriteAnimation.PlayHit();
                 doorHits++;
                 ResolvedCombats++;
@@ -187,7 +192,6 @@ namespace UnityGameJam.Zombies
             FormationArea = area;
             formationChanged = false;
             owner.ArrangeCombat(area);
-            RefreshLabel();
         }
         void ReleaseFighter(CharacterIdentity actor)
         {
@@ -212,11 +216,10 @@ namespace UnityGameJam.Zombies
         public void ProcessTick(int tick)
         {
             if (!owner.CanAdvance || State == ZombieState.Dead) return;
-            if (State == ZombieState.Approaching) { WalkApproach(tick); CheckDoor(tick); RefreshLabel(); return; }
-            if (State == ZombieState.Defending) { UpdateDefense(tick, tick); RefreshLabel(); return; }
+            if (State == ZombieState.Approaching) { WalkApproach(tick); CheckDoor(tick); return; }
+            if (State == ZombieState.Defending) { UpdateDefense(tick, tick); return; }
             ValidateCombat(tick);
             if (fighters.Count > 0 && tick >= nextCombatTick && !pendingReroll) ResolveCombat(tick);
-            RefreshLabel();
         }
         void ValidateCombat(int tick)
         {
@@ -297,7 +300,6 @@ namespace UnityGameJam.Zombies
                 if (!HasConsciousDefender()) BeginInvasion();
             }
             else ValidateCombat(tick);
-            RefreshLabel();
         }
         string ApplyRoll(CharacterIdentity actor, CombatOutcome outcome)
         {
@@ -307,6 +309,7 @@ namespace UnityGameJam.Zombies
             {
                 int before = Hp;
                 Hp = Mathf.Max(0, Hp - Rules.DamageToZombie);
+                RefreshHealth();
                 if (Hp < before) GameAudio.Play(GameSound.MeleeHit);
                 ShelterSpeech.Say(actor.transform, actor.Definition.Role, "melee_win");
                 if (before > 0 && Hp == 0) ShelterSpeech.Say(actor.transform, actor.Definition.Role, "kill");
@@ -327,7 +330,6 @@ namespace UnityGameJam.Zombies
             State = ZombieState.Invading;
             PickTarget();
             owner.Report($"방어 돌파 · {Definition.DisplayName} HP {Hp} · " + (TargetRoom ? TargetRoom.displayName + " 이동" : "연결된 방 대기"));
-            RefreshLabel();
         }
         bool PickTarget()
         {
@@ -350,24 +352,21 @@ namespace UnityGameJam.Zombies
             walker.AcquireMovementLock(this);
             FormUp(resume == ZombieState.Occupying ? TargetRoom : owner.EncounterAreaAt(transform.position));
             owner.Report($"강제 전투 · {fighters.Count}명 vs {Definition.DisplayName}");
-            RefreshLabel();
         }
         public void AdvanceMovement(float seconds)
         {
             if (!owner || !owner.CanAdvance || seconds <= 0 || State == ZombieState.Dead) return;
-            if (walker.IsInElevator) { RefreshLabel("엘리베이터 이동"); return; }
+            if (walker.IsInElevator) return;
             IsTrafficBlocked = false;
             if (State == ZombieState.Approaching)
             {
                 WalkApproach(owner.Simulation.FractionalTick);
                 CheckDoor(owner.Simulation.CurrentTick);
-                RefreshLabel();
                 return;
             }
             if (State == ZombieState.Defending)
             {
                 UpdateDefense(owner.Simulation.FractionalTick, owner.Simulation.CurrentTick);
-                RefreshLabel();
                 return;
             }
             ValidateCombat(owner.Simulation.CurrentTick);
@@ -378,7 +377,7 @@ namespace UnityGameJam.Zombies
             if (State == ZombieState.WaitingForRoute)
             {
                 if (owner.Navigation.Version != lastNavigationVersion) PickTarget();
-                RefreshLabel(); return;
+                return;
             }
             if (State != ZombieState.Invading) { walker.Animate(0); return; }
             if (!TargetRoom || !TargetRoom.IsWalkable) { PickTarget(); if (State != ZombieState.Invading) return; }
@@ -417,7 +416,6 @@ namespace UnityGameJam.Zombies
                 }
                 walker.Animate(dt);
             }
-            RefreshLabel();
         }
         float LimitMovement(Vector2 from, Vector2 to)
         {
@@ -441,7 +439,6 @@ namespace UnityGameJam.Zombies
             footsteps.Stop();
             Unlock();
             if (walker) walker.Stop();
-            RefreshLabel("전투 종료");
         }
         public void Cleanup()
         {
@@ -450,13 +447,10 @@ namespace UnityGameJam.Zombies
             if (TargetRoom) TargetRoom.SetOccupied(this, false);
         }
         void OnDisable() => Cleanup();
-        void RefreshLabel(string detail = null)
+        void RefreshHealth()
         {
-            if (!healthLabel || Definition == null) return;
-            string state = State == ZombieState.Approaching ? (knockedAtDoor ? $"문 앞 대기 · {doorHits}/{owner.Simulation.Rules.DoorHitLimit}" : IsTrafficBlocked ? "입구 대기" : "전투 방 접근 중") : State == ZombieState.Defending ? $"전투 방 교전 · {fighters.Count}명" :
-                State == ZombieState.Occupying ? "점거 중" : State == ZombieState.Encounter ? $"강제 전투 · {fighters.Count}명" :
-                State == ZombieState.WaitingForRoute ? "경로 대기" : IsTrafficBlocked ? "앞 좀비 대기" : "침입 중";
-            healthLabel.text = $"{Definition.DisplayName} · HP {Hp}/{InitialHp}\n{detail ?? state}" + (pendingReroll ? " · 동점 재굴림" : "");
+            healthFill.fillAmount = (float)Hp / InitialHp;
+            healthLabel.text = $"{Hp}/{InitialHp}";
         }
     }
 }

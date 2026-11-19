@@ -78,6 +78,7 @@ namespace UnityGameJam.Shelter
         internal bool IsCarrying => carrying;
         public bool IsRescuing => rescueTarget;
         public bool NeedsRescue => Identity && Identity.IsFainted && !Identity.IsRestingAfterRescue;
+        internal bool CanBePickedUp => NeedsRescue && !rescuedBy && !IsInElevator;
 
         private float facing = 1f;
         internal bool FacingLeft => facing < 0;
@@ -134,6 +135,15 @@ namespace UnityGameJam.Shelter
         public bool ContainsClick(Vector2 point)
         {
             if (InTent) return false;
+            if (NeedsRescue && TryGetComponent<SurvivorAnimation>(out var animation))
+            {
+                var body = animation.BodyRenderer;
+                if (body && body.sprite && body.enabled && !body.forceRenderingOff)
+                {
+                    var bounds = body.bounds;
+                    return bounds.Contains(new Vector3(point.x, point.y, bounds.center.z));
+                }
+            }
             var p = transform.InverseTransformPoint(point);
             return Mathf.Abs(p.x) <= 0.48f && p.y >= -0.08f && p.y <= 2.15f;
         }
@@ -370,8 +380,8 @@ namespace UnityGameJam.Shelter
         public bool TryRescue(ShelterWalker target)
         {
             RoomOrderFailure = null;
-            if (!target || target == this || IsMovementLocked || rescueTarget || target.rescuedBy ||
-                !target.isActiveAndEnabled || !target.NeedsRescue || target.IsInElevator) return false;
+            if (!target || target == this || IsMovementLocked || rescueTarget ||
+                !target.isActiveAndEnabled || !target.CanBePickedUp) return false;
             FindNavigation();
             if (!navigation) return false;
             navigation.Refresh();
