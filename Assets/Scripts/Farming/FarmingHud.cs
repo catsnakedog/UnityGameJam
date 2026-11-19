@@ -49,7 +49,12 @@ namespace ShelterRun
             if (session.Phase == FarmingPhase.Ready) session.Begin();
             else if (session.Phase == FarmingPhase.Finished) session.EnterShelter();
         }
-        public void Notify(string value) { toastText.text = value; toastUntil = Time.unscaledTime + 2; }
+        public void Notify(string value)
+        {
+            if (!toastText) return;
+            toastText.text = value;
+            toastUntil = Time.unscaledTime + 2;
+        }
         public void ShowFailure(string value) { failure = value; }
 
         void LateUpdate()
@@ -64,30 +69,21 @@ namespace ShelterRun
             if (session.Phase == FarmingPhase.Failed)
             { overlayTitle.text = "데이터를 확인해 주세요"; overlayBody.text = failure; return; }
 
-            missionTitle.text = preparing ? "파밍 준비" : rescueTitle;
+            if (missionTitle) missionTitle.text = preparing ? "파밍 준비" : rescueTitle;
             float remaining = preparing ? session.PreparationRemaining : session.Remaining;
             timerText.text = Mathf.CeilToInt(remaining).ToString("00");
             timerText.color = !preparing && remaining <= session.Rules.WarningSeconds ? new Color(1, 0.38f, 0.28f) : new Color(1, 0.84f, 0.51f);
             timeFill.fillAmount = remaining / (preparing ? session.Rules.PreparationDuration : session.Rules.Duration);
             var inventory = session.Player.Inventory;
             capacityText.text = $"운반  {inventory.Used} / {inventory.Capacity}칸";
-            rescuedText.text = $"확보   사람 {session.PeopleSaved}/{session.PeopleTotal}   ·   물자 {session.ItemsSaved}";
+            if (rescuedText) rescuedText.text = $"확보   사람 {session.PeopleSaved}/{session.PeopleTotal}   ·   물자 {session.ItemsSaved}";
             int filled = 0;
             foreach (var item in inventory.Carried)
                 for (int i = 0; i < item.Record.Weight && filled < slots.Count; i++) slots[filled++].Show(item.Record.Type);
             while (filled < slots.Count) slots[filled++].Show(null);
 
-            toastText.gameObject.SetActive((running || preparing) && Time.unscaledTime < toastUntil);
-            if (session.Player.AtBunker && inventory.Used > 0) promptText.text = "[ E ]  들고 있는 대상 모두 벙커에 투입";
-            else if (session.Player.FocusedDoor != null) promptText.text = $"[ E ]  {session.Player.FocusedDoor.DestinationLabel} 이동";
-            else if (preparing) promptText.text = "A / D  이동   ·   E  문 열기   ·   준비 후 획득 가능";
-            else if (session.Player.Focused != null)
-            {
-                var item = session.Player.Focused;
-                string kind = item.Record.Type == FarmingObjectType.Person ? "사람" : "물자";
-                promptText.text = inventory.CanAdd(item) ? $"[ E ]  {kind} 들기 · {item.Record.Weight}칸" : $"공간 부족 · {kind} {item.Record.Weight}칸 필요";
-            }
-            else promptText.text = inventory.Used > 0 ? "[ E ]  마지막 대상 내려놓기   ·   출구 문으로 복도 복귀" : "A / D  좌우 이동   ·   [ E ] 문 / 들기";
+            if (toastText) toastText.gameObject.SetActive((running || preparing) && Time.unscaledTime < toastUntil);
+            if (promptText) promptText.text = ActionPrompt(inventory, preparing);
 
             if (session.Phase == FarmingPhase.Ready)
             {
@@ -97,11 +93,24 @@ namespace ShelterRun
             }
             else if (session.Phase == FarmingPhase.Finished)
             {
-                promptText.text = "벙커로 이동 버튼으로 계속   ·   [ R ] 다시 파밍";
                 overlayTitle.text = "파밍 종료";
                 overlayBody.text = $"당신을 포함해 생존자 {session.PeopleSaved}명과 물자 {session.ItemsSaved}개를 확보했습니다.\n\n남겨진 사람  {session.PeopleTotal - session.PeopleSaved}명\n미투입 운반분  {inventory.Used}칸\n\n들고 있던 대상은 벙커에 포함되지 않습니다.";
                 actionText.text = "벙커로 이동";
             }
+        }
+        string ActionPrompt(FarmingInventory inventory, bool preparing)
+        {
+            if (session.Phase == FarmingPhase.Finished) return "벙커로 이동 버튼으로 계속   ·   [ R ] 다시 파밍";
+            if (session.Player.AtBunker && inventory.Used > 0) return "[ E ]  들고 있는 대상 모두 벙커에 투입";
+            if (session.Player.FocusedDoor != null) return $"[ E ]  {session.Player.FocusedDoor.DestinationLabel} 이동";
+            if (preparing) return "A / D  이동   ·   E  문 열기   ·   준비 후 획득 가능";
+            var item = session.Player.Focused;
+            if (item != null)
+            {
+                string kind = item.Record.Type == FarmingObjectType.Person ? "사람" : "물자";
+                return inventory.CanAdd(item) ? $"[ E ]  {kind} 들기 · {item.Record.Weight}칸" : $"공간 부족 · {kind} {item.Record.Weight}칸 필요";
+            }
+            return inventory.Used > 0 ? "[ E ]  마지막 대상 내려놓기   ·   출구 문으로 복도 복귀" : "A / D  좌우 이동   ·   [ E ] 문 / 들기";
         }
         void OnDestroy() { actionButton.onClick.RemoveListener(OnAction); }
     }

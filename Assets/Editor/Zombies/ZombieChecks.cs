@@ -148,9 +148,10 @@ public static class ZombieChecks
             void Ticks(int n) => sim.Advance(n * sim.Rules.SecondsPerTick);
             var z = ctrl.SpawnWave();
             var entry = z.Doorway;
+            var guardPositions = actors.Select(a => a.transform.position).ToArray();
             float speed = ctrl.Data.WalkSpeed;
-            Check(travel == 1 && volley == 2 && period == 5 && Mathf.Abs(Mathf.Abs(z.transform.position.x - entry.x) - travel * speed * sim.Rules.SecondsPerTick) < 0.001f,
-                "Spawn distance is one walking tick, ranged interval two, melee interval five");
+            Check(travel > 1 && volley == 2 && period == 5 && Mathf.Abs(Mathf.Abs(z.transform.position.x - entry.x) - travel * speed * sim.Rules.SecondsPerTick) < 0.001f,
+                "Outdoor spawn leaves the configured approach distance");
             var spawnX = z.transform.position.x;
             var camera = UnityEngine.Object.FindFirstObjectByType<ShelterCamera>();
             camera.Pan(Vector2.right * Mathf.Sign(spawnX - entry.x), 100f);
@@ -161,26 +162,40 @@ public static class ZombieChecks
             sim.AcquirePause(checks); var pausedAt = z.transform.position; Ticks(10); Advance(ctrl, 10); sim.ReleasePause(checks);
             Check(z.transform.position == pausedAt && z.ResolvedCombats == 0, "Pause freezes approach and attacks");
             sim.Advance(0.5 * sim.Rules.SecondsPerTick);
+            Ticks(travel - 2);
+            Check(z.ResolvedCombats == 0 && z.Hp == z.InitialHp, "Guards wait until the zombie reaches the door");
+            Ticks(1);
             Check(z.State == ZombieState.Approaching && z.ResolvedCombats == 1 && !guard.IsOccupied &&
                 z.Hp == z.InitialHp - ctrl.Data.DamageToZombie, "Exactly one guard hits on arrival without breaching");
             var rolls = ScriptRolls(ctrl); // Any door roll would fail this fixture.
             Ticks(volley);
+            Check(actors.Select(a => a.transform.position).SequenceEqual(guardPositions), "Door attacks keep each guard at their own post");
             Check(z.State == ZombieState.Dead && ctrl.Zombies.Count == 0 && !guard.IsOccupied,
                 "Multiple guards share the hit limit and a lethal door hit prevents entry");
             Reset(); Move(actors[0], guard);
-            for (int wave = 1; wave < 4; wave++) { ctrl.SpawnWave(); Ticks(travel + volley); }
+            // Advance the fixtures without also scheduling the clock's automatic wave.
+            for (int wave = 1; wave < 4; wave++)
+            {
+                var previous = ctrl.SpawnWave();
+                previous.ProcessTick(travel);
+                previous.ProcessTick(travel + volley);
+            }
             actors[0].ResetMental();
             z = ctrl.SpawnWave(); ctrl.RollDie = Outcome(false);
             Ticks(travel + volley);
             Check(z.ResolvedCombats == 2 && z.State == ZombieState.Approaching && !guard.IsOccupied &&
                 z.Hp == 2 && Mathf.Abs(z.transform.position.x-z.Doorway.x)<.001f, "A strong zombie waits at the door after two fixed hits");
             Ticks(volley);
-            Check(z.State == ZombieState.Defending && z.Hp == 1 && guard.IsOccupied && z.ResolvedCombats == 4,
-                "Three door hits followed immediately by a melee exchange");
+            var post = actors[0].transform.position;
+            int closingTicks = Mathf.CeilToInt(Vector2.Distance(post, z.Doorway) / (speed * sim.Rules.SecondsPerTick));
+            for (int i = 0; i < closingTicks && z.ResolvedCombats == 3; i++) Ticks(1);
+            Check(z.State == ZombieState.Defending && z.Hp == 1 && guard.IsOccupied && z.ResolvedCombats == 4 &&
+                actors[0].transform.position == post && Vector2.Distance(z.transform.position, post) <= ctrl.Data.EncounterDistance,
+                "After three door hits the zombie closes to melee range of the stationary guard");
             Ticks(period - 1);
             Check(z.ResolvedCombats == 4, "Melee does not repeat at the shorter ranged interval");
             Ticks(1);
-            Check(z.ResolvedCombats == 5, "Melee repeats five ticks after the breach");
+            Check(z.ResolvedCombats == 5, "Melee repeats five ticks after contact");
             actors[0].SetMental(2); Ticks(period);
             Check(!actors[0].CanAct && z.State == ZombieState.Invading && z.Hp == 1, "A surviving invader continues after its last defender faints");
             var fallen = actors[0];

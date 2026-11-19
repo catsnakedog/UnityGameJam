@@ -11,6 +11,7 @@ public static class SurvivorAnimationSetup
 {
     const string ArtRoot = "Assets/Art/Shelter/Characters";
     const string PrefabPath = "Assets/Prefabs/Shelter/Survivor.prefab";
+    internal static Material RimMaterial => AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Shelter/CharacterRim.mat");
 
     // The filenames correspond to SurvivorAnimation.Pose in serialized order.
     static readonly string[] Files = { "idle_1", "idle_2", "walk_1", "walk_2", "workin", "working", "sleep", "dead_2", "attack", "hit", "dead_1" };
@@ -31,10 +32,10 @@ public static class SurvivorAnimationSetup
             {
                 image = new GameObject("Character sprite").AddComponent<SpriteRenderer>();
                 image.transform.SetParent(root.transform, false);
-                image.sharedMaterial = root.GetComponent<ShelterWalker>().visual.GetComponentInChildren<SpriteRenderer>().sharedMaterial;
                 image.sortingOrder = 28;
                 serialized.FindProperty("image").objectReferenceValue = image;
             }
+            image.sharedMaterial = RimMaterial;
             // SampleAnimation needs an Animator on the object that owns the sprite binding.
             if (!image.TryGetComponent<Animator>(out _)) image.gameObject.AddComponent<Animator>();
             var characters = serialized.FindProperty("characters");
@@ -69,7 +70,7 @@ public static class SurvivorAnimationSetup
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
-    static SurvivorAnimation.Motion ReadMotion(string folder, string filename)
+    internal static SurvivorAnimation.Motion ReadMotion(string folder, string filename)
     {
         string path = folder + "/" + filename + ".aseprite";
         var motion = new SurvivorAnimation.Motion();

@@ -2,6 +2,8 @@ using System.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace ShelterRun.Editor
 {
@@ -53,6 +55,63 @@ namespace ShelterRun.Editor
             cameraData.ApplyModifiedPropertiesWithoutUndo();
             map.Corridor.Apply(1);
             foreach (var area in map.Rooms) area.Apply(0);
+            ApplyLighting(map, camera.GetComponent<Camera>());
+        }
+
+        public static void ApplyLighting(FarmingMap2D map, Camera camera)
+        {
+            var ambient = Fixture(map.transform, "Office daylight");
+            ambient.lightType = Light2D.LightType.Global;
+            ambient.color = new Color(1f, .98f, .93f);
+            ambient.intensity = 1.13f;
+
+            foreach (var area in map.Rooms.Prepend(map.Corridor))
+            {
+                var art = area.transform.Find("Visuals/Map artwork").GetComponent<SpriteRenderer>();
+                bool corridor = area == map.Corridor;
+                int[] lamps = corridor ? new[] { 49, 139, 228, 313, 400, 487, 575, 660 }
+                                       : new[] { 59, 150, 239, 325, 411 };
+                int[] windows = corridor ? new[] { 143, 383, 574 } : new[] { 143, 373 };
+                foreach (int x in lamps) PlaceLight(art, "Ceiling lamp", x, 109, new Color(1f, .9f, .72f), 1.65f, 3.5f);
+                foreach (int x in windows) PlaceLight(art, "Window daylight", x, 56, new Color(.82f, .93f, 1f), .8f, 2.9f);
+            }
+
+            camera.allowHDR = true;
+            var renderData = camera.GetUniversalAdditionalCameraData();
+            renderData.SetRenderer(-1); // Use the project's default 2D renderer.
+            renderData.renderPostProcessing = true;
+            var volume = map.gameObject.scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Volume>(true))
+                .FirstOrDefault(v => v.isGlobal);
+            if (!volume)
+            {
+                var obj = new GameObject("Global Volume");
+                obj.transform.SetParent(map.transform, false);
+                volume = obj.AddComponent<Volume>();
+            }
+            volume.isGlobal = true;
+            volume.sharedProfile = AssetDatabase.LoadAssetAtPath<VolumeProfile>("Assets/Scenes/Farming/Global Volume Profile.asset");
+        }
+
+        static Light2D Fixture(Transform parent, string name)
+        {
+            var child = parent.Find(name);
+            if (child) return child.GetComponent<Light2D>();
+            var obj = new GameObject(name);
+            obj.transform.SetParent(parent, false);
+            return obj.AddComponent<Light2D>();
+        }
+
+        static void PlaceLight(SpriteRenderer art, string label, int x, int y, Color color, float intensity, float radius)
+        {
+            var light = Fixture(art.transform, $"{label} {x}");
+            var sprite = art.sprite;
+            light.transform.localPosition = (new Vector2(x, y) - sprite.pivot) / sprite.pixelsPerUnit;
+            light.lightType = Light2D.LightType.Point;
+            light.blendStyleIndex = 2; // Multiply with R mask in Renderer2D.
+            light.color = color;
+            light.intensity = intensity;
+            light.pointLightInnerRadius = .4f;
+            light.pointLightOuterRadius = radius;
         }
 
         static void Layout(FarmingRoom2D area, Sprite sprite, bool hall)

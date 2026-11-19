@@ -252,7 +252,7 @@ namespace UnityGameJam.Zombies
             foreach (var zombie in zombies)
             {
                 if (!IsLive(zombie) || zombie.FormationArea != area) continue;
-                if (zombie.State != ZombieState.Approaching) enemies++;
+                enemies++;
                 foreach (var actor in zombie.Fighters) if (actor) developers++;
             }
 
@@ -261,25 +261,11 @@ namespace UnityGameJam.Zombies
             foreach (var zombie in zombies)
             {
                 if (!IsLive(zombie) || zombie.FormationArea != area) continue;
-                if (zombie.State != ZombieState.Approaching)
-                {
-                    float spacing = half / enemies;
-                    var point = new Vector2(area.Left + (enemySlot++ + 0.5f) * spacing, area.FloorY);
-                    zombie.GetComponent<ShelterWalker>().TakeCombatPosition(point, false);
-                }
+                var enemyPoint = new Vector2(area.Left + (enemySlot++ + 0.5f) * half / enemies, area.FloorY);
+                zombie.GetComponent<ShelterWalker>().TakeCombatPosition(enemyPoint, false);
                 foreach (var actor in zombie.Fighters)
                 {
                     if (!actor) continue;
-                    if (zombie.State == ZombieState.Approaching)
-                    {
-                        float inward = Mathf.Sign(area.Centre.x - zombie.Doorway.x);
-                        float gap = Mathf.Min(Data.EncounterDistance, half / developers);
-                        float x = zombie.Doorway.x + inward * (2f * Data.EncounterDistance + developerSlot++ * gap);
-                        var slot = area.ArrivalPoint(x - area.Centre.x);
-                        actor.GetComponent<ShelterWalker>().TakeCombatPosition(slot, inward > 0f);
-                        previousPositions[actor] = slot;
-                        continue;
-                    }
                     float spacing = half / developers;
                     var point = new Vector2(area.Centre.x + (developerSlot++ + 0.5f) * spacing, area.FloorY);
                     actor.GetComponent<ShelterWalker>().TakeCombatPosition(point, true);

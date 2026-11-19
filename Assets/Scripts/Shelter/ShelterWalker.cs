@@ -549,8 +549,7 @@ namespace UnityGameJam.Shelter
 
         public void Animate(float deltaTime)
         {
-            // Survivors use authored sprites. The joint rig is still used by the zombie prefab.
-            if (!externallyDriven) return;
+            if (!externallyDriven || !visual || !visual.gameObject.activeSelf) return;
             float speed = IsInElevator ? 0f : Mathf.Abs(Velocity.x);
             phase += deltaTime * speed * 4.5f;
             float swing = speed > 0.01f ? Mathf.Sin(phase) : 0f;

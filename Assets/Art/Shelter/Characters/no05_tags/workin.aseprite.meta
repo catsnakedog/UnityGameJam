@@ -479,7 +479,9 @@ ScriptedImporter:
   tileSets: []
   platformSettings: []
   generatePhysicsShape: 0
-  secondarySpriteTextures: []
+  secondarySpriteTextures:
+  - name: _MaskTex
+    texture: {fileID: 2800000, guid: 0ef5ecc27f76e3a40856d60f574647ab, type: 3}
   spritePackingTag: 
   canvasSize: {x: 128, y: 128}
   previousTextureSize: {x: 128, y: 256}

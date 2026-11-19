@@ -32,7 +32,7 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 확정 아이템은 기존 `data.shelter.items`의 12종과 `data.farming.pickups`의 물자 12종으로 연결한다. 멘탈 회복 물자 4종은 ShelterItems의 useKind와 mentalRestore로 가방 사용 효과를 결정한다. 통조림의 회분과 허기 회복량은 `data.bunker.rules`에서 읽는다. [아이템 효과](DataSpecs/ShelterItems.md) · [기존 12종 연결](DataHistory/20261118-item-roster-02-verified.md)
 
-좀비 접근 시간 1틱, 문 앞 피격 한도 3회와 보초 공격 주기 2틱은 `data.bunker.rules`가 담당한다. `data.zombies`는 좀비의 공용 보행 속도와 근접전 주기를 공급한다. [벙커 규칙](DataSpecs/BunkerRules.md) · [거리·사격 검증](DataHistory/20261119-zombie-volley-02-verified.md)
+좀비 접근 시간 6틱, 문 앞 피격 한도 3회와 보초 공격 주기 2틱은 `data.bunker.rules`가 담당한다. `data.zombies`는 좀비의 공용 보행 속도와 근접 접촉 반경을 공급한다. [벙커 규칙](DataSpecs/BunkerRules.md) · [제자리 방어 변경 이력](DataHistory/20261119-stationary-guard.md)
 
 좀비 다인 전투는 기존 `data.zombies`의 공용 속도·판정 주기·피해와 `data.characters`의 개인 전투력을 사용한다. 공격 대상, 남은 HP, 점거 여부는 전투 중인 개체가 관리한다. [전투 명세](DataSpecs/Zombies.md) · [다인 전투 도입 이력](DataHistory/20261118-zombie-group-combat.md)
 
@@ -178,3 +178,4 @@ rg -n 'm_Address:' Assets/AddressableAssetsData/AssetGroups -g '*.asset'
 - `audio.cue.30_canMiss` · 미제작 · `Assets/Settings/Audio/30_canMiss.asset`
 - `audio.cue.31_doorBang` · 미제작 · `Assets/Settings/Audio/31_doorBang.asset`
 - `audio.cue.32_defend` · 미제작 · `Assets/Settings/Audio/32_defend.asset`
+엔딩 컷씬은 기존 `data.game-dev.endings`의 판정 결과와 `data.shelter.dialogue`의 상황별 말풍선을 사용한다. [연출·대사 이력](DataHistory/20261119-ending-cutscenes.md)

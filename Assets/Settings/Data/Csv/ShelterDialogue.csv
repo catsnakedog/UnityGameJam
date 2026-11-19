@@ -65,3 +65,11 @@ art_sleep_1,아트,sleep,"꿈에서 채색할게요"
 plan_faint_1,기획,faint,"기획… 수정…"
 dev_faint_1,개발,faint,"NullReference…"
 art_faint_1,아트,faint,"Ctrl+Z…"
+zombie_ending_bad_1,좀비,ending_bad,이건 좀....
+zombie_ending_bad_2,좀비,ending_bad,도저히 못하겠다
+zombie_ending_bad_3,좀비,ending_bad,우웨웩
+zombie_ending_satisfied_1,좀비,ending_satisfied,엔딩까지 다 봤다…
+zombie_ending_satisfied_2,좀비,ending_satisfied,한 판 더…!
+dev_ending_joy_1,기획,ending_joy,우리 게임을 끝까지 해줬어!
+dev_ending_joy_2,개발,ending_joy,해냈다!
+dev_ending_joy_3,아트,ending_joy,자 다들 하이파이브!

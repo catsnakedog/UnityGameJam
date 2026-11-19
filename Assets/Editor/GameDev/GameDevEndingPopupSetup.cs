@@ -34,6 +34,7 @@ public static class GameDevEndingPopupSetup
             font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/FarmingKorean.asset");
             if (!font) throw new InvalidOperationException("Shared Korean font missing.");
             EnsurePrefab();
+            UpdateResultControls();
             var popup = Find<GameDevEndingPopup>(scene).SingleOrDefault();
             if (!popup) popup = ((GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath), scene)).GetComponent<GameDevEndingPopup>();
             Set(popup, "manager", manager); Set(popup, "simulation", simulation); Set(popup, "commander", commander);
@@ -93,6 +94,54 @@ public static class GameDevEndingPopupSetup
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         }
         finally { UnityEngine.Object.DestroyImmediate(root); }
+    }
+
+    static void UpdateResultControls()
+    {
+        var root = PrefabUtility.LoadPrefabContents(PrefabPath);
+        try
+        {
+            var popup = root.GetComponent<GameDevEndingPopup>();
+            var data = new SerializedObject(popup);
+            var main = (Button)data.FindProperty("confirm").objectReferenceValue;
+            var frame = main.transform.parent;
+            var hint = frame.Find("Hint");
+            if (hint) UnityEngine.Object.DestroyImmediate(hint.gameObject);
+            var retry = frame.Find("Retry");
+            if (!retry)
+            {
+                retry = UnityEngine.Object.Instantiate(main.transform, frame);
+                retry.name = "Retry";
+            }
+            void ButtonLayout(Button b, string label, float x)
+            {
+                var rect = (RectTransform)b.transform;
+                rect.anchoredPosition = new Vector2(x,-485);
+                rect.sizeDelta = new Vector2(250,56);
+                var text = b.GetComponentInChildren<TMP_Text>();
+                text.text = label;
+                text.rectTransform.sizeDelta = rect.sizeDelta;
+                b.navigation = new Navigation { mode = Navigation.Mode.Horizontal };
+            }
+            ButtonLayout(main, "메인으로 가기", 275);
+            ButtonLayout(retry.GetComponent<Button>(), "다시 하기", 595);
+            var curtain = root.transform.Find("Blackout");
+            if (!curtain)
+            {
+                curtain = new GameObject("Blackout", typeof(RectTransform), typeof(Image), typeof(CanvasGroup)).transform;
+                var rect = (RectTransform)curtain;
+                rect.SetParent(root.transform,false);
+                rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+                rect.offsetMin = rect.offsetMax = Vector2.zero;
+                curtain.GetComponent<Image>().color = Color.black;
+            }
+            curtain.GetComponent<CanvasGroup>().alpha = 0f;
+            curtain.gameObject.SetActive(false);
+            Set(popup, "blackout", curtain.GetComponent<CanvasGroup>());
+            Set(popup, "retry", retry.GetComponent<Button>());
+            PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
     static Sprite Sprite(string name) => AssetDatabase.LoadAssetAtPath<Sprite>(Art + name + ".png") ?? throw new InvalidOperationException("Missing Sprite " + name);

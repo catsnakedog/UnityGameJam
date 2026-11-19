@@ -57,7 +57,7 @@ public static class BunkerSetup
             data.FindProperty("randomEventEveryTicks").intValue = 40;
             data.FindProperty("invasionEveryTicks").intValue = 80;
             InitializeEventSchedule(data);
-            data.FindProperty("invasionApproachTicks").intValue = 1;
+            data.FindProperty("invasionApproachTicks").intValue = 6;
             data.FindProperty("doorHitLimit").intValue = 3;
             data.FindProperty("guardVolleyEveryTicks").intValue = 2;
             data.FindProperty("invasionMentalLoss").intValue = 2;

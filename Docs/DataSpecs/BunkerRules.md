@@ -117,7 +117,7 @@ Windows 번들로 불러온 값 50과 6인의 51·50·0 전환을 확인했다. 
 
 | 필드 | 타입 · 단위 | 초기값 · 제약 | 소비 |
 |---|---|---|---|
-| invasionApproachTicks | int · 선두가 막힘없이 생성 지점부터 입구까지 걷는 벙커 틱 | 1, 양수 | 공용 이동 속도 × 틱당 초 × 접근 틱으로 스폰 거리를 계산 |
+| invasionApproachTicks | int · 선두가 막힘없이 생성 지점부터 입구까지 걷는 벙커 틱 | 6, 양수 | 공용 이동 속도 × 틱당 초 × 접근 틱으로 스폰 거리를 계산 |
 | guardVolleyEveryTicks | int · 보초의 원거리 사격 간격(벙커 틱) | 2, 필수 양수 | `BunkerRules.GuardVolleyEveryTicks`를 통해 `ZombieAgent`가 도착 즉시 첫 공격을 처리하고 이후 공격을 예약한다. |
 | doorHitLimit | int · 좀비 한 마리가 문 앞에서 받는 총 공격 횟수 | 3, 필수 양수 | 보초 전체가 공유한다. 마지막 피해 적용 후 생존하면 즉시 진입한다. |
 | invasionMentalLoss | int · 침입 1마리당 1인 멘탈 | 2, 0 이상 | 실내 진입 시 구조 인원 전원에 1회 |

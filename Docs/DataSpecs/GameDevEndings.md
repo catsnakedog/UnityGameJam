@@ -76,3 +76,4 @@
 - 실제 검증: 컴파일, 29개 Edit 검사, 16개 Play 검사, 공용 CSV NUnit 33개, Addressables Default 콘텐츠 빌드 및 BuildScriptPackedPlayMode에서 런타임 로드, 경계값·외부 총점·중복 종료·재시작·씬 전환·UI 표시 통과.
 - 적용 직전/완료 시 목록 재확인: 새 엔딩 계약/예약 충돌 없음. 공용 DB·GameData 재사용, Farming/Audio 정본 복제 없음.
 - 최신 변경: 평가식·현재 벙커 틱 연결·중앙 팝업 구현 완료. [팝업 검증 기록](../DataHistory/20261118-ending-popup-02-verified.md). Player 실행 파일 빌드, 저장/로드 및 장기간 플레이 난이도 검증은 수행하지 않았다.
+세 분기의 전용 Ending 씬은 기존 판정 ID와 점수를 읽고 공용 결과창으로 전환한다. [엔딩 연출과 결과창](../UI/GameDevEndingPopup.md)

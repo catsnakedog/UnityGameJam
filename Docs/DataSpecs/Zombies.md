@@ -13,7 +13,7 @@
 - ID `data.zombies`, v2, 2026-11-18, active / Codex zombie-sheets-20261118.
 - 소유: 좀비 종류·웨이브별 선택, 기본 HP/전투력, 주사위 전투 규칙, 좀비 이동/접촉 수치. 별칭 Zombies, zombie_1~4, COMBAT_TICK, RAID_COMBAT_TICKS.
 - 제외: 캐릭터 능력·초기 멘탈(data.characters), 전역 멘탈/기절·발생 주기(data.bunker.rules), 다음 웨이브 HP 보정(data.events의 런타임 효과), 방 배치(ShelterArea), 남은 HP·점거·전투 횟수(런타임).
-- 좀비는 1틱 거리에서 접근하고 문 앞 방어가 끝나면 실내전을 시작한다. 수비자가 남아 있으면 반복 교전하고, 전원이 탈진하면 내부 이동을 시작한다. [벙커 규칙](BunkerRules.md)
+- 좀비는 6틱 거리에서 접근하고 문 앞 방어가 끝나면 수비자에게 걸어간다. 수비자가 접촉 반경 안에 있으면 근접전을 시작하고, 전원이 탈진하면 내부 이동을 시작한다. [벙커 규칙](BunkerRules.md)
 
 ## 정본과 연결
 
@@ -52,7 +52,7 @@ ID 변경/삭제 전 소비자·기획 참조 검색 필수. 영구 저장 없�
 
 ## 동작 계약
 
-선두 좀비는 전투 방까지 벙커 시간 1틱에 해당하는 거리에서 생성된다. 거리는 BunkerRules.InvasionApproachTicks × SecondsPerTick × ZombieData.WalkSpeed이며 모든 종류가 공용 속도로 걷는다. 뒤에 생성된 개체는 줄 간격을 지킨다. 길이 막히면 실제 도착도 늦어진다.
+선두 좀비는 철문 밖에서 BunkerRules.InvasionApproachTicks × SecondsPerTick × ZombieData.WalkSpeed만큼 떨어진 곳에 생성된다. 뒤에 생성된 개체는 줄 간격을 지킨다. 길이 막히면 실제 도착도 늦어진다. 보초는 각자 서 있던 위치에서 선두가 문에 도착하면 공격한다. 돌파 후에는 좀비가 가장 가까운 보초에게 걸어가며 encounterDistance 안에 있는 인원만 근접전에 참여한다.
 
 선두 좀비가 입구에 도착하면 보초가 문 안쪽에서 번갈아 공격한다. 매번 기존 damageToZombie만큼 확정 피해를 주고, 도착 시 행동 가능한 보초가 없거나 세 번째 타격에서 생존하면 즉시 침입한다. 문 앞에서 쓰러지면 침입 멘탈 손실은 발생하지 않는다. [벙커 규칙](BunkerRules.md)
 

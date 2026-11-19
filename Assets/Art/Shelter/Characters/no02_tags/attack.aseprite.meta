@@ -136,7 +136,7 @@ ScriptedImporter:
     rect:
       serializedVersion: 2
       x: 4
-      y: 157
+      y: 208
       width: 33
       height: 44
     spriteID: 7dd73c691afd1e84cb6ea6170e0b10d3
@@ -147,7 +147,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 4, y: 157}
+    uvTransform: {x: 4, y: 208}
   - name: Frame_1
     originalName: 
     pivot: {x: 0.3030303, y: 0}
@@ -255,16 +255,16 @@ ScriptedImporter:
     uvTransform: {x: 4, y: 4}
   - name: Frame_6
     originalName: 
-    pivot: {x: 0.47727275, y: 0.125}
+    pivot: {x: 0.125, y: 0}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     customData: 
     rect:
       serializedVersion: 2
       x: 4
-      y: 209
-      width: 44
-      height: 16
+      y: 157
+      width: 40
+      height: 43
     spriteID: edcdc346e13ba144499411c4c96153f1
     spriteBone: []
     spriteOutline: []
@@ -273,7 +273,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 4, y: 209}
+    uvTransform: {x: 4, y: 157}
   spriteSheetImportData: []
   tileSetImportData: []
   asepriteLayers:
@@ -347,10 +347,10 @@ ScriptedImporter:
       frameIndex: 6
       additiveSortOrder: 0
       cellRect:
-        x: 43
-        y: 30
-        width: 44
-        height: 16
+        x: 59
+        y: 32
+        width: 40
+        height: 43
       spriteId: edcdc346e13ba144499411c4c96153f1
     linkedCells: []
     tileCells: []
@@ -359,7 +359,9 @@ ScriptedImporter:
   tileSets: []
   platformSettings: []
   generatePhysicsShape: 0
-  secondarySpriteTextures: []
+  secondarySpriteTextures:
+  - name: _MaskTex
+    texture: {fileID: 2800000, guid: ed7b5cdb393334344907d41daa1f5fc8, type: 3}
   spritePackingTag: 
   canvasSize: {x: 128, y: 128}
   previousTextureSize: {x: 128, y: 256}

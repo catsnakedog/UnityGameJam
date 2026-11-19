@@ -9,7 +9,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityGameJam.Shelter;
 namespace ShelterRun.Editor
@@ -59,7 +58,7 @@ namespace ShelterRun.Editor
             Set(map,"corridor",corridor);SetArray(map,"rooms",rooms.Cast<UnityEngine.Object>().ToArray());SetArray(map,"doors",doors.Cast<UnityEngine.Object>().ToArray());Set(map,"player",player);Set(map,"session",session);
             var cameraObject=new GameObject("Main Camera",typeof(Camera),typeof(AudioListener));cameraObject.tag="MainCamera";
             var camera=cameraObject.GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=4.5f;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=FarmingSideViewArt.C("192E39");camera.nearClipPlane=.1f;camera.farClipPlane=100;camera.transparencySortMode=TransparencySortMode.Orthographic;
-            var follow=cameraObject.AddComponent<FarmingCamera>();Set(follow,"target",player.transform);Number(follow,"referenceSize",4.5f);cameraObject.transform.position=new Vector3(8,2,-20);ConfigureRenderer(camera);
+            var follow=cameraObject.AddComponent<FarmingCamera>();Set(follow,"target",player.transform);Number(follow,"referenceSize",4.5f);cameraObject.transform.position=new Vector3(8,2,-20);
             var events=new GameObject("EventSystem",typeof(EventSystem),typeof(InputSystemUIInputModule));events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
             FarmingMapArtwork.Apply(map,follow);
             AssetDatabase.SaveAssets();EditorSceneManager.SaveScene(scene,FarmingSceneBuilder.ScenePath);
@@ -169,6 +168,7 @@ namespace ShelterRun.Editor
                 owner.FindProperty("standingSprite").objectReferenceValue = null;
             }
             var renderer = (SpriteRenderer)owner.FindProperty("sprite").objectReferenceValue;
+            renderer.sharedMaterial = SurvivorAnimationSetup.RimMaterial;
             owner.ApplyModifiedPropertiesWithoutUndo();
             var art = source.FindArtwork(artId) ?? throw new InvalidOperationException("No survivor artwork for " + artId);
             renderer.sprite = art.Get(SurvivorAnimation.Pose.Idle)?.firstFrame ?? art.standing;
@@ -185,11 +185,6 @@ namespace ShelterRun.Editor
         {
             string path=Prefabs+"FarmingHud.prefab";var root=PrefabUtility.LoadPrefabContents(path);
             try{foreach(var label in root.GetComponentsInChildren<TMP_Text>(true))if(label.text.Contains("W A S D"))label.text="A / D  좌우 이동   ·   E  문 / 들기 / 내려놓기";PrefabUtility.SaveAsPrefabAsset(root,path);}finally{PrefabUtility.UnloadPrefabContents(root);}
-        }
-        static void ConfigureRenderer(Camera camera)
-        {
-            var pipeline=GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;if(!pipeline)return;
-            var renderer=AssetDatabase.LoadAssetAtPath<UniversalRendererData>("Assets/Settings/Farming/FarmingRenderer.asset");var so=new SerializedObject(pipeline);var array=so.FindProperty("m_RendererDataList");for(int i=0;i<array.arraySize;i++)if(array.GetArrayElementAtIndex(i).objectReferenceValue==renderer){camera.GetUniversalAdditionalCameraData().SetRenderer(i);return;}throw new InvalidOperationException("Existing FarmingRenderer is missing.");
         }
         static GameObject SpriteObject(string name,string sprite,Transform parent,Vector3 position,int order)
         {var go=new GameObject(name,typeof(SpriteRenderer));go.transform.SetParent(parent,false);go.transform.position=position;var renderer=go.GetComponent<SpriteRenderer>();renderer.sprite=FarmingSideViewArt.Load(sprite);renderer.spriteSortPoint=SpriteSortPoint.Pivot;renderer.sortingOrder=order;return go;}

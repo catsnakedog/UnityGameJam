@@ -959,7 +959,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 3
   m_LightType: 3
-  m_BlendStyleIndex: 0
+  m_BlendStyleIndex: 2
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.7, g: 0.87, b: 1, a: 1}
   m_Intensity: 1.4
@@ -14498,7 +14498,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 3
   m_LightType: 3
-  m_BlendStyleIndex: 0
+  m_BlendStyleIndex: 2
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.7, g: 0.87, b: 1, a: 1}
   m_Intensity: 1.4
@@ -18036,7 +18036,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 3
   m_LightType: 3
-  m_BlendStyleIndex: 0
+  m_BlendStyleIndex: 2
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.7, g: 0.87, b: 1, a: 1}
   m_Intensity: 1.4
@@ -25279,7 +25279,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 3
   m_LightType: 3
-  m_BlendStyleIndex: 0
+  m_BlendStyleIndex: 2
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.7, g: 0.87, b: 1, a: 1}
   m_Intensity: 1.4
@@ -34579,9 +34579,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.125
+    y: 0
     width: 1
-    height: 0.75
+    height: 1
   near clip plane: 0.1
   far clip plane: 100
   field of view: 60
@@ -41302,7 +41302,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 3
   m_LightType: 3
-  m_BlendStyleIndex: 0
+  m_BlendStyleIndex: 2
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.7, g: 0.87, b: 1, a: 1}
   m_Intensity: 1.4
@@ -42109,6 +42109,10 @@ PrefabInstance:
     - target: {fileID: 3347504128850672850, guid: 27ae7b09da16b094c9378f228832e349, type: 3}
       propertyPath: m_Name
       value: EventLaptopPopup
+      objectReference: {fileID: 0}
+    - target: {fileID: 3347504128850672850, guid: 27ae7b09da16b094c9378f228832e349, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4311337929270552500, guid: 27ae7b09da16b094c9378f228832e349, type: 3}
       propertyPath: m_Pivot.x
@@ -49622,7 +49626,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 3
   m_LightType: 3
-  m_BlendStyleIndex: 0
+  m_BlendStyleIndex: 2
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.7, g: 0.87, b: 1, a: 1}
   m_Intensity: 1.4
@@ -57336,7 +57340,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 3
   m_LightType: 3
-  m_BlendStyleIndex: 0
+  m_BlendStyleIndex: 2
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.7, g: 0.87, b: 1, a: 1}
   m_Intensity: 1.4
@@ -58829,7 +58833,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5092855024750003881, guid: 2e6a2e71aff6e7f45af124b63e805b0d, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5741880482512798698, guid: 2e6a2e71aff6e7f45af124b63e805b0d, type: 3}
       propertyPath: m_fontColor32.rgba
@@ -58857,15 +58861,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8547149743278428915, guid: 2e6a2e71aff6e7f45af124b63e805b0d, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8547149743278428915, guid: 2e6a2e71aff6e7f45af124b63e805b0d, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8825690772281514565, guid: 2e6a2e71aff6e7f45af124b63e805b0d, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 40.55
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -61607,7 +61611,7 @@ MonoBehaviour:
   m_LightType: 4
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 0.83, g: 0.88, b: 1, a: 1}
+  m_Color: {r: 0.5294118, g: 0.8078432, b: 0.9803922, a: 1}
   m_Intensity: 0.03
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
@@ -62159,7 +62163,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 3
   m_LightType: 3
-  m_BlendStyleIndex: 0
+  m_BlendStyleIndex: 2
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.7, g: 0.87, b: 1, a: 1}
   m_Intensity: 1.4

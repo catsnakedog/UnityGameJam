@@ -1,7 +1,9 @@
+﻿using System.Collections;
+using System.Linq;
+using ShelterRun;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityGameJam.Shelter;
 
@@ -15,86 +17,85 @@ namespace UnityGameJam.GameDev
         [SerializeField] ShelterCommander commander;
         [SerializeField] GameObject panel;
         [SerializeField] TMP_Text title, body, score;
-        [SerializeField] Button confirm;
+        [SerializeField] Button confirm, retry;
         [SerializeField] ScrollRect scroll;
-        GameDevEnding dismissed;
-        GameObject previousSelection;
-        int openedFrame;
-        public bool IsOpen { get; private set; }
+        [SerializeField] CanvasGroup blackout;
+        bool presenting, leaving;
+        string starter;
+        public bool IsOpen => panel && panel.activeSelf;
 
-        void Awake() { panel.SetActive(false); }
+        void Awake()
+        {
+            panel.SetActive(false);
+            blackout.gameObject.SetActive(false);
+            confirm.onClick.AddListener(() => Leave(false));
+            retry.onClick.AddListener(() => Leave(true));
+        }
 
         void OnEnable()
         {
-            if (!manager || !simulation || !commander || !panel || !title || !body || !score || !confirm || !scroll)
-            {
-                Debug.LogError("Ending popup references are missing.", this);
-                return;
-            }
-            confirm.onClick.AddListener(Confirm);
+            if (!manager) return;
             manager.Changed += Refresh;
-            manager.DevelopmentRestarted += ResetRun;
             Refresh();
+        }
+
+        void Refresh()
+        {
+            if (presenting || manager.Phase != GameDevPhase.Ended || manager.Ending == null || !manager.TotalScore.HasValue) return;
+            presenting = true;
+            simulation.AcquirePause(this);
+            commander.AcquireInputBlock(this);
+            starter = FarmingRunTransfer.SelectedStarter ?? FindFirstObjectByType<ShelterRoster>()?.Characters.FirstOrDefault()?.Id;
+            StartCoroutine(Present(manager.Ending, manager.TotalScore.Value));
+        }
+
+        IEnumerator Present(GameDevEnding ending, double value)
+        {
+            title.text = ending.DisplayName;
+            body.text = ending.Description;
+            score.text = $"평가 점수  {value:0.000}";
+            yield return Fade(1f);
+            DontDestroyOnLoad(gameObject);
+            yield return SceneManager.LoadSceneAsync(EndingCutscene.SceneName);
+            SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
+            var stage = FindFirstObjectByType<EndingCutscene>();
+            stage.Prepare(ending.Id);
+            yield return Fade(0f);
+            yield return stage.Play(this, ending.Id);
+            yield return Fade(1f);
+            panel.SetActive(true);
+            Canvas.ForceUpdateCanvases();
+            scroll.verticalNormalizedPosition = 1f;
+            yield return Fade(0f);
+            confirm.Select();
+        }
+
+        internal IEnumerator Fade(float target)
+        {
+            blackout.gameObject.SetActive(true);
+            while (!Mathf.Approximately(blackout.alpha, target))
+            {
+                if (!GameOptions.BlocksInput)
+                    blackout.alpha = Mathf.MoveTowards(blackout.alpha, target, Time.unscaledDeltaTime / .4f);
+                yield return null;
+            }
+            blackout.gameObject.SetActive(target > 0f);
+        }
+
+        void Leave(bool replay)
+        {
+            if (!IsOpen || leaving || blackout.gameObject.activeSelf || GameOptions.BlocksInput) return;
+            leaving = true;
+            if (replay) FarmingRunTransfer.BeginRun(starter);
+            else FarmingRunTransfer.Reset();
+            SceneManager.LoadSceneAsync(replay ? "Farming" : TitleMenu.SceneName);
         }
 
         void OnDisable()
         {
-            if (confirm) confirm.onClick.RemoveListener(Confirm);
-            if (manager) { manager.Changed -= Refresh; manager.DevelopmentRestarted -= ResetRun; }
-            Hide();
-        }
-
-        void ResetRun() { dismissed = null; Hide(); }
-
-        void Refresh()
-        {
-            if (manager.Phase != GameDevPhase.Ended)
-            {
-                dismissed = null;
-                Hide();
-                return;
-            }
-            if (IsOpen || manager.Ending == null || !manager.TotalScore.HasValue || dismissed == manager.Ending) return;
-            title.text = manager.Ending.DisplayName;
-            body.text = manager.Ending.Description;
-            score.text = $"평가 점수  {manager.TotalScore.Value:0.000}";
-            simulation.AcquirePause(this);
-            commander.AcquireInputBlock(this);
-            previousSelection = EventSystem.current ? EventSystem.current.currentSelectedGameObject : null;
-            panel.SetActive(true);
-            IsOpen = true;
-            openedFrame = Time.frameCount;
-            Canvas.ForceUpdateCanvases();
-            scroll.verticalNormalizedPosition = 1;
-            if (EventSystem.current) EventSystem.current.SetSelectedGameObject(confirm.gameObject);
-        }
-
-        void Update()
-        {
-            if (GameOptions.BlocksInput) return;
-            if (!IsOpen) return;
-            var keyboard = Keyboard.current;
-            if (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame ||
-                keyboard.spaceKey.wasPressedThisFrame || keyboard.escapeKey.wasPressedThisFrame)) Confirm();
-        }
-
-        public void Confirm()
-        {
-            if (!IsOpen || Time.frameCount == openedFrame) return;
-            dismissed = manager.Ending;
-            Hide();
-        }
-
-        void Hide()
-        {
+            if (manager) manager.Changed -= Refresh;
             if (simulation) simulation.ReleasePause(this);
             if (commander) commander.ReleaseInputBlock(this);
-            if (panel) panel.SetActive(false);
-            if (!IsOpen) return;
-            IsOpen = false;
-            if (EventSystem.current)
-                EventSystem.current.SetSelectedGameObject(previousSelection && previousSelection.activeInHierarchy ? previousSelection : null);
-            previousSelection = null;
         }
     }
 }

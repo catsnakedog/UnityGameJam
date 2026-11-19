@@ -24,3 +24,4 @@
 ## 변경·삭제와 중복 조사
 
 행 순서는 자유이며 한 행을 삭제하면 후보 하나가 제거된다. 후보가 없는 조합은 발화하지 않는다. 저장 데이터에서 대사 ID를 참조하지 않는다. Assets, ProjectSettings, Docs와 등록 목록의 예약 항목에서 dialogue·말풍선·대사와 원문을 검색했다. Characters.description은 인물 소개이고 Events는 선택지·효과이므로 양쪽 모두 상황별 대사와 중복되지 않는다. 직군은 Characters.role을 참조한다. 실제 적용 범위는 [이력](../DataHistory/20261119-shelter-dialogue.md)에 기록한다.
+추가 상황 키는 ending_bad(좀비 불평), ending_satisfied(만족한 좀비), ending_joy(개발자 축하)다. 전용 Ending 씬은 해당 후보를 ID 순서로 재생한다. Normal 연출은 기존 invade 행을 사용한다. 기쁜 대사는 같은 직군의 개발자에게 연결한다.

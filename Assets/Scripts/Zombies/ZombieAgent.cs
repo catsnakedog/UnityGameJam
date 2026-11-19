@@ -15,6 +15,7 @@ namespace UnityGameJam.Zombies
         [SerializeField] TextMesh healthLabel;
         ZombieInvasionController owner;
         ShelterWalker walker;
+        ZombieAnimation spriteAnimation;
         ShelterArea entryRoom;
         readonly List<CharacterIdentity> fighters = new List<CharacterIdentity>();
         internal IReadOnlyList<CharacterIdentity> Fighters => fighters;
@@ -50,6 +51,8 @@ namespace UnityGameJam.Zombies
             owner = controller; Definition = definition; Hp = InitialHp = hp; entryRoom = entry;
             Doorway = doorway;
             walker = GetComponent<ShelterWalker>();
+            spriteAnimation = GetComponent<ZombieAnimation>();
+            spriteAnimation.Bind(definition.Id);
             walker.playerSelectable = false; walker.externallyDriven = true;
             walker.navigation = owner.Navigation; walker.characterName = definition.DisplayName;
             walker.walkSpeed = Rules.WalkSpeed; walker.arrivalOffset = 0;
@@ -87,7 +90,6 @@ namespace UnityGameJam.Zombies
             foreach (var actor in owner.InRoom(entryRoom)) Enlist(actor, tick);
             if (fighters.Count > 0)
             {
-                FormUp(entryRoom);
                 if (tick < nextVolleyTick) return;
                 var shooter = doorHits == 0 || fighters.Count == 1 ? fighters[0] : fighters[1];
                 if (!owner.CanAttack(shooter, this, tick)) return;
@@ -95,7 +97,6 @@ namespace UnityGameJam.Zombies
                 {
                     fighters.Add(fighters[0]);
                     fighters.RemoveAt(0);
-                    owner.ArrangeCombat(entryRoom);
                 }
                 nextVolleyTick = tick + owner.Simulation.Rules.GuardVolleyEveryTicks;
                 owner.RecordAttack(shooter, this, tick);
@@ -105,6 +106,7 @@ namespace UnityGameJam.Zombies
                 participants.Add(shooter);
                 int damage = Mathf.Min(Hp, Rules.DamageToZombie);
                 Hp -= damage;
+                if (damage > 0) spriteAnimation.PlayHit();
                 doorHits++;
                 ResolvedCombats++;
                 GameAudio.Play(GameSound.CanHit);
@@ -123,15 +125,46 @@ namespace UnityGameJam.Zombies
             ShelterSpeech.Say(transform, "좀비", "invade");
             GameAudio.Play(GameSound.DoorBust);
             owner.ReportBreach(this);
-            foreach (var actor in owner.InRoom(entryRoom))
-                if (owner.CanAttack(actor, this, tick)) Enlist(actor, tick);
-            if (fighters.Count > 0)
+            UpdateDefense(lastApproachTick, tick);
+        }
+        bool WithinMeleeReach(CharacterIdentity actor) =>
+            ((Vector2)(actor.transform.position - transform.position)).sqrMagnitude <= Rules.EncounterDistance * Rules.EncounterDistance;
+
+        void UpdateDefense(double time, int tick)
+        {
+            float seconds = (float)System.Math.Max(0, time - lastApproachTick) * owner.Simulation.Rules.SecondsPerTick;
+            lastApproachTick = System.Math.Max(time, lastApproachTick);
+            RemoveUnavailableFighters(entryRoom);
+            if (fighters.Count == 0)
             {
-                FormUp(entryRoom);
-                nextCombatTick = tick;
-                ResolveCombat(tick);
+                CharacterIdentity nearest = null;
+                float distance = float.PositiveInfinity;
+                foreach (var actor in owner.InRoom(entryRoom))
+                {
+                    if (!CanFight(actor) || actor.GetComponent<ShelterWalker>().IsMovementLocked) continue;
+                    float gap = Vector2.Distance(actor.transform.position, transform.position);
+                    if (gap < distance) { nearest = actor; distance = gap; }
+                }
+                if (!nearest)
+                {
+                    if (!HasConsciousDefender()) BeginInvasion();
+                    return;
+                }
+                if (distance > Rules.EncounterDistance && seconds > 0f)
+                {
+                    Vector2 from = transform.position;
+                    var step = Vector2.MoveTowards(from, nearest.transform.position,
+                        Mathf.Min(Rules.WalkSpeed * seconds, distance - Rules.EncounterDistance * 0.95f));
+                    walker.ApplyMovementPosition(Vector2.Lerp(from, step, LimitMovement(from, step)), seconds);
+                }
             }
-            else ValidateCombat(tick);
+            bool starting = fighters.Count == 0;
+            if (!pendingReroll)
+                foreach (var actor in owner.InRoom(entryRoom))
+                    if (WithinMeleeReach(actor) && owner.CanAttack(actor, this, tick)) Enlist(actor, tick);
+            if (fighters.Count == 0) { pendingReroll = false; return; }
+            if (starting) nextCombatTick = tick;
+            if (tick >= nextCombatTick || pendingReroll) ResolveCombat(tick);
         }
         bool HasConsciousDefender() => owner.InRoom(entryRoom).Any(CanFight);
         bool CanFight(CharacterIdentity actor) => actor && actor.isActiveAndEnabled && actor.CanAct &&
@@ -180,18 +213,16 @@ namespace UnityGameJam.Zombies
         {
             if (!owner.CanAdvance || State == ZombieState.Dead) return;
             if (State == ZombieState.Approaching) { WalkApproach(tick); CheckDoor(tick); RefreshLabel(); return; }
+            if (State == ZombieState.Defending) { UpdateDefense(tick, tick); RefreshLabel(); return; }
             ValidateCombat(tick);
             if (fighters.Count > 0 && tick >= nextCombatTick && !pendingReroll) ResolveCombat(tick);
             RefreshLabel();
         }
         void ValidateCombat(int tick)
         {
-            if (State != ZombieState.Defending && State != ZombieState.Occupying && State != ZombieState.Encounter) return;
-            var room = State == ZombieState.Defending ? entryRoom :
-                State == ZombieState.Occupying ? TargetRoom : FormationArea;
+            if (State != ZombieState.Occupying && State != ZombieState.Encounter) return;
+            var room = State == ZombieState.Occupying ? TargetRoom : FormationArea;
             RemoveUnavailableFighters(room);
-            if (State == ZombieState.Defending && !HasConsciousDefender())
-            { BeginInvasion(); return; }
             if (!pendingReroll)
             {
                 if (room)
@@ -217,7 +248,8 @@ namespace UnityGameJam.Zombies
             for (int i = fighters.Count - 1; i >= 0; i--)
             {
                 var actor = fighters[i];
-                if (CanFight(actor) && (!room || room.ContainsFeet(actor.transform.position))) continue;
+                if (CanFight(actor) && (!room || room.ContainsFeet(actor.transform.position)) &&
+                    (State != ZombieState.Defending || WithinMeleeReach(actor))) continue;
                 ReleaseFighter(actor);
                 fighters.RemoveAt(i);
                 pendingRolls.Remove(actor);
@@ -251,6 +283,7 @@ namespace UnityGameJam.Zombies
             pendingRolls.RemoveRange(ties, pendingRolls.Count - ties);
             if (Hp < hpBeforeExchange)
             {
+                spriteAnimation.PlayHit();
                 owner.ShowDamage(transform.position, hpBeforeExchange - Hp);
                 ShelterSpeech.Say(transform, "좀비", "melee_hit");
             }
@@ -259,7 +292,11 @@ namespace UnityGameJam.Zombies
             pendingReroll = ties > 0;
             if (pendingReroll) return;
             nextCombatTick = tick + Rules.CombatEveryTicks;
-            ValidateCombat(tick);
+            if (State == ZombieState.Defending)
+            {
+                if (!HasConsciousDefender()) BeginInvasion();
+            }
+            else ValidateCombat(tick);
             RefreshLabel();
         }
         string ApplyRoll(CharacterIdentity actor, CombatOutcome outcome)
@@ -324,6 +361,12 @@ namespace UnityGameJam.Zombies
             {
                 WalkApproach(owner.Simulation.FractionalTick);
                 CheckDoor(owner.Simulation.CurrentTick);
+                RefreshLabel();
+                return;
+            }
+            if (State == ZombieState.Defending)
+            {
+                UpdateDefense(owner.Simulation.FractionalTick, owner.Simulation.CurrentTick);
                 RefreshLabel();
                 return;
             }

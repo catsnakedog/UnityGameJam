@@ -42,18 +42,22 @@ namespace UnityGameJam.Shelter
                 if (motion?.firstFrame == null && pose == Pose.TiredWalk) motion = artwork.Get(Pose.Walk);
                 if (motion?.firstFrame == null && pose != Pose.Faint) motion = artwork.Get(idle);
                 if (motion?.firstFrame == null && pose != Pose.Faint) motion = artwork.Get(Pose.Idle);
+                Sample(motion, artwork.standing, pose == Pose.Faint || pose == Pose.Attack || pose == Pose.Hit, image, dt);
+            }
+
+            public void Sample(Motion motion, Sprite fallback, bool holdLast, SpriteRenderer image, float dt)
+            {
                 var clip = motion?.clip;
                 if (current != clip) { current = clip; elapsed = 0f; }
                 if (clip && clip.length > 0f)
                 {
-                    // Keep the last faint frame until recovery. Other loops use the authored key times.
-                    float time = pose == Pose.Faint || pose == Pose.Attack || pose == Pose.Hit
+                    float time = holdLast
                         ? Mathf.Min(elapsed, Mathf.Max(0f, clip.length - 0.5f / clip.frameRate))
                         : Mathf.Repeat(elapsed, clip.length);
                     clip.SampleAnimation(image.gameObject, time);
                     elapsed += dt;
                 }
-                else image.sprite = motion?.firstFrame ? motion.firstFrame : artwork.standing;
+                else image.sprite = motion?.firstFrame ? motion.firstFrame : fallback;
             }
         }
 

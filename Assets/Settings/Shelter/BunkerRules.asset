@@ -35,7 +35,7 @@ MonoBehaviour:
     label: "\uAC13\uAC9C"
     mentalDelta: 20
     color: {r: 1, g: 0.81960785, b: 0.35686275, a: 1}
-  invasionApproachTicks: 1
+  invasionApproachTicks: 6
   guardVolleyEveryTicks: 2
   doorHitLimit: 3
   invasionMentalLoss: 2
