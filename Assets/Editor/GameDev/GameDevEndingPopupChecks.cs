@@ -37,8 +37,10 @@ public static class GameDevEndingPopupChecks
         foreach (string field in new[] { "panel", "title", "body", "score", "confirm", "retry", "blackout", "scroll" })
             Check(serialized.FindProperty(field).objectReferenceValue != null, "Stored popup reference: " + field, results);
         Check(root.GetComponentsInChildren<TMP_Text>(true).All(t => t.font && !t.richText), "Korean font and literal data text", results);
-        var button = root.GetComponentInChildren<Button>(true);
-        Check(button.transition == Selectable.Transition.SpriteSwap && button.spriteState.highlightedSprite && button.spriteState.pressedSprite, "Real button state sprites", results);
+        var buttons = root.GetComponentsInChildren<Button>(true);
+        Check(buttons.Length == 2 && buttons.All(b => b.transition == Selectable.Transition.ColorTint &&
+            b.targetGraphic && b.colors.normalColor != b.colors.highlightedColor && b.colors.normalColor != b.colors.pressedColor),
+            "Both choices show focus and press feedback on the report", results);
         Check(root.GetComponentsInChildren<Transform>(true).All(t => GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject) == 0), "No missing prefab scripts", results);
         return string.Join("\n",results);
     }

@@ -34,7 +34,6 @@ Transform:
   m_Children:
   - {fileID: 6077207758897934322}
   - {fileID: 3518109309934259827}
-  - {fileID: 64952069021651655}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!210 &8771618340368580594
@@ -81,8 +80,6 @@ MonoBehaviour:
   weightLabel: {fileID: 4472963724521026976}
   sprite: {fileID: 8619416815547108594}
   standingSprite: {fileID: 21300000, guid: 209fc9da645278e41b533c00477c3d2f, type: 3}
-  lyingSprite: {fileID: 21300000, guid: 209fc9da645278e41b533c00477c3d2f, type: 3}
-  displayHeight: 0
 --- !u!1 &4119158567037268277
 GameObject:
   m_ObjectHideFlags: 0
@@ -112,7 +109,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 64952069021651655}
   m_Father: {fileID: 6573220856393315515}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8619416815547108594
@@ -186,7 +184,7 @@ GameObject:
   - component: {fileID: 8229947810826387991}
   - component: {fileID: 4472963724521026976}
   m_Layer: 0
-  m_Name: "Label 1\uCE78"
+  m_Name: Item slot cost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -204,13 +202,13 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6573220856393315515}
+  m_Father: {fileID: 6077207758897934322}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.8}
-  m_SizeDelta: {x: 5, y: 1}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0.754375}
+  m_SizeDelta: {x: 0.8, y: 0.22}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!23 &8229947810826387991
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -280,7 +278,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "2\uCE78"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
   m_sharedMaterial: {fileID: -5733948556709897978, guid: 26cde8ea28932b040972c0c77ac3b86f, type: 2}
@@ -307,8 +305,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 2.3
-  m_fontSizeBase: 2.3
+  m_fontSize: 1.5
+  m_fontSizeBase: 1.5
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

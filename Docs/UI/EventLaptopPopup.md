@@ -29,7 +29,7 @@ stateDiagram-v2
 
 ## 중간 발표
 
-발표 시점에 같은 노트북의 Number 영역에 회차와 발생 틱을, Title에 **중간 발표**를 즉시 표시한다. BodyScroll에는 기획·프로그래밍·그래픽 진행도, 평가 점수, 팀원 한 명당 멘탈 보정량을 표시한다. Result에는 해당 등급의 이름을 등급 색으로 표시한다. 시뮬레이션이 판정한 점수·등급·멘탈 보정을 그대로 사용한다. 일정과 등급의 편집 위치는 [벙커 규칙](../DataSpecs/BunkerRules.md)에 있다.
+발표 시점에 종이 정산지의 Title에 **중간 발표**를 즉시 표시한다. 정산지의 세 줄에는 기획·프로그래밍·그래픽 진행도를 표시하며, 하단에는 평가 점수, 팀원 한 명당 멘탈 보정량을 표시한다. Result에는 해당 등급의 이름을 등급 색으로 표시한다. 시뮬레이션이 판정한 점수·등급·멘탈 보정을 그대로 사용한다. 일정과 등급의 편집 위치는 [벙커 규칙](../DataSpecs/BunkerRules.md)에 있다.
 
 발표에는 계속 버튼 하나만 보인다. 확인할 때까지 벙커 틱과 월드 명령을 정지하고 버튼 클릭 또는 Enter(숫자패드 포함)로 재개한다. 발표 화면은 선택형 사건의 자동 닫기 타이머를 사용하지 않는다. 재시작·종료·비활성화 시 창을 닫고 이 팝업이 보유한 잠금을 해제한다.
 
@@ -57,15 +57,15 @@ CSV는 UTF-8 BOM 포함. `Tools > Events > Import Event CSV`로 효과·참조 �
 
 ## 레이아웃과 아트
 
-1920×1080 논리 영역/16:9 letterbox, 정렬 순서 100, 중앙 1120×760 노트북. 기존 Korean TMP 폰트 재사용. Laptop 아래 Number/Title/BodyScroll/Result/Yes/No/Confirm/Hint. 본문 860×165 마스크와 세로 스크롤, 결과 860×42 한 줄 자동 크기, Yes/No 각 180×56. 매우 긴 제목은 편집 검수 필요.
+1920×1080 논리 영역/16:9 letterbox, 정렬 순서 100, 표시 폭 1440의 노트북. 기존 Korean TMP 폰트 재사용. Laptop 아래 Number/Title/BodyScroll/Result/Yes/No/Confirm/Hint. 명령창 안에 888×140 본문 뷰포트와 세로 스크롤, 888×54 결과 영역, Yes/No 버튼을 배치한다. 매우 긴 제목은 편집 검수 필요.
 
 직렬화된 TMP·Button·Sprite 참조를 Editor에서 저장한다. 런타임 UI 조립 없음. `Install Laptop Popup`은 기존 프리팹 GUID와 외형을 유지하며 선택 요소/참조만 추가한다. Play 밖에서도 계층·이미지 편집 가능.
 
-`Assets/Art/UI/Events/`의 laptop_frame.png(1120×760), button_normal/hover/pressed.png(180×56)를 사용한다. 아트 파일 변경 없음. PNG 교체 시 같은 경로·크기와 .meta를 보존한다. Sprite Single, 중앙 pivot, PPU100, Bilinear, mipmap 없음, 비슬라이스. 프리팹 GUID 27ae7b09da16b094c9378f228832e349. 실제 문구를 이미지에 굽지 않는다.
+`Assets/Art/UI/Events/`의 laptop_frame.png(1523×1033)와 `Assets/Art/UI/Paper/`의 선택 버튼 및 중간 발표 정산지를 사용한다. 노트북 프레임은 제공된 Command Prompt 이미지의 비율을 유지한다. PNG 교체 시 같은 경로·크기와 .meta를 보존한다. Sprite Single, 중앙 pivot, PPU100, Bilinear, mipmap 없음, 비슬라이스. 프리팹 GUID 27ae7b09da16b094c9378f228832e349. 실제 문구를 이미지에 굽지 않는다.
 
 ## 검증
 
-벙커 Play에서 실제 발표가 열린 상태로 `EventPopupChecks.CheckPresentationInPlay(false)`를 실행하면 노트북 문구·등급 색, 월드 입력과 틱 정지, 자동 닫힘 시간 경과, Y/N/Space 무시, 계속 버튼과 외부 정지 유지 여부를 검사한다. 다음 발표에서 인수를 `true`로 바꾸면 입력 시스템의 Enter 키로 같은 동작을 검사한다.
+벙커 Play에서 실제 발표가 열린 상태로 `EventPopupChecks.CheckPresentationInPlay(false)`를 실행하면 정산지 문구·등급 색, 월드 입력과 틱 정지, 자동 닫힘 시간 경과, Y/N/Space 무시, 계속 버튼과 외부 정지 유지 여부를 검사한다. 다음 발표에서 인수를 `true`로 바꾸면 입력 시스템의 Enter 키로 같은 동작을 검사한다.
 
 [구현·검증 이력](../DataHistory/20261118-event-effects-02-verified.md), [Play 검사](../Events/Verification-effects-play.txt), [경계 검사](../Events/Verification-effects-edge.txt), [Edit 검사](../Events/Verification-effects-edit.txt).
 

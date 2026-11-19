@@ -139,6 +139,7 @@ public static class GameDevEndingPopupSetup
             curtain.gameObject.SetActive(false);
             Set(popup, "blackout", curtain.GetComponent<CanvasGroup>());
             Set(popup, "retry", retry.GetComponent<Button>());
+            PaperUISetup.Ending(root);
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }

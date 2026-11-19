@@ -1,0 +1,694 @@
+{
+  "project": {
+    "name": "UnityGameJam · 세상이 끝나더라도 게임을 만들겠어!",
+    "platform": "PC",
+    "engine": "Unity",
+    "engine_version": "6000.3.28f1",
+    "genre": "생존·개발 시뮬레이션",
+    "play_mode": "단일 플레이 기준",
+    "overview": "현행 기능의 원문 대조, 차이 보완 및 한 판 통합 검증"
+  },
+  "epics": [
+    {
+      "id": "JAM-E1",
+      "title": "준비와 벙커 운영"
+    },
+    {
+      "id": "JAM-E2",
+      "title": "사건·습격·평가"
+    },
+    {
+      "id": "JAM-E3",
+      "title": "아트와 씬 통합"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "JAM-R01",
+      "text": "PC 게임의 제목과 플랫폼 — 게임 제목: 세상이 끝나더라도 게임을 만들겠어!\n플랫폼: PC",
+      "source": "세상이 끝나더라도 게임을 만들겠어! · https://app.notion.com/p/41caca30f5dc8067be16f428c49fdd08 · 발췌 1~2"
+    },
+    {
+      "id": "JAM-R02",
+      "text": "하루의 시계와 정시·반시 일정 — 총 틱: 960T (게임 안 24시간 × 1시간당 40T). 틱 길이 0.9375초 → 한 판 15분.\n이벤트 | 주기 | 한 판 횟수 | 일시정지 여부 | 첫 발생\n개발 틱 | 1T | 960 | x | 1T\n전투 틱 | 5T (습격 중에만, 3번) | 36 | x | 습격 시작 시점\n좀비 습격 | 80T | 12 | x | 20T (00:30)\n이벤트 팝업 | 40T | 20 | 일시정지 함 | 40T (01:00)\n중간 평가 | 240T | 3 (240 · 480 · 720T) | 일시정지 함 | 240T (06:00)\n종료 (제출 판정) | — | 1 | - | 960T\n이벤트 팝업은 매 정시(40T의 배수)에 온다. 단, 240 · 480 · 720T에는 이벤트 대신 중간 평가가 온다.\n좀비 습격은 20T, 100T, 180T … 900T. 정시 이벤트와 20T 어긋나 있어서 서로 겹치지 않는다.",
+      "source": "개발 요구사항 · https://app.notion.com/p/41caca30f5dc80239e4dd03a4d451a46 · 발췌 3~12"
+    },
+    {
+      "id": "JAM-R03",
+      "text": "전역 시간·인원·능력·멘탈 범위 — 설명 | key | 값\n게임 안 00:00 → 24:00 | GAME_HOURS | 24\n개발 틱 길이(초). 이것만 바꿔 전체 시간 조정. 0.9375 → 한 판 15분, 1.0 → 16분 | TICK_DEV_SEC | 0.9375\n게임 안 1시간 = 개발 틱 40번 | HOUR_TICKS | 40\n전투 틱 = 개발 틱 5번 | COMBAT_TICK | 5\n습격 1회 = 전투 틱 3번 | RAID_COMBAT_TICKS | 3\n6명 중 데려가는 인원 ★ | TEAM_SIZE | 4\nMENTAL_MAX / MENTAL_MIN / MENTAL_START | 100 / 0 / 60\n기획 · 아트 · 플밍 · 전투 공통 | STAT_MAX / STAT_MIN | 6 (천재) / 1 (바보)\n멘탈 0 → 기절. 게임 안 1시간 동안 행동 불가  | FAINT_HOURS | 1\n기절에서 깨어날 때 멘탈  | WAKE_MENTAL | 30\n증감값은 전부 “게임 안 1시간당 값”으로 적는다. 개발 틱마다 값 ÷ 40씩 적용한다.",
+      "source": "전역 상수 · https://app.notion.com/p/41caca30f5dc800d82dee2b37b164f48 · 발췌 2~13"
+    },
+    {
+      "id": "JAM-R04",
+      "text": "시간표 전체 발생 횟수와 정지 — 일어나는 일 | 언제 (게임 안 시각)\n각 방의 진척 · 멘탈 적용, 전구 아이콘 | 계속 (개발 틱마다)\n이벤트 팝업 (일시정지 → Yes / No) | 매 정시 (01:00 ~ 23:00)\n그 정시의 이벤트 대신 중간 평가 | 06:00 · 12:00 · 18:00\n좀비 습격 (전투 틱 3번 = 15초). 정시 이벤트와 겹치지 않게 30분에 둔다 ★ | 짝수 시각 30분 (00:30, 02:30 … 22:30)\n제출 판정 → 엔딩 | 24:00\n한 판 횟수\n이벤트 | 20회 (23회 − 중간 평가 3회)\n중간 평가 | 3회\n좀비 습격 | 12회",
+      "source": "시간표 · https://app.notion.com/p/41caca30f5dc8065a8aae3eccbbd09c0 · 발췌 2~11"
+    },
+    {
+      "id": "JAM-R05",
+      "text": "캐릭터 6명의 직군·소개·능력과 상태 — 6. 캐릭터 Character — 스탯 4개 (1 ~ 6)\n이름 | 직군 | 전투 | 한 줄 | 플밍 | 아트 | id | 기획 | 합\n한지우 | 기획 | 1 | 나는 기획의 신 | 3 | 2 | jiwoo | 6 | 12\n강태산 | 기획 | 5 | 군대 수첩에 그린 게임을, 벙커에서 만든다 | 2 | 2 | taesan | 3 | 12\n윤새벽 | 아트 | 2 | 밤새 그린 그림, 아직 아무도 본 적 없다 | 2 | 5 | saebyeok | 3 | 12\n오다솜 | 아트 | 3 | 동생이랑 약속했다. 같이 게임 내자고 | 3 | 4 | dasom | 2 | 12\n민도현 | 개발 | 2 | 마지막 잼이라고 정했다 | 5 | 2 | dohyun | 3 | 12\n백건우 | 개발 | 4 | 벙커를 대비하던 사람이, 벙커에서 게임을 만든다 | 3 | 2 | gunwoo | 3 | 12\n설계 원칙: 4개 스탯의 합은 모두 12. 직군 = 가장 높은 개발 스탯. 장인형은 자기 분야에 몰빵, 생존형은 전투에 나눔.\n남의 방에서 일할 수는 있지만 효율이 낮다 (대부분 2 ~ 3).\n변동 스탯: mental (0 ~ 100, 시작 60), faintTicks, room",
+      "source": "캐릭터 · https://app.notion.com/p/41caca30f5dc806c91ddc5c0a834472c · 발췌 1~11"
+    },
+    {
+      "id": "JAM-R06",
+      "text": "시작 물자와 60초 파밍 목록 — 7. 아이템 Item\n7-1. 60초 파밍 아이템\n분류 | 등급 | 이름 | id | 장착 슬롯 | 효과\n근접 무기 | 일반 | 대걸레 | mw_mop | 근접 | 근접 보정 +1\n근접 무기 | 일반 | 알루미늄 배트 | mw_bat | 근접 | 근접 보정 +2\n근접 무기 | 일반 | 기계식 키보드 | mw_keyboard | 근접 | 근접 보정 +2\n근접 무기 | 일반 | 프라이팬 | mw_pan | 근접 | 근접 보정 +2\n소비 | 일반 | 몬스터 | it_monster | — | 멘탈 +10\n소비 | 일반 | 초콜렛 | it_choco | — | 멘탈 +10\n소비 | 일반 | 박카스 | it_bacchus | — | 멘탈 +10\n근접 무기 | 희귀 | 소방도끼 | mw_axe | 근접 | 근접 보정 +3\n장비 | 희귀 | 일반 노트북 | eq_laptop | 장비 | 기획 · 아트 · 플밍 +1 (최대 6)\n근접 무기 | 종결 | 못 박힌 빠따 | mw_nailbat | 근접 | 근접 보정 +3, 이기면 좀비 체력 −3\n장비 | 종결 | 게이밍 노트북 | eq_gaming | 장비 | 기획 · 아트 · 플밍 +2 (최대 6)\n식량 | — | 통조림 묶음 | fd_can | — | 식량 +4\n7-2. 기본 장비(아이템 장착과 무관하게 공격 모션은 모두 이걸로 나감)",
+      "source": "아이템 목록 · https://app.notion.com/p/41caca30f5dc8024a4c7eb32f87da05a · 발췌 1~16"
+    },
+    {
+      "id": "JAM-R07",
+      "text": "6개 방의 배정·작업·회복과 시작 위치 — 1. 공간 Room — 누구든 어느 방에나 드롭 가능\n진척 / 시간 | id | 이름 | 쓰는 스탯 | 멘탈 / 시간\n기획 축 + 기획 스탯 | room_plan | 기획 방 | 기획 | 0\n아트 축 + 아트 스탯 | room_art | 아트 방 | 아트 | 0\n프로그래밍 축 + 플밍 스탯 | room_prog | 프로그래밍 방 | 플밍 | 0\n없음 (습격 때 싸움) | room_guard | 보초 방 | 전투 | −5 \n없음 | room_sleep | 수면 방 | — | +8\n없음 (대기) | room_living | 거실 | — | 0\n개발 순서: 아트 방 · 프로그래밍 방은 기획 축이 50%를 초과한 시점부터 진척이 생긴다. 방 이동과 통과는 가능하다. 그전에는 머리 위에 기획서 대기 아이콘. (2026-11-18 본문 기준 확정)\n진척이 생기는 개발 틱마다 머리 위에 전구 아이콘.\n게임 시작 시 전원 거실.",
+      "source": "공간 · https://app.notion.com/p/41caca30f5dc8009aa61e62d155c94bd · 발췌 1~11"
+    },
+    {
+      "id": "JAM-R08",
+      "text": "50% 선행 조건과 팀 크기별 목표 — 프로그래밍과 아트 개발은 기획이 50% 넘은 시점부터 시작 가능\n해당 방을 지나는 것은 가능, 단지 거기로 이동 명령을 못함\nUI에서 기획 진척이 50%가 되기 전에는 개발/아트 진척도가 자물쇠로 잠겨 있음\n1-1. 진척 목표 Progress — 팀이 크면 기대치도 크다\n목표 = round(TARGET_BASE × TEAM_MULT[인원]), TARGET_BASE = [18, 63, 58]\n인원 | 합 | 아트 | 배수 | 프로그래밍 | 기획\n3명 | 94 | 43 | ×0.68 | 39 | 12\n4명 | 139 | 63 | ×1.0 | 58 | 18\n5명 | 173 | 79 | ×1.25 | 72 | 22\n6명 | 208 | 94 | ×1.5 | 87 | 27",
+      "source": "개발 매커니즘 세부사항 · https://app.notion.com/p/41caca30f5dc801a9510f43ea4b657dd · 발췌 1~10"
+    },
+    {
+      "id": "JAM-R09",
+      "text": "개발 중 머리 위 전구 — 개발중 머리위에 몇 틱마다 뜨는 전구",
+      "source": "디테일 · https://app.notion.com/p/41caca30f5dc80389c9ecbe24c60c114 · 발췌 1~1"
+    },
+    {
+      "id": "JAM-R10",
+      "text": "근접·장비 슬롯과 소비 드래그 — 7-2. 기본 장비(아이템 장착과 무관하게 공격 모션은 모두 이걸로 나감)\n이름 | 효과 | 쓰는 곳 | id\n빈 캔 던지기 | 보정 −2 (고정, 바꿀 수 없음) | 문 앞 (보초 전원) | rw_can\n빠따 | 근접 보정 −1 | 벙커 안 | mw_fist\n7-3. 장착 · 사용\n규칙 | 항목\n근접 1 · 장비 1 | 캐릭터 슬롯\n아이템을 캐릭터에게 드래그. 언제든 바꿀 수 있다 | 장착\n캐릭터에게 드래그하면 바로 사용.  | 소비 아이템\n몬스터 · 초콜렛 · 박카스 각 1 ★ + 파밍한 것 | 시작 보유",
+      "source": "아이템 목록 · https://app.notion.com/p/41caca30f5dc8024a4c7eb32f87da05a · 발췌 16~25"
+    },
+    {
+      "id": "JAM-R11",
+      "text": "사건 물자와 AED — 7. 아이템 Item\n효과 | id | 얻는 곳 | 종류 | 이름\n멘탈 +10 | monster | ev_vending | 소비 | 몬스터\n멘탈 +10 | choco | ev_door | 소비 | 초콜렛\n멘탈 +10 | bacchus | ev_bacchus | 소비 | 박카스\n기절 캐릭터 부활 | 소비 | AED\n사용법: 식량창고의 아이템을 캐릭터에게 드래그 \n기절한 캐릭터에게 써도 기절은 풀리지 않는다 ",
+      "source": "개발 요구사항 · https://app.notion.com/p/41caca30f5dc80239e4dd03a4d451a46 · 발췌 23~30"
+    },
+    {
+      "id": "JAM-R12",
+      "text": "사건 효과 문법·사건 12종·조건·팝업 — 4. 이벤트 Event (매 정시 1개, 무작위 · 같은 이벤트 연속 금지)\n4-1. 효과 문법 Effect\n뜻 | 쓰는 법 | 효과\n전원 / 무작위 1명 / 그 방에 있는 사람 | MENTAL(all, -5) / MENTAL(random1, -15) / MENTAL(room:art, -5) | 멘탈\n축 지정 / 진행 중인 모든 축 | PROGRESS(art, +2) / PROGRESS(open, -1) | 진척\n인벤토리 증감 | ITEM(monster, +1) | 아이템\n다음 습격의 적 HP 증감 | NEXT_WAVE_HP(+3) | 적\nNONE | 없음\n4-2. 이벤트 목록(예시)\nid | No | 제목 | Yes | 본문\nev_door | MENTAL(all, -5) | 문 두드리는 소리 | ITEM(choco, +1), NEXT_WAVE_HP(+4) | 생존자가 문을 두드린다. 열어 줄까?\nev_radio | NONE | 주최측 방송 | MENTAL(all, -5), PROGRESS(open, +1) | \"마감 연장은 없습니다.\" 끝까지 들을까?\nev_blackout | PROGRESS(open, -2) | 정전 | MENTAL(all, -5) | 비상 배터리를 노트북에 몰아줄까?\nev_vending | NONE | 지하 자판기 | ITEM(monster, +2), NEXT_WAVE_HP(+4) | 자판기를 털까? 소리가 날 텐데.\nev_fight | MENTAL(room:plan, -10), MENTAL(room:art, -10), PROGRESS(art, +2) | 팀 내 언쟁 | MENTAL(room:plan, -5), MENTAL(room:art, -5) | 기획 방과 아트 방이 싸운다. 말릴까?\nev_bug | MENTAL(all, -5) | 치명적 버그 | PROGRESS(prog, -2), MENTAL(room:prog, +5) | 지금 고칠까?\nev_sns | NONE | 바깥 소식 | MENTAL(random1, -15), NEXT_WAVE_HP(-4) | 휴대폰으로 바깥 상황을 볼까?\nev_idea | MENTAL(room:plan, -10) | 번뜩이는 아이디어 | PROGRESS(plan, +3), PROGRESS(art, -2), PROGRESS(prog, -2) | 기획을 바꿀까?\nev_bacchus | NONE | 박카스 상자 | ITEM(bacchus, +2), MENTAL(random1, -10) | 상자를 열어 볼까? 함정일 수도.\nev_barricade | NONE | 문 보강 | NEXT_WAVE_HP(-6), PROGRESS(open, -1) | 다 같이 문을 보강할까?\nev_party | NONE | 야식 파티 | MENTAL(all, +5), ITEM(choco, -1) | 초콜렛을 다 같이 나눠 먹을까?\nev_commit | MENTAL(all, -5) | 커밋 안 함 | PROGRESS(open, -1), MENTAL(all, +5) | 지금이라도 저장할까?\nev_party는 초콜렛이 1개 이상 있을 때만 나온다.\n방 기준 효과(room:)는 그 방에 아무도 없으면 건너뛴다.\n팝업: 제목 · 본문 · [Yes] [No]. 고르면 결과를 한 줄로 보여 주고 닫힌 뒤 시간이 다시 흐른다.",
+      "source": "이벤트 · https://app.notion.com/p/41caca30f5dc808a9c2bcda8f0c01844 · 발췌 1~25"
+    },
+    {
+      "id": "JAM-R13",
+      "text": "방어 주사위·예고·다음 웨이브 보정과 구버전 확률표 — 1. 웨이브별 좀비 (한 웨이브에 한 마리)\n전투력 | 좀비 | 체력 | id | 시각\n1 | 좀비 | 2 | zombie_1 | 00:30 · 02:30 · 04:30\n2 | 덩치 좀비 | 4 | zombie_2 | 06:30 · 08:30 · 10:30\n3 | 성난 좀비 | 5 | zombie_3 | 12:30 · 14:30 · 16:30\n4 | 거대 좀비 | 6 | zombie_4 | 18:30 · 20:30 · 22:30\n2. 전투 규칙: 주사위 싸움 (전투 틱 3번)\n전투 틱마다 보초가 한 명씩 좀비와 맞붙는다\n  캐릭터: 주사위 1개(1~6) + 전투력\n  좀비:   주사위 1개(1~6) + 좀비 전투력\n  캐릭터가 높으면 → 좀비 체력 −1\n  좀비가 높으면   → 그 보초 멘탈 −2\n  같으면 다시 굴린다\n좀비 체력 0 → 방어 성공 (보초 방 인원 멘탈 +5)\n전투 틱 3번 뒤 체력이 남으면 → 좀비 침입 (남은 체력 그대로) | Plain Text\n3. 침입 확률 (시뮬레이션 4만 회)\n보초 1명 (전투 5) | 좀비 | 보초 1명 (전투 2) | 보초 2명 (5 · 4) | 보초 4명 (5 · 4 · 3 · 2) | 보초 3명 (5 · 4 · 3)\n0% | 좀비 (체력 2) | 24% | 0% | 0% | 0%\n100% | 덩치 좀비 (체력 4) | 100% | 4% | 0% | 0%\n100% | 성난 좀비 (체력 5) | 100% | 48% | 6% | 14%\n100% | 거대 좀비 (체력 6) | 100% | 96% | 61% | 76%\n공격 규칙 총정리\n1. 기본 개념\n항목 | 규칙\n공격력 | 따로 없음. 판정값 = 전투 스탯 + 무기 보정\n한 번의 공격 | 캐릭터 주사위(1~6) + 판정값 vs 좀비 주사위(1~6) + 좀비 전투력\n승패 | 큰 쪽이 이긴다. 같으면 다시 굴린다\n공격 간격 | 전투 틱마다 1번 (전투 틱 = 개발 틱 5번, 게임 안 1시간에 8번)\n좀비 수 | 한 웨이브에 한 마리\n2. 승률표\n차이 = 판정값 − 좀비 전투력\n차이 | +3 | −1 | +1 | 0 | +5 이상 | −3 | +2 | +4 | −2 | −4\n캐릭터 승률 | 91% | 32% | 68% | 50% | 100% | 9% | 81% | 97% | 19% | 3%\n3. 좀비\n전투력 | 좀비 | 체력 | 시각 | id\n1 | 좀비 | 1 | 00:30 · 02:30 · 04:30 | zombie_1\n2 | 덩치 좀비 | 2 | 06:30 · 08:30 · 10:30 | zombie_2\n3 | 성난 좀비 | 3 | 12:30 · 14:30 · 16:30 | zombie_3\n4 | 거대 좀비 | 3 | 18:30 · 20:30 · 22:30 | zombie_4\n습격 1시간 전에 보초 방 위에 다음 좀비의 이름 · 전투력 · 체력을 예고한다.\n이벤트 NEXT_WAVE_HP(±n)은 다음 좀비 체력에 더한다 (최소 1).",
+      "source": "좀비 전투 · https://app.notion.com/p/41caca30f5dc808cae8bc2fc08977a8f · 발췌 2~35"
+    },
+    {
+      "id": "JAM-R14",
+      "text": "문 앞 방어 개정 규칙·캔 소진·터널 진행·4종 스탯 — [좀비 전투 변경 사항]\n1. 문 앞 (습격) — \"캔 기준\"으로 바꿈\n보초 1명당 빈 캔 3개 (보초 3명이면 9개)\n2T마다 캔 1개씩 던짐. 보초가 여러 명이면 돌아가며 던짐 (A → B → C → A …). 동시에 굴리지 않음\n캔 하나 = 주사위 한 판: d6 + (전투 − 2) vs d6 + 좀비 전투력, 같으면 다시 굴림\n문 앞에서는 장착 무기 적용 안 됨\n이기면 좀비 체력 −1, 지면 아무 일 없음\n체력 0 → 방어 성공, 남은 캔은 버림, 보초 전원 멘탈 +5\n캔을 다 썼는데 체력이 남아 있으면 침입\n좀비 위치 = 터널 시작 + (던진 캔 ÷ 전체 캔) × 터널 길이. 마지막 캔에 철문 도착\n보초 명단은 습격 시작 때 고정. 도중에 빠지거나 기절하면 그 사람 차례는 건너뜀\n2. 좀비 스탯 (한 웨이브에 한 마리)\n좀비: 전투 1 / 체력 1\n덩치 좀비: 전투 2 / 체력 2\n성난 좀비: 전투 3 / 체력 3\n거대 좀비: 전투 4 / 체력 3",
+      "source": "좀비 전투 · https://app.notion.com/p/41caca30f5dc808cae8bc2fc08977a8f · 발췌 70~85"
+    },
+    {
+      "id": "JAM-R15",
+      "text": "실내 근접 장비·승패·지정 공격·취소·복귀 — 4. 두 가지 전투\n벙커 안 (침입 좀비) | 항목 | 문 앞 (습격)\n침입한 좀비가 남아 있는 동안 | 언제 | 짝수 시각 30분\n플레이어가 보낸 캐릭터 | 누가 | 보초 방 인원 전원 (최대 3명)\n근접 무기 (없으면 맨손 −1) | 무기 | 빈 캔 −2 (고정)\n전투 틱마다 공격. 여러 명이면 도착한 순서대로 | 진행 | 전투 틱 3번. 틱마다 보초가 한 명씩 차례로 공격\n없음 | 시간 제한 | 3틱 (15초)\n좀비 체력 −2 (못 박힌 빠따 −3) | 이기면 | 좀비 체력 −1\n그 캐릭터 멘탈 −8 | 지면 | 피해 없음\n체력 0 → 처치, 원래 방으로 복귀 ★ | 끝 | 체력 0 → 방어 성공, 보초 전원 멘탈 +5 / 3틱 뒤 남으면 → 침입\n쉽다 | 난이도 | 어렵다\n5. 무기 보정\n등급 | 무기 | 보정 | 승리 피해 | 쓰는 곳\n— | 빈 캔 (기본) | −2 | −1 | 문 앞\n— | 맨손 (기본) | −1 | −2 | 안\n일반 | 대걸레 | +1 | −2 | 안\n일반 | 알루미늄 배트 · 기계식 키보드 · 프라이팬 | +2 | −2 | 안\n희귀 | 소방도끼 | +3 | −2 | 안\n종결 | 못 박힌 빠따 | +3 | −3 | 안\n6. 침입 전투\n침입한 좀비는 남은 체력을 그대로 가진 채 벙커 안(거실)에 나타나고, 처치할 때까지 남는다.\n6-1. 멘탈: 침입 기간 동안 계속 떨어진다\n값 | 항목\n전원 멘탈 시간당 −5 ★ | 침입 좀비 1마리당\n마리 수만큼 더해진다 (2마리면 시간당 −10) | 여러 마리\n그 좀비를 처치한 순간 | 끝나는 때\n6-2. 처치 조작: 캐릭터 클릭 → 좀비 클릭\n① 캐릭터를 클릭한다 (선택 표시)\n② 좀비를 클릭한다\n③ 캐릭터가 좀비에게 걸어간다 (원래 방에서 빠짐 → 하던 개발 · 수면 중단)\n④ 도착하면 전투 틱(5T)마다 2번과 같은 주사위 싸움\n⑤ 좀비 체력 0 → 처치. 싸운 캐릭터는 원래 방으로 돌아간다 ★ | Plain Text\n항목 | 규칙\n여러 명 보내기 | 가능. 도착한 순서대로 차례로 맞붙는다\n지면 | 그 캐릭터 멘탈 −2 (보초 싸움과 같음)\n기절하면 | 자리에서 누움\n보초 방 인원 | 보낼 수 있지만, 다음 습격 전에 돌아오지 못하면 보초가 빈다\n취소 | 이동 중인 캐릭터를 다른 방에 드래그하면 취소",
+      "source": "좀비 전투 · https://app.notion.com/p/41caca30f5dc808cae8bc2fc08977a8f · 발췌 36~69"
+    },
+    {
+      "id": "JAM-R16",
+      "text": "침입 즉시 피해와 누적 피해 — 3. 침입\n좀비가 남은 체력 그대로 거실에 나타나서 처치될 때까지 남음\n들어오는 순간 1번: 미완성 축 1개 진척 −5, 무작위 2명 멘탈 −10\n남아 있는 동안 1마리당 시간당: 전원 멘탈 −5, 무작위 축 1개 진척 −3 (T마다 ÷ 40씩 적용)",
+      "source": "좀비 전투 · https://app.notion.com/p/41caca30f5dc808cae8bc2fc08977a8f · 발췌 86~89"
+    },
+    {
+      "id": "JAM-R17",
+      "text": "평가 점수 및 네 등급 — 5. 중간 평가 Eval — 06:00 · 12:00 · 18:00 (반드시 발생)\n평가 점수 = 현재 진척 합 ÷ (목표 합 96 × 현재 시각 ÷ 24) | Plain Text\n멘탈 (전원) | 연출 색 | 점수 | 단계\n+20 | 금색 | 1.2 이상 | 갓겜\n+10 | 초록 | 1.0 이상 | 굿\n0 | 회색 | 0.7 이상 | 흠\n−15 | 빨강 | 0.7 미만 | 망겜",
+      "source": "중간평가 · https://app.notion.com/p/41caca30f5dc801c873be391bddeeade · 발췌 1~7"
+    },
+    {
+      "id": "JAM-R18",
+      "text": "맵 배치·수면 소품·방어선 — 맵\n공간(드래그 앤 드롭 할 곳)\n44 KiB | 맵.png | attachment:5ba3db52-839e-4645-bbbb-3ad74d93415a:맵.png\n벙커 방은 총 6개, 파밍 맵은 복도와 홀 2개\n수면 방\n텐트, 빈 백이 비치됨\n전투방\n2.7 MiB | 전투실의 즉흥 방어선.png | attachment:6e85ab20-0a61-4405-ad80-cfeec8111ee8:전투실의_즉흥_방어선.png",
+      "source": "아트 요구사항 · https://app.notion.com/p/41caca30f5dc80e2be07e8f84750c377 · 발췌 1~8"
+    },
+    {
+      "id": "JAM-R19",
+      "text": "좀비 네 외형과 타이틀·엔딩 그림 — 좀비 4종\n917.2 KiB | image.png | attachment:20e17b4c-7f66-45a5-896c-c5ae8e731aec:image.png\n타이틀 화면(1장)\n  \n엔딩 (2장)\n굿 엔딩\n배드 엔딩",
+      "source": "아트 요구사항 · https://app.notion.com/p/41caca30f5dc80e2be07e8f84750c377 · 발췌 10~16"
+    },
+    {
+      "id": "JAM-R20",
+      "text": "캐릭터 상태별 애니메이션 — 프레임 | 쓰는 곳 | 비고 | 묶음 | 동작 · 이름 | 루프\n- | 빈 시간 | 숨쉬기 | 캐릭터 | Idle(멀쩡) | O\n- | 멘탈 낮을 때 | 다크서클 , 처진 어깨 | 캐릭터 | Idle(피곤) | O\n- | 방 이동 · 좀비에게 이동 | 캐릭터 | 걷기(멀쩡) | O\n- | 방 이동 · 좀비에게 이동 | 캐릭터 | 걷기(피곤) | O\n- | 기획 · 아트 · 프로그래밍 방 | 캐릭터 | 개발 돌입(의자에 앉기) | O\n- | 기획 · 아트 · 프로그래밍 방 | 캐릭터 | 타이핑 | O\n- | 수면 방 텐트 | 캐릭터 | 수면 | O\n- | 멘탈 0 | 바닥에 쓰러진 정지 그림 | 캐릭터 | 기절 | X\n- | 전투방 | 캐릭터 | 원거리 공격",
+      "source": "필요 애니메이션 · https://app.notion.com/p/41caca30f5dc803d9d01f49d1fba9860 · 발췌 1~10"
+    },
+    {
+      "id": "JAM-R21",
+      "text": "마감 제출 판정과 두 엔딩 — 제출 판정 → 엔딩 | 24:00",
+      "source": "시간표 · https://app.notion.com/p/41caca30f5dc8065a8aae3eccbbd09c0 · 발췌 7~7"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "JAM-T01",
+      "epic_id": "JAM-E1",
+      "title": "하루 시계와 이벤트 일정 배분",
+      "implementation": "BunkerTickClock.Advance와 Tick(int)를 기준으로 960틱을 배분하고 팝업 동안 일시정지한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "한 판에서 사건 20회, 평가 3회, 습격 12회, 마지막 제출 1회를 기록한다."
+      ],
+      "requirement_ids": [
+        "JAM-R02",
+        "JAM-R03",
+        "JAM-R04"
+      ],
+      "depends_on": [],
+      "integrates": [],
+      "related_to": [],
+      "produces": [
+        "JAM-CLOCK"
+      ],
+      "consumes": [],
+      "modifies": [
+        {
+          "path": "Assets/Settings/Scripts/Shelter/BunkerTickClock.cs",
+          "basis": "observed",
+          "reason": "하루 시계와 이벤트 일정 배분"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Shelter/BunkerRules.cs",
+          "basis": "observed",
+          "reason": "하루 시계와 이벤트 일정 배분"
+        }
+      ],
+      "open_questions": [],
+      "execution": {
+        "lane": "code",
+        "skills": [
+          "unity-project-layout"
+        ],
+        "resources": []
+      }
+    },
+    {
+      "id": "JAM-T02",
+      "epic_id": "JAM-E1",
+      "title": "파밍 구조 인원과 물자 인계",
+      "implementation": "인물 6명의 기존 ID와 파밍 목록을 대조하고 FarmingRunTransfer.Capture의 구조 결과를 거실과 창고로 넘긴다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "파밍 종료 후 구조 인물·물자가 한 번 인계되고 다음 판 시작 시 초기화된다."
+      ],
+      "requirement_ids": [
+        "JAM-R05",
+        "JAM-R06"
+      ],
+      "depends_on": [],
+      "integrates": [],
+      "related_to": [],
+      "produces": [
+        "JAM-TRANSFER"
+      ],
+      "consumes": [],
+      "modifies": [
+        {
+          "path": "Assets/Settings/Scripts/Farming/FarmingRunTransfer.cs",
+          "basis": "observed",
+          "reason": "파밍 구조 인원과 물자 인계"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Farming/FarmingSession.cs",
+          "basis": "observed",
+          "reason": "파밍 구조 인원과 물자 인계"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Shelter/ShelterRoster.cs",
+          "basis": "observed",
+          "reason": "파밍 구조 인원과 물자 인계"
+        }
+      ],
+      "open_questions": [
+        "전역 상수의 4명과 목표표의 3~6명 적용 범위를 확인한다."
+      ],
+      "execution": {
+        "lane": "code",
+        "skills": [
+          "unity-project-layout"
+        ],
+        "resources": []
+      }
+    },
+    {
+      "id": "JAM-T03",
+      "epic_id": "JAM-E1",
+      "title": "방 배정·진척·멘탈과 작업 피드백",
+      "implementation": "장비 보정 후 방별 능력으로 실제 진척을 계산한다. 수면·보초·기절의 시간과 작업 잠금 표시를 연결한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "기획 50%와 초과 시점을 비교하고 기절 40틱 후 멘탈 30 복귀와 방별 증감을 확인한다."
+      ],
+      "requirement_ids": [
+        "JAM-R07",
+        "JAM-R08",
+        "JAM-R09"
+      ],
+      "depends_on": [
+        "JAM-T01",
+        "JAM-T02"
+      ],
+      "integrates": [],
+      "related_to": [],
+      "produces": [],
+      "consumes": [
+        "JAM-CLOCK",
+        "JAM-TRANSFER"
+      ],
+      "modifies": [
+        {
+          "path": "Assets/Settings/Scripts/Shelter/BunkerSimulation.cs",
+          "basis": "observed",
+          "reason": "방 배정·진척·멘탈과 작업 피드백"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Shelter/WorkProgressFeedback.cs",
+          "basis": "observed",
+          "reason": "방 배정·진척·멘탈과 작업 피드백"
+        },
+        {
+          "path": "Assets/Settings/Scripts/GameDev/DevelopmentLockHint.cs",
+          "basis": "observed",
+          "reason": "방 배정·진척·멘탈과 작업 피드백"
+        }
+      ],
+      "open_questions": [
+        "공간 문서의 이동 허용과 개발 세부 문서의 명령 금지가 상충한다. 최근 공간 문구와 현재 명령 동작을 대조한다."
+      ],
+      "execution": {
+        "lane": "code",
+        "skills": [
+          "unity-project-layout"
+        ],
+        "resources": []
+      }
+    },
+    {
+      "id": "JAM-T04",
+      "epic_id": "JAM-E1",
+      "title": "창고 드래그 소비와 장비 교체",
+      "implementation": "파밍 ID와 기존 물자 ID를 대응시키고 캐릭터의 근접·장비 슬롯 및 소비 결과를 창고에 반영한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "노트북 교체 후 능력 상한 6, 소비 후 수량과 멘탈, 무기 교체 후 전투 보정을 검사한다."
+      ],
+      "requirement_ids": [
+        "JAM-R10",
+        "JAM-R11"
+      ],
+      "depends_on": [
+        "JAM-T02"
+      ],
+      "integrates": [],
+      "related_to": [],
+      "produces": [],
+      "consumes": [
+        "JAM-TRANSFER"
+      ],
+      "modifies": [
+        {
+          "path": "Assets/Settings/Scripts/Shelter/ShelterInventory.cs",
+          "basis": "observed",
+          "reason": "창고 드래그 소비와 장비 교체"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Shelter/ShelterInventorySlot.cs",
+          "basis": "observed",
+          "reason": "창고 드래그 소비와 장비 교체"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Shelter/CharacterEquipmentRow.cs",
+          "basis": "observed",
+          "reason": "창고 드래그 소비와 장비 교체"
+        }
+      ],
+      "open_questions": [
+        "AED의 ID·획득처·기절 해제 예외가 미정이다."
+      ],
+      "execution": {
+        "lane": "code",
+        "skills": [
+          "unity-project-layout"
+        ],
+        "resources": []
+      }
+    },
+    {
+      "id": "JAM-T05",
+      "epic_id": "JAM-E2",
+      "title": "정시 사건 추첨과 선택 결과",
+      "implementation": "기존 EventCatalog와 효과 실행기로 각 사건의 양쪽 분기를 처리하고 팝업이 닫힐 때 시간을 재개한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "12종의 Yes/No, 빈 방, 초콜렛 없음, 연속 추첨과 다음 습격 보정을 확인한다."
+      ],
+      "requirement_ids": [
+        "JAM-R12"
+      ],
+      "depends_on": [
+        "JAM-T01"
+      ],
+      "integrates": [],
+      "related_to": [],
+      "produces": [],
+      "consumes": [
+        "JAM-CLOCK"
+      ],
+      "modifies": [
+        {
+          "path": "Assets/Settings/Scripts/Events/EventCatalog.cs",
+          "basis": "observed",
+          "reason": "정시 사건 추첨과 선택 결과"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Events/EventEffectExecutor.cs",
+          "basis": "observed",
+          "reason": "정시 사건 추첨과 선택 결과"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Events/EventPopupController.cs",
+          "basis": "observed",
+          "reason": "정시 사건 추첨과 선택 결과"
+        }
+      ],
+      "open_questions": [],
+      "execution": {
+        "lane": "code",
+        "skills": [
+          "unity-project-layout"
+        ],
+        "resources": []
+      }
+    },
+    {
+      "id": "JAM-T06",
+      "epic_id": "JAM-E2",
+      "title": "터널 예고와 빈 캔 방어",
+      "implementation": "하단 변경 사항을 우선 적용한다. 시작 명단을 고정하고 캔 차례와 남은 체력으로 성공 또는 침입을 결정한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "보초 0·1·3명, 중간 이탈·기절, 동률 재시도, 조기 처치와 마지막 캔 도착을 검사한다."
+      ],
+      "requirement_ids": [
+        "JAM-R13",
+        "JAM-R14"
+      ],
+      "depends_on": [
+        "JAM-T01"
+      ],
+      "integrates": [],
+      "related_to": [],
+      "produces": [],
+      "consumes": [
+        "JAM-CLOCK"
+      ],
+      "modifies": [
+        {
+          "path": "Assets/Settings/Scripts/Zombies/ZombieInvasionController.cs",
+          "basis": "observed",
+          "reason": "터널 예고와 빈 캔 방어"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Zombies/ZombieData.cs",
+          "basis": "observed",
+          "reason": "터널 예고와 빈 캔 방어"
+        }
+      ],
+      "open_questions": [
+        "이전 3전투틱·체력표·확률은 변경 전 비교 자료다. 첫 습격의 예고 시점은 미정이다."
+      ],
+      "execution": {
+        "lane": "code",
+        "skills": [
+          "unity-project-layout"
+        ],
+        "resources": []
+      }
+    },
+    {
+      "id": "JAM-T07",
+      "epic_id": "JAM-E2",
+      "title": "실내 추격·근접전과 침입 피해",
+      "implementation": "남은 HP로 거실 진입, 순간 피해와 개체별 누적 피해, 도착 순 전투, 이동 취소·복귀를 연결한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "2마리 침입 때 지속 피해가 중첩되고 한 마리 처치 즉시 감소하며 마지막 처치 후 중단된다."
+      ],
+      "requirement_ids": [
+        "JAM-R15",
+        "JAM-R16"
+      ],
+      "depends_on": [
+        "JAM-T04",
+        "JAM-T06"
+      ],
+      "integrates": [],
+      "related_to": [],
+      "produces": [],
+      "consumes": [],
+      "modifies": [
+        {
+          "path": "Assets/Settings/Scripts/Zombies/ZombieCombat.cs",
+          "basis": "observed",
+          "reason": "실내 추격·근접전과 침입 피해"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Zombies/ZombieAgent.cs",
+          "basis": "observed",
+          "reason": "실내 추격·근접전과 침입 피해"
+        },
+        {
+          "path": "Assets/Settings/Scripts/Zombies/ZombieTraffic.cs",
+          "basis": "observed",
+          "reason": "실내 추격·근접전과 침입 피해"
+        }
+      ],
+      "open_questions": [
+        "패배 멘탈 −2/−8 및 기존 벙커 규칙과 침입 피해의 차이를 확정한다."
+      ],
+      "execution": {
+        "lane": "code",
+        "skills": [
+          "unity-project-layout"
+        ],
+        "resources": []
+      }
+    },
+    {
+      "id": "JAM-T08",
+      "epic_id": "JAM-E2",
+      "title": "중간 평가 점수와 결과 표시",
+      "implementation": "기존 진척 퍼센트와 원문 축별 목표 단위를 대조하고 3회 평가에서 등급색과 전원 멘탈을 적용한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "0.7·1.0·1.2 경계 양쪽에서 색·멘탈 변화를 확인하고 확인 버튼으로 재개한다."
+      ],
+      "requirement_ids": [
+        "JAM-R17"
+      ],
+      "depends_on": [
+        "JAM-T01",
+        "JAM-T03"
+      ],
+      "integrates": [],
+      "related_to": [],
+      "produces": [],
+      "consumes": [
+        "JAM-CLOCK"
+      ],
+      "modifies": [
+        {
+          "path": "Assets/Settings/Scripts/GameDev/GameDevScoreCalculator.cs",
+          "basis": "observed",
+          "reason": "중간 평가 점수와 결과 표시"
+        }
+      ],
+      "open_questions": [
+        "평가 분모 96과 4인 목표 합 139의 관계를 확정한다."
+      ],
+      "execution": {
+        "lane": "code",
+        "skills": [
+          "unity-project-layout"
+        ],
+        "resources": []
+      }
+    },
+    {
+      "id": "JAM-T09",
+      "epic_id": "JAM-E3",
+      "title": "맵·좀비·타이틀과 엔딩 원화 연결 준비",
+      "implementation": "거실 중심 좌측 기획·우측 수면·상층 전투·하층 아트/프로그래밍, 사다리와 복도 연결을 재현한다. 방어실의 터널·바리케이드·캔과 수면 텐트·빈백, 파밍 복도·홀 2개를 확인한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "참고 이미지의 출입증·냄비·머리띠·안전모로 4종을 구분하고 타이틀 1장과 굿/배드 엔딩 2장을 확인한다."
+      ],
+      "requirement_ids": [
+        "JAM-R18",
+        "JAM-R19"
+      ],
+      "depends_on": [],
+      "integrates": [],
+      "related_to": [],
+      "produces": [],
+      "consumes": [],
+      "modifies": [
+        {
+          "path": "Assets/Art/Environment",
+          "basis": "proposed",
+          "reason": "맵·좀비·타이틀과 엔딩 원화 연결 준비"
+        },
+        {
+          "path": "Assets/Art/Zombies",
+          "basis": "proposed",
+          "reason": "맵·좀비·타이틀과 엔딩 원화 연결 준비"
+        },
+        {
+          "path": "Assets/Art/UI/Title",
+          "basis": "proposed",
+          "reason": "맵·좀비·타이틀과 엔딩 원화 연결 준비"
+        },
+        {
+          "path": "Assets/Art/UI/Endings",
+          "basis": "proposed",
+          "reason": "맵·좀비·타이틀과 엔딩 원화 연결 준비"
+        }
+      ],
+      "open_questions": [],
+      "execution": {
+        "lane": "ui",
+        "skills": [
+          "unity-project-layout",
+          "unity-cli"
+        ],
+        "resources": [
+          "unity-editor"
+        ]
+      }
+    },
+    {
+      "id": "JAM-T10",
+      "epic_id": "JAM-E3",
+      "title": "생존자 상태별 동작과 루프",
+      "implementation": "정상/피곤 대기·걷기, 착석·타이핑·수면·기절·원거리 공격을 상태 변화에 연결한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "낮은 멘탈의 자세 변화, 텐트 수면, 기절 정지 그림, 보초 투척 시점을 확인한다."
+      ],
+      "requirement_ids": [
+        "JAM-R20"
+      ],
+      "depends_on": [
+        "JAM-T03",
+        "JAM-T06"
+      ],
+      "integrates": [],
+      "related_to": [],
+      "produces": [],
+      "consumes": [],
+      "modifies": [
+        {
+          "path": "Assets/Settings/Scripts/Shelter/SurvivorAnimation.cs",
+          "basis": "observed",
+          "reason": "생존자 상태별 동작과 루프"
+        },
+        {
+          "path": "Assets/Art/Characters",
+          "basis": "proposed",
+          "reason": "생존자 상태별 동작과 루프"
+        }
+      ],
+      "open_questions": [],
+      "execution": {
+        "lane": "ui",
+        "skills": [
+          "unity-project-layout",
+          "unity-cli"
+        ],
+        "resources": [
+          "unity-editor"
+        ]
+      }
+    },
+    {
+      "id": "JAM-T11",
+      "epic_id": "JAM-E3",
+      "title": "PC 시작부터 제출·엔딩까지 씬 통합",
+      "implementation": "Title→Farming→ShelterPrototype→Ending 순서로 실제 자산·입력·상태 인계를 연결하고 기존 기능은 먼저 재현한다. 기존 구현을 원문과 대조해 차이가 있는 범위만 수정한다. 데이터 변경 시 Docs/DataRegistry.md와 해당 명세·정본·소비자를 먼저 확인하고 이력을 추가한다.",
+      "completion_criteria": [
+        "960틱 제출 후 판정에 맞는 엔딩이 한 번 나오고 재시작 시 이전 인원·시간·습격 상태가 초기화된다."
+      ],
+      "requirement_ids": [
+        "JAM-R01",
+        "JAM-R21"
+      ],
+      "depends_on": [
+        "JAM-T01",
+        "JAM-T02",
+        "JAM-T03",
+        "JAM-T04",
+        "JAM-T05",
+        "JAM-T06",
+        "JAM-T07",
+        "JAM-T08",
+        "JAM-T09",
+        "JAM-T10"
+      ],
+      "integrates": [
+        "JAM-T01",
+        "JAM-T02",
+        "JAM-T03",
+        "JAM-T04",
+        "JAM-T05",
+        "JAM-T06",
+        "JAM-T07",
+        "JAM-T08",
+        "JAM-T09",
+        "JAM-T10"
+      ],
+      "related_to": [],
+      "produces": [],
+      "consumes": [
+        "JAM-CLOCK",
+        "JAM-TRANSFER"
+      ],
+      "modifies": [
+        {
+          "path": "Assets/Scenes/Title.unity",
+          "basis": "observed",
+          "reason": "PC 시작부터 제출·엔딩까지 씬 통합"
+        },
+        {
+          "path": "Assets/Scenes/Farming.unity",
+          "basis": "observed",
+          "reason": "PC 시작부터 제출·엔딩까지 씬 통합"
+        },
+        {
+          "path": "Assets/Scenes/ShelterPrototype.unity",
+          "basis": "observed",
+          "reason": "PC 시작부터 제출·엔딩까지 씬 통합"
+        },
+        {
+          "path": "Assets/Scenes/Ending.unity",
+          "basis": "observed",
+          "reason": "PC 시작부터 제출·엔딩까지 씬 통합"
+        }
+      ],
+      "open_questions": [
+        "최종 제출 등급과 굿/배드 분기 기준을 기존 엔딩 명세와 대조한다."
+      ],
+      "execution": {
+        "lane": "integration",
+        "skills": [
+          "unity-project-layout",
+          "unity-cli"
+        ],
+        "resources": [
+          "unity-editor"
+        ]
+      }
+    }
+  ],
+  "contracts": [
+    {
+      "id": "JAM-CLOCK",
+      "name": "벙커 틱과 정지 상태",
+      "kind": "api",
+      "purpose": "하루 시계와 이벤트 일정 배분",
+      "usage": "0에서 시작해 정지 중에는 증가하지 않는다. 씬 종료 시 구독을 해제한다.",
+      "public_structure": "Tick(int currentTick), CurrentTick, Paused",
+      "definition_path": "Assets/Settings/Scripts/Shelter/BunkerTickClock.cs",
+      "owner_task": "JAM-T01"
+    },
+    {
+      "id": "JAM-TRANSFER",
+      "name": "파밍 결과 인계",
+      "kind": "api",
+      "purpose": "파밍 구조 인원과 물자 인계",
+      "usage": "확보한 인물 ID와 물자를 결과로 보관하고 새 판에서 초기화한다.",
+      "public_structure": "Capture(IEnumerable<string>, FarmingDatabase), People, Items, Reset()",
+      "definition_path": "Assets/Settings/Scripts/Farming/FarmingRunTransfer.cs",
+      "owner_task": "JAM-T02"
+    }
+  ]
+}

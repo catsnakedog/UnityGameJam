@@ -119,7 +119,7 @@ namespace ShelterRun
             else if (Focused)
             {
                 if (!Take(Focused))
-                { session.Notify($"공간 부족 · {Focused.Record.Weight}칸 필요 / {Inventory.Capacity - Inventory.Used}칸 남음"); return; }
+                { session.Notify("운반 공간이 부족합니다"); return; }
                 session.Notify(Focused.Record.Type == FarmingObjectType.Person ? "사람을 들었습니다" : "물자를 챙겼습니다");
                 if (Focused.Record.Type == FarmingObjectType.Item) GameAudio.Play(GameSound.FarmPickup);
                 Focused = null;

@@ -101,9 +101,11 @@ public static class EventPopupSetup
             result.textWrappingMode=TextWrappingModes.NoWrap; result.enableAutoSizing=true; result.fontSizeMin=12; result.fontSizeMax=22;
             var area=laptop.Find("BodyScroll").GetComponent<RectTransform>(); area.sizeDelta=new Vector2(860,165);
             var viewport=area.Find("Viewport").GetComponent<RectTransform>(); viewport.sizeDelta=new Vector2(860,165);
-            var hint=laptop.Find("Hint").GetComponent<TMP_Text>(); hint.text="Y / N 선택  ·  ENTER 전체 보기"; hint.rectTransform.sizeDelta=new Vector2(440,28);
-            Set(popup,"yesButton",yes); Set(popup,"noButton",no); Set(popup,"resultLabel",result); Set(popup,"hint",hint);
+            var hint=laptop.Find("Hint"); if(hint) hint.gameObject.SetActive(false);
+            Set(popup,"yesButton",yes); Set(popup,"noButton",no); Set(popup,"resultLabel",result);
             laptop.Find("Confirm").gameObject.SetActive(false);
+            LaptopTerminalLayout.Apply((RectTransform)laptop, true);
+            PaperUISetup.Review(root);
             PrefabUtility.SaveAsPrefabAsset(root,PrefabPath);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
@@ -151,7 +153,7 @@ public static class EventPopupSetup
             button.spriteState=new SpriteState {highlightedSprite=Sprite("button_hover"),pressedSprite=Sprite("button_pressed"),selectedSprite=Sprite("button_hover")};
             button.navigation=new Navigation {mode=Navigation.Mode.None};
             var label=Text("Label","확인",button.transform,new Vector2(0,0),new Vector2(180,56),24); label.alignment=TextAlignmentOptions.Center;
-            var footer=Text("Hint","기록 수신  /  ENTER 또는 SPACE",laptop.transform,new Vector2(130,-501),new Vector2(640,28),18); footer.color=new Color32(145,164,135,255);
+            Text("Hint","",laptop.transform,new Vector2(130,-501),new Vector2(640,28),18).gameObject.SetActive(false);
             var popup=root.GetComponent<EventLaptopPopup>();
             Set(popup,"panel",overlay.gameObject); Set(popup,"number",number); Set(popup,"title",title); Set(popup,"body",body); Set(popup,"buttonLabel",label); Set(popup,"confirm",button); Set(popup,"scroll",bodyArea);
             PrefabUtility.SaveAsPrefabAsset(root,PrefabPath);
@@ -174,4 +176,67 @@ public static class EventPopupSetup
     { t.SetParent(parent,false); t.anchorMin=t.anchorMax=t.pivot=anchor; t.anchoredPosition=pos; t.sizeDelta=size; }
     static void Set(UnityEngine.Object target,string field,UnityEngine.Object value)
     { var s=new SerializedObject(target); s.FindProperty(field).objectReferenceValue=value; s.ApplyModifiedPropertiesWithoutUndo(); }
+}
+
+// All positions are measured from the top left of the supplied 1523 x 1033 image,
+// scaled to 1440 logical pixels wide. The controls sit inside its black console.
+internal static class LaptopTerminalLayout
+{
+    internal static void Apply(RectTransform laptop, bool eventScreen)
+    {
+        laptop.sizeDelta = new Vector2(1440, 1440f * 1033 / 1523);
+        laptop.GetComponent<Image>().preserveAspect = true;
+        var paper = new Color32(232, 237, 234, 255);
+        var accent = new Color32(153, 220, 206, 255);
+        var dim = new Color32(178, 195, 195, 255);
+
+        RectTransform Box(string path, float x, float y, float w, float h)
+        {
+            var rect = (RectTransform)laptop.Find(path);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
+            rect.anchoredPosition = new Vector2(x, -y);
+            rect.sizeDelta = new Vector2(w, h);
+            return rect;
+        }
+        TMP_Text Label(RectTransform rect, int size, Color32 color)
+        {
+            var label = rect.GetComponent<TMP_Text>();
+            label.fontSize = size;
+            label.color = color;
+            return label;
+        }
+        void Button(string name, int x, int width)
+        {
+            var rect = Box(name, x, 515, width, 48);
+            rect.GetComponent<Image>().color = new Color32(196, 215, 224, 255);
+            var label = Label(Box(name + "/Label", 0, 0, width, 48), 22, paper);
+            label.alignment = TextAlignmentOptions.Center;
+        }
+
+        Label(Box(eventScreen ? "Number" : "Score", 273, 188, 888, 30), 22, accent);
+        var title = Label(Box("Title", 273, 225, 888, 49), 36, paper);
+        title.fontSizeMax = 36;
+        int bodyHeight = eventScreen ? 140 : 210;
+        Box("BodyScroll", 273, 285, 888, bodyHeight);
+        Box("BodyScroll/Viewport", 0, 0, 888, bodyHeight);
+        var body = Label(Box("BodyScroll/Viewport/Content", 0, 0, 880, bodyHeight), 26, paper);
+        body.lineSpacing = 3;
+
+        if (eventScreen)
+        {
+            var result = Label(Box("Result", 273, 428, 888, 54), 23, accent);
+            result.fontSizeMax = 23;
+            result.fontSizeMin = 16;
+            result.textWrappingMode = TextWrappingModes.Normal;
+            Label(Box("Hint", 273, 525, 490, 32), 20, dim);
+            Button("Yes", 824, 156);
+            Button("No", 996, 165);
+            Button("Confirm", 961, 200);
+        }
+        else
+        {
+            Button("Confirm", 693, 224);
+            Button("Retry", 937, 224);
+        }
+    }
 }

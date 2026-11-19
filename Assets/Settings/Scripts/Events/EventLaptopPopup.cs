@@ -17,9 +17,13 @@ namespace UnityGameJam.Events
         enum Page { Hidden, Event, EventResult, Presentation }
 
         [SerializeField] GameObject panel;
-        [SerializeField] TMP_Text number,title,body,buttonLabel,resultLabel,hint;
+        [SerializeField] TMP_Text number,title,body,buttonLabel,resultLabel;
         [SerializeField] Button confirm,yesButton,noButton;
         [SerializeField] ScrollRect scroll;
+        [SerializeField] GameObject presentationSheet;
+        [SerializeField] TMP_Text reviewPlanning, reviewProgramming, reviewGraphics, reviewScore, reviewMental, reviewGrade;
+        [SerializeField] Image reviewFace;
+        [SerializeField] Sprite angryFace, neutralFace, happyFace;
         [SerializeField,Min(1)] float charactersPerSecond=30;
         [SerializeField,Min(0.5f)] float resultDisplaySeconds=3;
         readonly List<int> visibleSteps=new List<int>();
@@ -76,6 +80,17 @@ namespace UnityGameJam.Events
             string summary = $"{progressLine}\n평가 점수  {score:0.000}\n팀원 1인당 기본 멘탈  {grade.MentalDelta:+0;-0;0}";
             GameAudio.Play(GameSound.Stamp);
             Open(Page.Presentation, string.Empty, "중간 발표", summary);
+            if (presentationSheet)
+            {
+                reviewPlanning.text = Percent(progress.Planning);
+                reviewProgramming.text = Percent(progress.Programming);
+                reviewGraphics.text = Percent(progress.Graphics);
+                reviewScore.text = $"평가 점수  {score:0.000}";
+                reviewMental.text = $"팀원 1인당 기본 멘탈  {grade.MentalDelta:+0;-0;0}";
+                reviewGrade.text = grade.Label;
+                reviewGrade.color = grade.Color;
+                reviewFace.sprite = grade.MentalDelta < 0 ? angryFace : grade.MentalDelta > 0 ? happyFace : neutralFace;
+            }
             resultLabel.text = grade.Label;
             resultLabel.color = grade.Color;
             SetButtons();
@@ -87,6 +102,11 @@ namespace UnityGameJam.Events
             if(IsOpen) throw new InvalidOperationException("Event popup is already open.");
             GameAudio.DuckBunker(true);
             page=nextPage;
+            if (presentationSheet)
+            {
+                presentationSheet.SetActive(ShowingPresentation);
+                number.transform.parent.gameObject.SetActive(!ShowingPresentation);
+            }
             number.text=heading; title.text=caption; body.richText=false; body.text=content;
             body.maxVisibleCharacters=int.MaxValue;
             resultLabel.text=string.Empty; resultLabel.color=defaultResultColor;
@@ -101,8 +121,6 @@ namespace UnityGameJam.Events
         {
             confirm.gameObject.SetActive(IsTyping || ShowingResult);
             buttonLabel.text=ShowingResult?"계속":"전체 보기";
-            if (ShowingPresentation) hint.text = string.Empty;
-            else hint.text=ShowingResult?"결과 확인 후 계속됩니다":IsTyping?"ENTER 또는 SPACE · 전체 보기":"Y / N · 선택";
             yesButton.gameObject.SetActive(CanChoose); noButton.gameObject.SetActive(CanChoose);
         }
         void Update()

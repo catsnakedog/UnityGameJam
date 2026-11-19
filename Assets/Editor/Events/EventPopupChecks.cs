@@ -57,8 +57,8 @@ public static class EventPopupChecks
         Check(calculator.TryCalculate(progress, out double score), "Scheduled tick has a score", results);
         var grade = sim.Rules.GradePresentation(score);
         var labels = popup.GetComponentsInChildren<TMP_Text>().Where(t => t.name != "Label").ToDictionary(t => t.name);
-        string content = labels["Content"].text;
-        Check(labels["Title"].text == "중간 발표" && string.IsNullOrEmpty(labels["Number"].text) && string.IsNullOrEmpty(labels["Hint"].text) &&
+        string content = string.Join(" ", labels.Values.Select(label => label.text));
+        Check(labels["Title"].text == "중간 발표" && !labels.ContainsKey("Number") && !labels.ContainsKey("Hint") &&
             new[] { "기획", "프로그래밍", "그래픽", $"평가 점수  {score:0.000}", $"멘탈  {grade.MentalDelta:+0;-0;0}" }.All(content.Contains) &&
             labels["Result"].text == grade.Label && ((Color32)labels["Result"].color).Equals((Color32)grade.Color),
             "Presentation shows its evaluation without the round, tick or keyboard hint", results);

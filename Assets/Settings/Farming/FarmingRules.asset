@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: FarmingRules
   m_EditorClassIdentifier: Assembly-CSharp::ShelterRun.FarmingRules
   duration: 30
-  preparationDuration: 15
+  preparationDuration: 10
   capacity: 4
   moveSpeed: 5.8
   interactionRadius: 2

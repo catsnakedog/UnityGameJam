@@ -21,7 +21,6 @@ namespace ShelterRun
         FarmingDepth2D depth;
         SortingGroup group;
         float depositAlpha = 1;
-        float labelHeight;
         Vector3 groundPosition;
         Vector3 launchGround;
         public string RecordId => recordId;
@@ -37,14 +36,16 @@ namespace ShelterRun
                 ? SurvivorAnimation.Pose.Type : SurvivorAnimation.Pose.Idle;
             if (artwork != null) sprite.sprite = artwork.standing;
             Record = record; depth = GetComponent<FarmingDepth2D>(); group = GetComponent<SortingGroup>();
-            labelHeight = weightLabel.transform.localPosition.y;
             if (tabletop)
             {
                 displayHeight = transform.InverseTransformPoint(tabletop.position).y;
                 depth.enabled = false;
                 group.sortingOrder = 20 + tabletop.GetSiblingIndex();
             }
-            weightLabel.text = $"{record.Weight}칸"; SetFocused(false);
+            bool isItem = record.Type == FarmingObjectType.Item;
+            weightLabel.gameObject.SetActive(isItem);
+            if (isItem) weightLabel.text = $"{record.Weight}칸";
+            SetFocused(false);
             LateUpdate();
         }
         public void SetFocused(bool value) { focusMarker.SetActive(value && State == PickupState.Available); }
@@ -93,7 +94,9 @@ namespace ShelterRun
                 visual.localRotation = Quaternion.identity;
                 visual.localPosition = Vector3.zero;
                 sprite.sprite = artwork != null ? artwork.standing : standingSprite;
-                State = PickupState.Available; weightLabel.gameObject.SetActive(true); yield break;
+                State = PickupState.Available;
+                weightLabel.gameObject.SetActive(Record.Type == FarmingObjectType.Item);
+                yield break;
             }
             for (float elapsed = 0; elapsed < rules.FadeDuration; elapsed += Time.deltaTime)
             { depositAlpha = 1 - Mathf.Clamp01(elapsed / rules.FadeDuration); yield return null; }
@@ -105,14 +108,18 @@ namespace ShelterRun
             var map = FarmingMap2D.Instance;
             float visibility = State == PickupState.Carried ? 1 : map ? map.VisibilityAt(State == PickupState.InFlight ? groundPosition : transform.position) : 1;
             sprite.color = new Color(1, 1, 1, visibility * depositAlpha);
-            var labelColor = weightLabel.color; labelColor.a = visibility; weightLabel.color = labelColor;
             if (State == PickupState.Available)
             {
                 if (artwork != null && visibility > 0f)
                     playback.Sample(artwork, waitingPose, SurvivorAnimation.Pose.Idle, sprite, Time.deltaTime);
                 visual.localPosition = Vector3.up * displayHeight;
                 focusMarker.transform.localPosition = Vector3.up * displayHeight;
-                weightLabel.transform.localPosition = Vector3.up * (labelHeight + displayHeight);
+                if (Record.Type == FarmingObjectType.Item)
+                {
+                    var color = weightLabel.color;
+                    color.a = visibility;
+                    weightLabel.color = color;
+                }
             }
         }
     }

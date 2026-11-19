@@ -57,7 +57,7 @@ namespace ShelterRun
             player.Teleport(ActiveArea.Constrain(door.Target.Arrival));
             var camera = Camera.main ? Camera.main.GetComponent<FarmingCamera>() : null;
             if (camera) camera.Snap();
-            session.Notify(ActiveArea == corridor ? "복도로 나왔습니다" : ActiveArea.name + " 입실");
+            session.Notify(ActiveArea == corridor ? "복도로 나왔습니다" : "방에 들어왔습니다");
             return true;
         }
         void Update()

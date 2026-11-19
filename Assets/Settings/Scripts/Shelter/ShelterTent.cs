@@ -7,6 +7,7 @@ namespace UnityGameJam.Shelter
     {
         [SerializeField] Sprite openSprite;
         [SerializeField] Sprite closedSprite;
+        [SerializeField] GameObject sleepEmoji;
         public ShelterArea Room => GetComponentInParent<ShelterArea>();
         public float Offset => transform.position.x - Room.Centre.x;
         public ShelterWalker Guest { get; private set; }
@@ -33,6 +34,7 @@ namespace UnityGameJam.Shelter
         {
             Occupied = true;
             GetComponent<SpriteRenderer>().sprite = closedSprite;
+            if (sleepEmoji) sleepEmoji.SetActive(true);
         }
 
         internal void Release()
@@ -40,6 +42,7 @@ namespace UnityGameJam.Shelter
             Guest = null;
             Occupied = false;
             GetComponent<SpriteRenderer>().sprite = openSprite;
+            if (sleepEmoji) sleepEmoji.SetActive(false);
         }
 
         void OnDisable()

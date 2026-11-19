@@ -81,13 +81,7 @@ public static class ShelterPrototypeBuilder
         camera.farClipPlane = 100f;
 
         var notes = new GameObject("05 - World-space prototype notes").transform;
-        Label("Title", notes, "S H E L T E R", -13.2f, 13.1f, 0.42f, Paper);
-        Label("Subtitle", notes, "SIDE VIEW  /  CLICK TO COMMAND", 5.5f, 13.12f, 0.13f, Paper);
-        Rect("Title rule", notes, 0f, 12.84f, 26.4f, 0.025f, Steel, 10);
-        Label("Walk instructions", notes, "CLICK A SURVIVOR  >  CLICK A ROOM", -13.2f, -1.45f, 0.18f, Paper);
-        Label("Climb instructions", notes, "", -5.3f, -1.45f, 0.18f, Amber);
-        Label("Reset instructions", notes, "3 SURVIVORS", 8.9f, -1.45f, 0.18f, Paper);
-        Label("Arrow instructions", notes, "CLICK A SURVIVOR, THEN CLICK A ROOM", -13.2f, -2.1f, 0.12f, Hex("879493"));
+        Label("Arrow instructions", notes, "", -13.2f, -2.1f, 0.12f, Hex("879493"));
 
         ShelterNavigationSetup.ConfigureScene();
         EditorSceneManager.SaveScene(scene, ScenePath);

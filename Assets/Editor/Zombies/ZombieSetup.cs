@@ -60,7 +60,7 @@ public static class ZombieSetup
                 status.name = "Zombie event status"; status.transform.position = new Vector3(-16.5f, 15.7f, -0.5f);
                 status.anchor = TextAnchor.UpperLeft; status.alignment = TextAlignment.Left;
                 status.characterSize = 0.065f; status.fontSize = 48; status.color = new Color(0.92f, 0.55f, 0.43f);
-                status.text = "좀비 침입 대기";
+                status.text = string.Empty;
             }
             Set(ctrl, "statusLabel", status);
             EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();

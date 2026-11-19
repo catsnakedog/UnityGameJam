@@ -19,6 +19,8 @@ namespace UnityGameJam.GameDev
         [SerializeField] TMP_Text title, body, score;
         [SerializeField] Button confirm, retry;
         [SerializeField] ScrollRect scroll;
+        [SerializeField] Image reactionFace;
+        [SerializeField] Sprite angryFace, neutralFace, happyFace;
         [SerializeField] CanvasGroup blackout;
         bool presenting, leaving;
         string starter;
@@ -51,6 +53,9 @@ namespace UnityGameJam.GameDev
 
         IEnumerator Present(GameDevEnding ending, double value)
         {
+            if (reactionFace)
+                reactionFace.sprite = ending.Id == "ending_breakthrough" ? happyFace :
+                    ending.Id == "ending_unfinished" ? angryFace : neutralFace;
             title.text = ending.DisplayName;
             body.text = ending.Description;
             score.text = $"평가 점수  {value:0.000}";

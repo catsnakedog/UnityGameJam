@@ -36,7 +36,7 @@ namespace UnityGameJam.Zombies
         public ZombieData Data { get; private set; }
         public bool IsReady => Data != null;
         public string LastError { get; private set; }
-        public string Message { get; private set; } = "좀비 침입 대기";
+        public string Message { get; private set; } = string.Empty;
         public int Wave { get; private set; }
         public event Action<ZombieAgent> ZombieSpawned;
         public IReadOnlyList<ZombieAgent> Zombies => zombies.AsReadOnly();
@@ -84,7 +84,7 @@ namespace UnityGameJam.Zombies
             if (development.Phase != GameDevPhase.AwaitingScore) return;
             foreach (var zombie in zombies) if (zombie) zombie.StopCombat();
         }
-        public void ResetRun() { ClearZombies(); Wave = 0; LastError = null; Report("좀비 침입 대기"); RememberPositions(); }
+        public void ResetRun() { ClearZombies(); Wave = 0; LastError = null; Report(string.Empty); RememberPositions(); }
         void ClearZombies()
         {
             lastAttacks.Clear();

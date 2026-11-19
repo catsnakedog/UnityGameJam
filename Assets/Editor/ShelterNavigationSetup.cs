@@ -79,11 +79,7 @@ public static class ShelterNavigationSetup
         ConfigureActor(third, graph, "NOA", 0.65f);
         TintCoat(third, ColorFrom("B08C78"));
 
-        SetNote("Subtitle", "SIDE VIEW  /  CLICK TO COMMAND");
-        SetNote("Walk instructions", "CLICK A SURVIVOR  >  CLICK A ROOM");
-        SetNote("Climb instructions", "");
-        SetNote("Reset instructions", "3 SURVIVORS");
-        var status = SetNote("Arrow instructions", "ROOMS + CORRIDORS + LADDERS CONNECT AUTOMATICALLY");
+        var status = SetNote("Arrow instructions", "");
         graph.GetComponent<ShelterCommander>().statusLabel = status;
         graph.GetComponent<ShelterCommander>().view = SceneObjects<Camera>().FirstOrDefault(c => c.CompareTag("MainCamera"));
         graph.Refresh();

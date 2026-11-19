@@ -29,6 +29,7 @@ namespace UnityGameJam.Shelter
         [SerializeField] TMP_Text totalLabel, footer, pageLabel;
         [SerializeField] ShelterInventorySlot[] slots;
         [SerializeField] ItemArt[] artwork;
+        [SerializeField] GameObject footerPaper;
         [SerializeField] RectTransform tooltip;
         [SerializeField] TMP_Text tooltipTitle, tooltipDetail;
         ShelterInventorySlot hovered;
@@ -80,6 +81,14 @@ namespace UnityGameJam.Shelter
             data.Use();
         }
 
+        void ShowFooter(string message)
+        {
+            footer.text = message;
+            bool visible = !string.IsNullOrEmpty(message);
+            footer.gameObject.SetActive(visible);
+            if (footerPaper) footerPaper.SetActive(visible);
+        }
+
         void Refresh()
         {
             if (!panel.activeSelf) return;
@@ -88,7 +97,7 @@ namespace UnityGameJam.Shelter
             long lastRow = Math.Max(0, (total + Columns - 1) / Columns - slots.Length / Columns);
             firstRow = Math.Max(0, Math.Min(firstRow, lastRow));
             totalLabel.text = $"보유 {total:N0}개";
-            footer.text = total == 0 ? "보관한 아이템이 없습니다." : "생존자에게 끌어 사용하거나 장착하세요.";
+            ShowFooter(total == 0 ? "보관한 아이템이 없습니다." : string.Empty);
             pageNavigation.SetActive(lastRow > 0);
             previousPage.interactable = firstRow > 0;
             nextPage.interactable = firstRow < lastRow;
@@ -113,7 +122,7 @@ namespace UnityGameJam.Shelter
                     string bonus = gear.PlusAttack > 0 ? $"전투력 +{gear.PlusAttack}" : string.Empty;
                     if (gear.PlusSkill > 0)
                         bonus += (bonus.Length > 0 ? " · " : string.Empty) + $"개발력 +{gear.PlusSkill}";
-                    detail = $"{bonus}\n장착 시 기존 장비 교체";
+                    detail = bonus;
                 }
                 else if (entry.Supply != null)
                     detail = $"멘탈 +{entry.Supply.MentalRestore}\n보유 {supplies.GetCount(entry.Id):N0}개";
@@ -183,7 +192,7 @@ namespace UnityGameJam.Shelter
             bool applied = target && supplies.TryUse(item, target, view);
             GameAudio.Play(applied ? GameSound.Drop : GameSound.Wrong);
             if (target && !applied)
-                footer.text = target.IsFainted ? "기절한 생존자는 아이템을 사용할 수 없습니다." : "지금은 이 아이템을 사용할 수 없습니다.";
+                ShowFooter(target.IsFainted ? "기절한 생존자는 아이템을 사용할 수 없습니다." : "지금은 이 아이템을 사용할 수 없습니다.");
         }
         void EndDragVisual()
         {

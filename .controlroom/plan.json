@@ -673,7 +673,7 @@
     {
       "id": "JAM-CLOCK",
       "name": "벙커 틱과 정지 상태",
-      "kind": "existing-api",
+      "kind": "api",
       "purpose": "하루 시계와 이벤트 일정 배분",
       "usage": "0에서 시작해 정지 중에는 증가하지 않는다. 씬 종료 시 구독을 해제한다.",
       "public_structure": "Tick(int currentTick), CurrentTick, Paused",
@@ -683,7 +683,7 @@
     {
       "id": "JAM-TRANSFER",
       "name": "파밍 결과 인계",
-      "kind": "existing-api",
+      "kind": "api",
       "purpose": "파밍 구조 인원과 물자 인계",
       "usage": "확보한 인물 ID와 물자를 결과로 보관하고 새 판에서 초기화한다.",
       "public_structure": "Capture(IEnumerable<string>, FarmingDatabase), People, Items, Reset()",

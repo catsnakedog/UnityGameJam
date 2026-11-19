@@ -79,7 +79,9 @@ namespace ShelterRun.Editor
         }
         static FarmingDoor2D Door(GameObject prefab,FarmingRoom2D room,float x,string destination)
         {
-            var root=(GameObject)PrefabUtility.InstantiatePrefab(prefab);root.name="Door to "+destination;root.transform.SetParent(room.transform.Find("Visuals"));root.transform.position=new Vector3(x,room.GroundY,0);var door=root.GetComponent<FarmingDoor2D>();Set(door,"area",room);Text(door,"destinationLabel",destination);Label(destination,root.transform,new Vector3(x,room.GroundY+3.25f,0),3,30);return door;
+            var root=(GameObject)PrefabUtility.InstantiatePrefab(prefab);root.name="Door to "+destination;root.transform.SetParent(room.transform.Find("Visuals"));root.transform.position=new Vector3(x,room.GroundY,0);var door=root.GetComponent<FarmingDoor2D>();Set(door,"area",room);Text(door,"destinationLabel",destination);
+            if (destination == "복도") Label(destination,root.transform,new Vector3(x,room.GroundY+3.25f,0),3,30);
+            return door;
         }
         static Dictionary<string,GameObject> PickupPrefabs(FarmingDatabase db)
         {
@@ -88,13 +90,48 @@ namespace ShelterRun.Editor
             {
                 var root=new GameObject(row.Id);root.AddComponent<FarmingDepth2D>();var pickup=root.AddComponent<FarmingPickup>();
                 var visual=SpriteObject("Visual",row.Id,root.transform,Vector3.zero,1);var focus=SpriteObject("Focus","focus",root.transform,Vector3.zero,-1);focus.SetActive(false);
-                var label=Label(row.Weight+"칸",root.transform,new Vector3(0,row.Type==FarmingObjectType.Person?1.55f:.8f,0),2.3f,20);
+                var label = Label("",root.transform,Vector3.zero,1.5f,20);
+                ConfigureSlotCost(label, visual.GetComponent<SpriteRenderer>(), row.Type);
                 Text(pickup,"recordId",row.Id);Set(pickup,"visual",visual.transform);Set(pickup,"sprite",visual.GetComponent<SpriteRenderer>());Set(pickup,"standingSprite",FarmingSideViewArt.Load(row.Id));Set(pickup,"focusMarker",focus);Set(pickup,"weightLabel",label);
                 if (row.Type == FarmingObjectType.Person) ConfigureCharacter(root, row.Id);
                 result.Add(row.Id,PrefabUtility.SaveAsPrefabAsset(root,Prefabs+row.Id+".prefab"));UnityEngine.Object.DestroyImmediate(root);
             }
             return result;
         }
+        internal static void ConfigureSlotCost(TMP_Text label, SpriteRenderer visual, FarmingObjectType type)
+        {
+            label.name = "Item slot cost";
+            label.text = "";
+            label.fontSize = 1.5f;
+            label.rectTransform.pivot = new Vector2(.5f, 0);
+            label.rectTransform.sizeDelta = new Vector2(.8f, .22f);
+            label.gameObject.SetActive(type == FarmingObjectType.Item);
+            if (type != FarmingObjectType.Item) return;
+
+            // Anchor to the painted pixels. The transparent border varies between item sprites.
+            var sprite = visual.sprite;
+            var source = new Texture2D(2, 2);
+            try
+            {
+                var path = AssetDatabase.GetAssetPath(sprite);
+                if (!source.LoadImage(File.ReadAllBytes(path))) throw new IOException(path);
+                var pixels = source.GetPixels32();
+                int top = source.height - 1;
+                while (top > 0 && !RowHasInk(pixels, source.width, top)) top--;
+                label.transform.SetParent(visual.transform, false);
+                label.transform.localPosition = new Vector3(sprite.bounds.center.x,
+                    (top + 1 - sprite.pivot.y) / sprite.pixelsPerUnit + .02f, 0);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(source); }
+        }
+
+        static bool RowHasInk(Color32[] pixels, int width, int y)
+        {
+            for (int x = 0; x < width; x++)
+                if (pixels[y * width + x].a != 0) return true;
+            return false;
+        }
+
         static GameObject TablePrefab()
         {
             var root=SpriteObject("Table","table",null,Vector3.zero,0);root.AddComponent<SortingGroup>().sortingOrder=10;
