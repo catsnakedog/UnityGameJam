@@ -67,7 +67,7 @@ public static class CharacterLinkChecks
                     Check(session.PeopleSaved == 1 && session.ItemsSaved == 0 && session.Pickups.All(p => p.State == PickupState.Available),
                         "Restart clears the prior rescue and restores the room pickups");
                 }
-                string starter = session.Rules.StartingPersonId;
+                string starter = session.StartingPersonId;
                 Check(!FarmingRunTransfer.HasResult && FarmingRunTransfer.People.Count == 0, "Fresh farming clears previous roster");
                 Check(session.Player.Inventory.Used == 0 && session.SecuredIds.SequenceEqual(new[] { starter }) &&
                       session.Pickups.All(p => p.RecordId != starter), "A fresh run starts empty-handed with only the player secured");
@@ -106,7 +106,9 @@ public static class CharacterLinkChecks
             FarmingRunTransfer.Reset();
             await SceneManager.LoadSceneAsync("Assets/Scenes/ShelterPrototype.unity");
             await Until(() => UnityEngine.Object.FindFirstObjectByType<ShelterRoster>()?.IsReady == true);
-            Check(UnityEngine.Object.FindObjectsByType<ShelterWalker>(FindObjectsSortMode.None).Length == 0, "Direct shelter start has no fabricated survivors");
+            var previewRoster = UnityEngine.Object.FindFirstObjectByType<ShelterRoster>();
+            Check(previewRoster.Characters.Select(actor => actor.Id).SequenceEqual(GameData.GetTable(CharacterKeys.Table).Rows.Select(row => row.Id)),
+                "Direct editor start loads all characters in catalog order");
             File.WriteAllLines("Docs/CharacterLink-play.txt", checks);
         }
         catch (Exception e) { checks.Add("FAIL: " + e); File.WriteAllLines("Docs/CharacterLink-play.txt", checks); throw; }

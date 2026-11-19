@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,14 @@ namespace UnityGameJam.Zombies
         [SerializeField] ShelterNavigation navigation;
         [SerializeField] ZombieAgent zombiePrefab;
         [SerializeField] TextMesh statusLabel;
+        [SerializeField] Transform entryDoor;
+        [SerializeField] CombatDamagePopup damagePopup;
+
+        internal void ShowDamage(Vector3 feet, int amount)
+        {
+            if (damagePopup && amount > 0)
+                Instantiate(damagePopup, feet + Vector3.up * 2.6f, Quaternion.identity, transform).Show(amount);
+        }
         readonly List<ZombieAgent> zombies = new List<ZombieAgent>();
         readonly Dictionary<CharacterIdentity, Vector2> previousPositions = new Dictionary<CharacterIdentity, Vector2>();
         readonly Dictionary<CharacterIdentity, (int tick, ZombieAgent zombie)> lastAttacks = new Dictionary<CharacterIdentity, (int, ZombieAgent)>();
@@ -99,6 +108,11 @@ namespace UnityGameJam.Zombies
             // Approach from the exposed wall, away from the interior landing and its boarding queue.
             int side = right - entry.Right > entry.Left - left ? -1 : 1;
             Vector2 doorway = entry.ArrivalPoint(side * (entry.Right - entry.Left) * 0.5f);
+            if (entryDoor && entryDoor.IsChildOf(entry.transform))
+            {
+                side = entryDoor.position.x < entry.Centre.x ? -1 : 1;
+                doorway.x = entryDoor.position.x + side * Data.EncounterDistance;
+            }
             float spawnDistance = Data.WalkSpeed * simulation.Rules.SecondsPerTick * simulation.Rules.InvasionApproachTicks;
             // Append behind the queue rather than filling a gap ahead of an older arrival.
             foreach (var other in zombies)
@@ -108,6 +122,7 @@ namespace UnityGameJam.Zombies
             while (zombies.Any(z => IsLive(z) && Vector2.Distance(spawn, z.transform.position) < Data.MinimumSpacing)) spawn.x += side * Data.MinimumSpacing;
             var zombie = Instantiate(zombiePrefab, spawn, Quaternion.identity, transform);
             zombies.Add(zombie);
+            GameAudio.Play(GameSound.Alarm);
             Report($"{wave}차 습격 · {definition.DisplayName}");
             zombie.Initialize(this, definition, simulation.GetCurrentWaveEnemyHp(definition.Hp), entry, doorway, simulation.CurrentTick);
             ZombieSpawned?.Invoke(zombie);
@@ -132,7 +147,7 @@ namespace UnityGameJam.Zombies
             foreach (var actor in roster.Characters)
             {
                 if (!actor) continue;
-                actor.ApplyMentalChange(-loss);
+                actor.ApplyMentalChange(-loss, SurvivorEmotion.Cause.Breach);
                 if (!actor.isActiveAndEnabled || !actor.CanAct) continue;
                 float distance = (actor.transform.position - zombie.transform.position).sqrMagnitude;
                 if (distance >= nearest) continue;
@@ -217,6 +232,62 @@ namespace UnityGameJam.Zombies
             foreach (var actor in roster.Characters)
                 if (actor && actor.isActiveAndEnabled && !actor.GetComponent<ShelterWalker>().IsInElevator && room.ContainsFeet(actor.transform.position)) yield return actor;
         }
+
+        internal ShelterArea EncounterAreaAt(Vector2 feet)
+        {
+            // Elevator landings overlap playable rooms and corridors in the authored map.
+            ShelterArea corridor = null;
+            foreach (var area in navigation.Areas)
+            {
+                if (!area.IsWalkable || !area.ContainsFeet(feet)) continue;
+                if (area.kind == ShelterArea.AreaKind.Room) return area;
+                if (!corridor || area.Right - area.Left < corridor.Right - corridor.Left) corridor = area;
+            }
+            return corridor ? corridor : navigation.AreaAt(feet);
+        }
+
+        internal void ArrangeCombat(ShelterArea area)
+        {
+            int enemies = 0, developers = 0;
+            foreach (var zombie in zombies)
+            {
+                if (!IsLive(zombie) || zombie.FormationArea != area) continue;
+                if (zombie.State != ZombieState.Approaching) enemies++;
+                foreach (var actor in zombie.Fighters) if (actor) developers++;
+            }
+
+            float half = (area.Right - area.Left) * 0.5f;
+            int enemySlot = 0, developerSlot = 0;
+            foreach (var zombie in zombies)
+            {
+                if (!IsLive(zombie) || zombie.FormationArea != area) continue;
+                if (zombie.State != ZombieState.Approaching)
+                {
+                    float spacing = half / enemies;
+                    var point = new Vector2(area.Left + (enemySlot++ + 0.5f) * spacing, area.FloorY);
+                    zombie.GetComponent<ShelterWalker>().TakeCombatPosition(point, false);
+                }
+                foreach (var actor in zombie.Fighters)
+                {
+                    if (!actor) continue;
+                    if (zombie.State == ZombieState.Approaching)
+                    {
+                        float inward = Mathf.Sign(area.Centre.x - zombie.Doorway.x);
+                        float gap = Mathf.Min(Data.EncounterDistance, half / developers);
+                        float x = zombie.Doorway.x + inward * (2f * Data.EncounterDistance + developerSlot++ * gap);
+                        var slot = area.ArrivalPoint(x - area.Centre.x);
+                        actor.GetComponent<ShelterWalker>().TakeCombatPosition(slot, inward > 0f);
+                        previousPositions[actor] = slot;
+                        continue;
+                    }
+                    float spacing = half / developers;
+                    var point = new Vector2(area.Centre.x + (developerSlot++ + 0.5f) * spacing, area.FloorY);
+                    actor.GetComponent<ShelterWalker>().TakeCombatPosition(point, true);
+                    previousPositions[actor] = point; // Taking a slot is not a swept walking contact.
+                }
+            }
+        }
+
         internal bool CanAttack(CharacterIdentity actor, ZombieAgent zombie, int tick) =>
             !lastAttacks.TryGetValue(actor, out var attack) || attack.tick != tick || attack.zombie == zombie;
         internal void RecordAttack(CharacterIdentity actor, ZombieAgent zombie, int tick) => lastAttacks[actor] = (tick, zombie);

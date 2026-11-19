@@ -87,10 +87,8 @@ public static class ZombieSetup
             var walker = instance.GetComponent<ShelterWalker>(); walker.playerSelectable = false; walker.externallyDriven = true;
             walker.characterName = "좀비"; walker.walkSpeed = walker.climbSpeed = 0; // Runtime catalog provides speeds.
             if (walker.selectionMarker) walker.selectionMarker.enabled = false;
-            var speechAnchor = instance.GetComponent<ShelterSpeechAnchor>();
             foreach (var sprite in instance.GetComponentsInChildren<SpriteRenderer>())
             {
-                if (speechAnchor && sprite.name == "Hair") Set(speechAnchor, "head", sprite);
                 if (sprite.name == "Head" || sprite.name == "Neck" || sprite.name == "Nose") sprite.color = new Color(0.43f, 0.59f, 0.37f);
                 if (sprite.name.Contains("Coat") || sprite.name.Contains("arm")) sprite.color = new Color(0.38f, 0.27f, 0.23f);
                 if (sprite.name == "Backpack") sprite.gameObject.SetActive(false);

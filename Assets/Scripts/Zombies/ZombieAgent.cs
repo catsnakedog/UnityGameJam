@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -16,12 +17,15 @@ namespace UnityGameJam.Zombies
         ShelterWalker walker;
         ShelterArea entryRoom;
         readonly List<CharacterIdentity> fighters = new List<CharacterIdentity>();
+        internal IReadOnlyList<CharacterIdentity> Fighters => fighters;
+        internal ShelterArea FormationArea { get; private set; }
+        bool formationChanged;
         readonly List<CharacterIdentity> pendingRolls = new List<CharacterIdentity>();
         readonly List<string> rollMessages = new List<string>();
         CharacterIdentity attackTarget;
         ZombieState afterEncounter;
         readonly HashSet<CharacterIdentity> participants = new HashSet<CharacterIdentity>();
-        int nextCombatTick, nextVolleyTick, earliestEntryTick, turn;
+        int nextCombatTick, nextVolleyTick, doorHits, turn;
         double lastApproachTick;
         bool pendingReroll;
         bool knockedAtDoor;
@@ -39,6 +43,8 @@ namespace UnityGameJam.Zombies
         public bool IsTrafficBlocked { get; private set; }
         ZombieData Rules => owner.Data;
 
+        SoundHandle footsteps;
+
         public void Initialize(ZombieInvasionController controller, ZombieDefinition definition, int hp, ShelterArea entry, Vector2 doorway, int tick)
         {
             owner = controller; Definition = definition; Hp = InitialHp = hp; entryRoom = entry;
@@ -50,9 +56,8 @@ namespace UnityGameJam.Zombies
             walker.FindLandingSpace = (exit, previous) => owner.FindLandingSpace(this, exit, previous);
             State = ZombieState.Approaching;
             lastApproachTick = tick;
-            earliestEntryTick = tick + owner.Simulation.Rules.InvasionApproachTicks;
-            nextVolleyTick = tick + owner.Simulation.Rules.GuardVolleyEveryTicks;
             knockedAtDoor = false;
+            footsteps = GameAudio.Play(GameSound.ZombieSteps, transform, definition.DisplayName == "거대 좀비" ? .85f : 1f);
             ShelterSpeech.Say(transform, "좀비", "approach");
             RefreshLabel();
         }
@@ -66,56 +71,71 @@ namespace UnityGameJam.Zombies
             var step = Vector2.MoveTowards(from, Doorway, Rules.WalkSpeed * seconds);
             walker.ApplyMovementPosition(Vector2.Lerp(from, step, LimitMovement(from, step)), seconds);
         }
-        void ProcessApproach(int tick)
+        void CheckDoor(int tick)
         {
-            WalkApproach(tick);
-            if (!entryRoom || !entryRoom.IsWalkable) return;
-            if (pendingReroll) RetryVolley(tick);
-            else if (tick >= nextVolleyTick)
-            {
-                nextVolleyTick = tick + owner.Simulation.Rules.GuardVolleyEveryTicks;
-                if (owner.CanStartDefense(this))
-                {
-                    foreach (var actor in owner.InRoom(entryRoom))
-                        if (owner.CanAttack(actor, this, tick)) Enlist(actor, tick);
-                    if (fighters.Count > 0) ResolveCombat(tick);
-                }
-            }
-            TryEnterRoom(tick);
-        }
-        void TryEnterRoom(int tick)
-        {
-            if (State != ZombieState.Approaching || !entryRoom || !entryRoom.IsWalkable ||
-                Vector2.Distance(transform.position, Doorway) > 0.001f) return;
+            if (!entryRoom || !entryRoom.IsWalkable || Vector2.Distance(transform.position, Doorway) > .001f ||
+                !owner.CanStartDefense(this)) return;
             if (!knockedAtDoor)
             {
                 knockedAtDoor = true;
+                nextVolleyTick = tick;
+                footsteps.Stop();
+                GameAudio.Play(GameSound.DoorBang);
                 ShelterSpeech.Say(transform, "좀비", "knock");
             }
-            if (tick < earliestEntryTick || !owner.CanStartDefense(this)) return;
-            // Physical arrival ends the ranged window, including any still-contested shots.
+            RemoveUnavailableFighters(entryRoom);
+            foreach (var actor in owner.InRoom(entryRoom)) Enlist(actor, tick);
+            if (fighters.Count > 0)
+            {
+                FormUp(entryRoom);
+                if (tick < nextVolleyTick) return;
+                var shooter = doorHits == 0 || fighters.Count == 1 ? fighters[0] : fighters[1];
+                if (!owner.CanAttack(shooter, this, tick)) return;
+                if (shooter != fighters[0])
+                {
+                    fighters.Add(fighters[0]);
+                    fighters.RemoveAt(0);
+                    owner.ArrangeCombat(entryRoom);
+                }
+                nextVolleyTick = tick + owner.Simulation.Rules.GuardVolleyEveryTicks;
+                owner.RecordAttack(shooter, this, tick);
+                shooter.GetComponent<SurvivorAnimation>()?.PlayAttack(transform.position.x);
+                GameAudio.Play(GameSound.CanThrow);
+                ShelterSpeech.Say(shooter.transform, shooter.Definition.Role, "can_throw");
+                participants.Add(shooter);
+                int damage = Mathf.Min(Hp, Rules.DamageToZombie);
+                Hp -= damage;
+                doorHits++;
+                ResolvedCombats++;
+                GameAudio.Play(GameSound.CanHit);
+                ShelterSpeech.Say(transform, "좀비", "can_hit");
+                owner.ShowDamage(transform.position, damage);
+                rollMessages.Clear();
+                rollMessages.Add($"{shooter.Definition.DisplayName} · 문 앞 공격 -{damage}");
+                owner.Report(rollMessages[0]);
+                if (Hp == 0) { Die(true); return; }
+                if (doorHits < owner.Simulation.Rules.DoorHitLimit) return;
+            }
+            else if (HasConsciousDefender()) return;
             Unlock();
             State = ZombieState.Defending;
             entryRoom.SetOccupied(this, true);
             ShelterSpeech.Say(transform, "좀비", "invade");
+            GameAudio.Play(GameSound.DoorBust);
             owner.ReportBreach(this);
             foreach (var actor in owner.InRoom(entryRoom))
                 if (owner.CanAttack(actor, this, tick)) Enlist(actor, tick);
             if (fighters.Count > 0)
             {
+                FormUp(entryRoom);
                 nextCombatTick = tick;
                 ResolveCombat(tick);
             }
             else ValidateCombat(tick);
         }
-        void RetryVolley(int tick)
-        {
-            RemoveUnavailableFighters(entryRoom);
-            if (pendingRolls.Count > 0) ResolveCombat(tick);
-            else Unlock();
-        }
-        bool HasConsciousDefender() => owner.InRoom(entryRoom).Any(a => a.CanAct);
-        bool CanFight(CharacterIdentity actor) => actor && actor.isActiveAndEnabled && actor.CanAct && !actor.GetComponent<ShelterWalker>().IsInElevator;
+        bool HasConsciousDefender() => owner.InRoom(entryRoom).Any(CanFight);
+        bool CanFight(CharacterIdentity actor) => actor && actor.isActiveAndEnabled && actor.CanAct &&
+            actor.TryGetComponent<ShelterWalker>(out var walker) && !walker.IsInElevator && !walker.InTent;
         void Enlist(CharacterIdentity actor, int tick)
         {
             if (!CanFight(actor)) return;
@@ -125,21 +145,41 @@ namespace UnityGameJam.Zombies
             if (fighters.Count == 0) nextCombatTick = tick + Rules.CombatEveryTicks;
             movement.AcquireMovementLock(this);
             fighters.Add(actor);
+            if (actor.TryGetComponent<SurvivorEmotion>(out var emotion)) emotion.ShowAnger();
+            formationChanged = true;
+        }
+        void FormUp(ShelterArea area)
+        {
+            if (!area || (!formationChanged && FormationArea == area)) return;
+            FormationArea = area;
+            formationChanged = false;
+            owner.ArrangeCombat(area);
+            RefreshLabel();
+        }
+        void ReleaseFighter(CharacterIdentity actor)
+        {
+            if (!actor) return;
+            var movement = actor.GetComponent<ShelterWalker>();
+            movement.ReleaseMovementLock(this);
+            if (FormationArea) movement.LeaveCombatPosition();
         }
         void Unlock()
         {
-            foreach (var actor in fighters)
-                if (actor) actor.GetComponent<ShelterWalker>().ReleaseMovementLock(this);
+            foreach (var actor in fighters) ReleaseFighter(actor);
             fighters.Clear();
             pendingRolls.Clear();
             attackTarget = null;
             pendingReroll = false;
             if (walker) walker.ReleaseMovementLock(this);
+            var previousArea = FormationArea;
+            FormationArea = null;
+            formationChanged = false;
+            if (owner && previousArea) owner.ArrangeCombat(previousArea);
         }
         public void ProcessTick(int tick)
         {
             if (!owner.CanAdvance || State == ZombieState.Dead) return;
-            if (State == ZombieState.Approaching) { ProcessApproach(tick); RefreshLabel(); return; }
+            if (State == ZombieState.Approaching) { WalkApproach(tick); CheckDoor(tick); RefreshLabel(); return; }
             ValidateCombat(tick);
             if (fighters.Count > 0 && tick >= nextCombatTick && !pendingReroll) ResolveCombat(tick);
             RefreshLabel();
@@ -148,7 +188,7 @@ namespace UnityGameJam.Zombies
         {
             if (State != ZombieState.Defending && State != ZombieState.Occupying && State != ZombieState.Encounter) return;
             var room = State == ZombieState.Defending ? entryRoom :
-                State == ZombieState.Occupying || afterEncounter == ZombieState.Occupying ? TargetRoom : null;
+                State == ZombieState.Occupying ? TargetRoom : FormationArea;
             RemoveUnavailableFighters(room);
             if (State == ZombieState.Defending && !HasConsciousDefender())
             { BeginInvasion(); return; }
@@ -161,8 +201,12 @@ namespace UnityGameJam.Zombies
                         if (actor && Vector2.Distance(actor.transform.position, transform.position) <= Rules.EncounterDistance)
                             Enlist(actor, tick);
             }
-            if (State == ZombieState.Occupying && fighters.Count > 0) BeginEncounter(ZombieState.Occupying);
-            if (fighters.Count == 0)
+            if (fighters.Count > 0)
+            {
+                if (State == ZombieState.Occupying) BeginEncounter(ZombieState.Occupying);
+                else FormUp(room);
+            }
+            else
             {
                 Unlock();
                 if (State == ZombieState.Encounter) State = afterEncounter;
@@ -174,17 +218,17 @@ namespace UnityGameJam.Zombies
             {
                 var actor = fighters[i];
                 if (CanFight(actor) && (!room || room.ContainsFeet(actor.transform.position))) continue;
-                if (actor) actor.GetComponent<ShelterWalker>().ReleaseMovementLock(this);
+                ReleaseFighter(actor);
                 fighters.RemoveAt(i);
                 pendingRolls.Remove(actor);
+                formationChanged = true;
             }
         }
         void ResolveCombat(int tick)
         {
-            bool ranged = State == ZombieState.Approaching;
             if (!pendingReroll)
             {
-                attackTarget = ranged ? null : fighters[turn++ % fighters.Count];
+                attackTarget = fighters[turn++ % fighters.Count];
                 pendingRolls.AddRange(fighters);
             }
             // All attacks in this exchange land together. Only the zombie's chosen opponent can lose mental.
@@ -196,32 +240,29 @@ namespace UnityGameJam.Zombies
             {
                 var actor = pendingRolls[i];
                 owner.RecordAttack(actor, this, tick);
-                if (ranged)
-                {
-                    if (!pendingReroll) ShelterSpeech.Say(actor.transform, actor.Definition.Role, "can_throw");
-                    actor.GetComponent<SurvivorAnimation>()?.PlayRangedAttack(transform.position.x);
-                }
+                if (!pendingReroll) actor.GetComponent<SurvivorAnimation>()?.PlayAttack(transform.position.x);
                 participants.Add(actor);
                 LastRoll = new CombatRoll(ZombieCombat.RollDie(Rules, owner.RollDie), zombieDie, actor.Combat, Definition.Combat);
                 if (LastRoll.Outcome == CombatOutcome.Tie) pendingRolls[ties++] = actor;
-                string result = ApplyRoll(actor, LastRoll.Outcome, ranged);
+                string result = ApplyRoll(actor, LastRoll.Outcome);
+                if (actor.CanAct && actor.TryGetComponent<SurvivorEmotion>(out var emotion)) emotion.ShowAnger();
                 rollMessages.Add($"{actor.Definition.DisplayName} {LastRoll.SurvivorTotal} 대 {LastRoll.ZombieTotal} · {result}");
             }
             pendingRolls.RemoveRange(ties, pendingRolls.Count - ties);
-            if (Hp < hpBeforeExchange) ShelterSpeech.Say(transform, "좀비", ranged ? "can_hit" : "melee_hit");
-            if (Hp == 0) { Die(ranged || State == ZombieState.Defending); return; }
+            if (Hp < hpBeforeExchange)
+            {
+                owner.ShowDamage(transform.position, hpBeforeExchange - Hp);
+                ShelterSpeech.Say(transform, "좀비", "melee_hit");
+            }
+            if (Hp == 0) { Die(State == ZombieState.Defending); return; }
             if (rollMessages.Count > 0) owner.Report($"{Definition.DisplayName} HP {Hp}\n" + string.Join("\n", rollMessages));
             pendingReroll = ties > 0;
             if (pendingReroll) return;
-            if (ranged) Unlock();
-            else
-            {
-                nextCombatTick = tick + Rules.CombatEveryTicks;
-                ValidateCombat(tick);
-            }
+            nextCombatTick = tick + Rules.CombatEveryTicks;
+            ValidateCombat(tick);
             RefreshLabel();
         }
-        string ApplyRoll(CharacterIdentity actor, CombatOutcome outcome, bool ranged)
+        string ApplyRoll(CharacterIdentity actor, CombatOutcome outcome)
         {
             if (outcome == CombatOutcome.Tie) return "재굴림";
             ResolvedCombats++;
@@ -229,15 +270,17 @@ namespace UnityGameJam.Zombies
             {
                 int before = Hp;
                 Hp = Mathf.Max(0, Hp - Rules.DamageToZombie);
-                ShelterSpeech.Say(actor.transform, actor.Definition.Role, ranged ? "can_hit" : "melee_win");
+                if (Hp < before) GameAudio.Play(GameSound.MeleeHit);
+                ShelterSpeech.Say(actor.transform, actor.Definition.Role, "melee_win");
                 if (before > 0 && Hp == 0) ShelterSpeech.Say(actor.transform, actor.Definition.Role, "kill");
                 return $"좀비 HP -{Rules.DamageToZombie}";
             }
-            ShelterSpeech.Say(actor.transform, actor.Definition.Role, ranged ? "can_miss" : "melee_loss");
+            GameAudio.Play(GameSound.MeleeMiss);
+            ShelterSpeech.Say(actor.transform, actor.Definition.Role, "melee_loss");
             if (actor != attackTarget) return "공격 실패";
-            if (!ranged && Rules.MentalDamage > 0 && actor.TryGetComponent<SurvivorEmotion>(out var emotion))
-                emotion.ShowAnger();
-            int change = actor.ApplyMentalChange(-Rules.MentalDamage);
+            int change = actor.ApplyMentalChange(-Rules.MentalDamage, SurvivorEmotion.Cause.Combat);
+            if (change < 0) actor.GetComponent<SurvivorAnimation>()?.PlayHit(transform.position.x);
+            owner.ShowDamage(actor.transform.position, -change);
             return $"멘탈 {change}";
         }
         void BeginInvasion()
@@ -268,6 +311,7 @@ namespace UnityGameJam.Zombies
         {
             afterEncounter = resume; State = ZombieState.Encounter;
             walker.AcquireMovementLock(this);
+            FormUp(resume == ZombieState.Occupying ? TargetRoom : owner.EncounterAreaAt(transform.position));
             owner.Report($"강제 전투 · {fighters.Count}명 vs {Definition.DisplayName}");
             RefreshLabel();
         }
@@ -279,8 +323,7 @@ namespace UnityGameJam.Zombies
             if (State == ZombieState.Approaching)
             {
                 WalkApproach(owner.Simulation.FractionalTick);
-                if (pendingReroll) RetryVolley(owner.Simulation.CurrentTick);
-                TryEnterRoom(owner.Simulation.CurrentTick);
+                CheckDoor(owner.Simulation.CurrentTick);
                 RefreshLabel();
                 return;
             }
@@ -342,14 +385,17 @@ namespace UnityGameJam.Zombies
         void Die(bool defense)
         {
             var rewarded = defense ? owner.InRoom(entryRoom).ToArray() : participants.Where(a => a).ToArray();
+            if (State == ZombieState.Approaching) GameAudio.Play(GameSound.Defend);
+            GameAudio.Play(GameSound.ZombieDown);
             State = ZombieState.Dead;
             ShelterSpeech.Say(transform, "좀비", "death");
-            foreach (var actor in rewarded) actor.SetMental((int)System.Math.Min(int.MaxValue, (long)actor.CurrentMental + Rules.MentalRecovery));
+            foreach (var actor in rewarded) actor.SetMental((int)System.Math.Min(int.MaxValue, (long)actor.CurrentMental + Rules.MentalRecovery), SurvivorEmotion.Cause.Victory);
             owner.NotifyKilled(this, string.Join("\n", rollMessages));
             gameObject.SetActive(false); Destroy(gameObject);
         }
         internal void StopCombat()
         {
+            footsteps.Stop();
             Unlock();
             if (walker) walker.Stop();
             RefreshLabel("전투 종료");
@@ -364,7 +410,7 @@ namespace UnityGameJam.Zombies
         void RefreshLabel(string detail = null)
         {
             if (!healthLabel || Definition == null) return;
-            string state = State == ZombieState.Approaching ? (IsTrafficBlocked ? "입구 대기" : "전투 방 접근 중") : State == ZombieState.Defending ? $"전투 방 교전 · {fighters.Count}명" :
+            string state = State == ZombieState.Approaching ? (knockedAtDoor ? $"문 앞 대기 · {doorHits}/{owner.Simulation.Rules.DoorHitLimit}" : IsTrafficBlocked ? "입구 대기" : "전투 방 접근 중") : State == ZombieState.Defending ? $"전투 방 교전 · {fighters.Count}명" :
                 State == ZombieState.Occupying ? "점거 중" : State == ZombieState.Encounter ? $"강제 전투 · {fighters.Count}명" :
                 State == ZombieState.WaitingForRoute ? "경로 대기" : IsTrafficBlocked ? "앞 좀비 대기" : "침입 중";
             healthLabel.text = $"{Definition.DisplayName} · HP {Hp}/{InitialHp}\n{detail ?? state}" + (pendingReroll ? " · 동점 재굴림" : "");

@@ -71,6 +71,7 @@ namespace UnityGameJam.GameDev
 
         void Update()
         {
+            if (GameOptions.BlocksInput) return;
             if (!IsOpen) return;
             var keyboard = Keyboard.current;
             if (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame ||

@@ -114,7 +114,7 @@ namespace UnityGameJam.Events
                 // Lock first; reentrant notifications and repeated button input cannot apply twice.
                 choiceApplied=true;
                 LastResult=EventEffectExecutor.Apply(yes?current.Yes:current.No,roster,development,supplies,simulation);
-                popup.ShowResult(LastResult);
+                popup.ShowResult(LastResult, yes ? current.YesResult : current.NoResult);
                 LastError=null;
             }
             catch(InvalidOperationException e) { choiceApplied=false; LastError=e.Message; popup.ShowChoiceError(e.Message); }

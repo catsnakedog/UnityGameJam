@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using GameJam.Data;
 using TMPro;
 using UnityEngine;
+using UnityGameJam.Characters;
 
 namespace UnityGameJam.Shelter
 {
@@ -21,6 +22,10 @@ namespace UnityGameJam.Shelter
             public TMP_Text text;
             public Transform speaker;
             public ShelterSpeechAnchor anchor;
+            public ShelterWalker walker;
+            public ShelterArea workRoom;
+            public Canvas canvas;
+            public int walkingOrder;
             public float expires;
             public bool ambient;
             public readonly Queue<string> next = new Queue<string>(3);
@@ -33,21 +38,41 @@ namespace UnityGameJam.Shelter
             Clear();
         }
 
-        internal void Clear()
+        internal void Clear() => ClearBubbles(null);
+
+        void ClearBubbles(Transform speaker)
         {
             foreach (var bubble in pool)
             {
-                bubble.rect.gameObject.SetActive(false);
-                bubble.speaker = null;
-                bubble.anchor = null;
-                bubble.next.Clear();
+                if (!speaker || bubble.speaker == speaker) Hide(bubble);
             }
+        }
+
+        static void Hide(Bubble bubble)
+        {
+            bubble.rect.gameObject.SetActive(false);
+            bubble.speaker = null;
+            bubble.anchor = null;
+            bubble.walker = null;
+            bubble.workRoom = null;
+            bubble.next.Clear();
         }
 
         public static void Say(Transform speaker, string role, string situation)
         {
-            if (instance && speaker && speaker.gameObject.scene == instance.gameObject.scene && GameData.IsReady && role != null)
-                instance.Show(speaker, role, situation);
+            if (!instance || !speaker || speaker.gameObject.scene != instance.gameObject.scene) return;
+            if (speaker.TryGetComponent<ShelterWalker>(out var walker) && walker.InTent) return;
+            if (situation == "work" && (!walker || !walker.CanDoDevelopmentWork)) return;
+            if (speaker.TryGetComponent<CharacterIdentity>(out var actor))
+            {
+                if (situation == "faint")
+                {
+                    if (!actor.IsFainted) return;
+                    instance.ClearBubbles(speaker);
+                }
+                else if (!actor.CanAct) return;
+            }
+            if (GameData.IsReady && role != null) instance.Show(speaker, role, situation);
         }
 
         void Show(Transform speaker, string role, string situation)
@@ -65,7 +90,7 @@ namespace UnityGameJam.Shelter
                 source = table;
             }
             if (!lines.TryGetValue((role, situation), out var candidates)) return;
-            bool ambient = situation == "work" || situation == "guard" || situation == "wait_plan";
+            bool ambient = situation == "work" || situation == "guard";
             // Stagger idle chatter without consuming combat's random sequence.
             if (ambient && random.Next(4) != 0) return;
             string line = candidates[random.Next(candidates.Count)];
@@ -75,9 +100,10 @@ namespace UnityGameJam.Shelter
                 if (!bubble.rect.gameObject.activeSelf) { free = bubble; continue; }
                 if (bubble.speaker != speaker) continue;
                 if (ambient) return;
-                if (bubble.ambient || situation == "faint")
+                if (bubble.ambient)
                 {
                     bubble.next.Clear();
+                    bubble.workRoom = null;
                     Display(bubble, line, false);
                 }
                 else
@@ -90,12 +116,15 @@ namespace UnityGameJam.Shelter
             if (free == null)
             {
                 var rect = Instantiate(bubblePrefab, transform);
-                free = new Bubble { rect = rect, text = rect.GetComponentInChildren<TMP_Text>(true) };
+                var canvas = rect.GetComponent<Canvas>();
+                free = new Bubble { rect = rect, text = rect.GetComponentInChildren<TMP_Text>(true), canvas = canvas, walkingOrder = canvas.sortingOrder };
                 pool.Add(free);
             }
             free.speaker = speaker;
             speaker.TryGetComponent(out free.anchor);
-            free.rect.position = ShelterSpeechAnchor.DefaultPosition(speaker);
+            speaker.TryGetComponent(out free.walker);
+            free.workRoom = situation == "work" ? free.walker.CurrentRoom : null;
+            free.rect.position = SpeakerPosition(free);
             Display(free, line, ambient);
         }
 
@@ -112,12 +141,17 @@ namespace UnityGameJam.Shelter
             bubble.expires = Time.time + Mathf.Clamp(line.Length * 0.10f, 1.25f, 2.4f);
         }
 
+        static Vector3 SpeakerPosition(Bubble bubble) =>
+            bubble.speaker.position + (Vector3)(bubble.anchor ? bubble.anchor.Offset : ShelterSpeechAnchor.DefaultOffset);
+
         static void FollowSpeaker(Bubble bubble)
         {
-            if (!bubble.speaker || !bubble.speaker.gameObject.activeInHierarchy) return;
-            bubble.rect.position = bubble.anchor
-                ? bubble.anchor.Position(bubble.rect.rect.height * bubble.rect.lossyScale.y)
-                : ShelterSpeechAnchor.DefaultPosition(bubble.speaker);
+            if (bubble.speaker && bubble.speaker.gameObject.activeInHierarchy)
+            {
+                bubble.rect.position = SpeakerPosition(bubble);
+                int order = bubble.walkingOrder + (bubble.walker ? bubble.walker.RideOrderOffset : 0);
+                if (bubble.canvas.sortingOrder != order) bubble.canvas.sortingOrder = order;
+            }
         }
 
         void LateUpdate()
@@ -125,15 +159,16 @@ namespace UnityGameJam.Shelter
             foreach (var bubble in pool)
             {
                 if (!bubble.rect.gameObject.activeSelf) continue;
+                if (bubble.walker && bubble.walker.InTent) { Hide(bubble); continue; }
+                if (bubble.workRoom && (!bubble.walker || bubble.walker.CurrentRoom != bubble.workRoom || !bubble.walker.CanDoDevelopmentWork))
+                {
+                    Hide(bubble);
+                    continue;
+                }
                 FollowSpeaker(bubble);
                 if (Time.time < bubble.expires) continue;
                 if (bubble.next.Count > 0) Display(bubble, bubble.next.Dequeue(), false);
-                else
-                {
-                    bubble.rect.gameObject.SetActive(false);
-                    bubble.speaker = null;
-                    bubble.anchor = null;
-                }
+                else Hide(bubble);
             }
         }
     }

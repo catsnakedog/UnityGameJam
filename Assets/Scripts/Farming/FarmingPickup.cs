@@ -15,6 +15,7 @@ namespace ShelterRun
         [SerializeField] SpriteRenderer sprite;
         [SerializeField] Sprite standingSprite;
         SurvivorAnimation.Artwork artwork;
+        SurvivorAnimation.Pose waitingPose;
         readonly SurvivorAnimation.Playback playback = new SurvivorAnimation.Playback();
         float displayHeight;
         FarmingDepth2D depth;
@@ -32,6 +33,8 @@ namespace ShelterRun
             if (record.Type == FarmingObjectType.Person && characterArt?.standing == null)
                 throw new InvalidOperationException("Missing farming person art for " + record.Id);
             artwork = characterArt;
+            waitingPose = artwork != null && artwork.workingUsesChair
+                ? SurvivorAnimation.Pose.Type : SurvivorAnimation.Pose.Idle;
             if (artwork != null) sprite.sprite = artwork.standing;
             Record = record; depth = GetComponent<FarmingDepth2D>(); group = GetComponent<SortingGroup>();
             labelHeight = weightLabel.transform.localPosition.y;
@@ -47,6 +50,7 @@ namespace ShelterRun
         public void SetFocused(bool value) { focusMarker.SetActive(value && State == PickupState.Available); }
         public void Carry(Transform anchor, int index)
         {
+            waitingPose = SurvivorAnimation.Pose.Idle;
             State = PickupState.Carried; SetFocused(false); weightLabel.gameObject.SetActive(false);
             displayHeight = 0;
             transform.SetParent(anchor, false);
@@ -57,13 +61,12 @@ namespace ShelterRun
         public void PlaceInHands(int index)
         {
             bool person = Record.Type == FarmingObjectType.Person;
-            sprite.sprite = person ? artwork.standing : standingSprite;
+            sprite.sprite = person ? artwork.Get(SurvivorAnimation.Pose.Carried).firstFrame : standingSprite;
             transform.localRotation = Quaternion.identity;
             transform.localPosition = person ? new Vector3(0, .58f + index * .22f, 0)
                 : new Vector3(index % 2 == 0 ? -.19f : .19f, .55f + index / 2 * .24f, 0);
-            // Imported survivor frames pivot at the feet. Centre the horizontal body over the hands.
-            visual.localRotation = person ? Quaternion.Euler(0, 0, 90) : Quaternion.identity;
-            visual.localPosition = person ? -(visual.localRotation * sprite.sprite.bounds.center) : Vector3.zero;
+            visual.localRotation = Quaternion.identity;
+            visual.localPosition = person ? -Vector3.Scale(visual.localScale, sprite.sprite.bounds.center) : Vector3.zero;
         }
         public void Throw(Vector3 destination, bool deposit, FarmingRules rules)
         {
@@ -106,7 +109,7 @@ namespace ShelterRun
             if (State == PickupState.Available)
             {
                 if (artwork != null && visibility > 0f)
-                    playback.Sample(artwork, SurvivorAnimation.Pose.Idle, SurvivorAnimation.Pose.Idle, sprite, Time.deltaTime);
+                    playback.Sample(artwork, waitingPose, SurvivorAnimation.Pose.Idle, sprite, Time.deltaTime);
                 visual.localPosition = Vector3.up * displayHeight;
                 focusMarker.transform.localPosition = Vector3.up * displayHeight;
                 weightLabel.transform.localPosition = Vector3.up * (labelHeight + displayHeight);

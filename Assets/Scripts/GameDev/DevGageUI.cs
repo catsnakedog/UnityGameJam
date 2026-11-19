@@ -16,6 +16,11 @@ namespace UnityGameJam.GameDev
             [SerializeField] GameDevField field;
             [SerializeField] Image fill;
             [SerializeField] TMP_Text percentage;
+            [SerializeField] DevelopmentLockHint lockHint;
+            public void RefreshLock(bool locked, float threshold)
+            {
+                if (lockHint) lockHint.SetLocked(locked, threshold);
+            }
             public void Refresh(GameDevProgress progress)
             {
                 float value = progress.Get(field);
@@ -87,6 +92,7 @@ namespace UnityGameJam.GameDev
             int tick = simulation ? simulation.CurrentTick : 0;
             var rules = simulation ? simulation.Rules : null;
             int total = rules ? rules.TotalTicks : 0;
+            if (rules != markerRules) RefreshLocks();
             RefreshMarkers(rules);
             if (tick == displayedTick && total == displayedTotal) return;
             displayedTick = tick;
@@ -154,9 +160,17 @@ namespace UnityGameJam.GameDev
             }
         }
 
+        void RefreshLocks()
+        {
+            var rules = simulation ? simulation.Rules : null;
+            bool locked = rules && manager.Phase == GameDevPhase.Developing && !simulation.PlanningUnlocksDepartments;
+            foreach (var field in fields) field.RefreshLock(locked, rules ? rules.PlanningUnlockPercent : 0f);
+        }
+
         void Refresh()
         {
             if (fields == null || status == null) return;
+            RefreshLocks();
             foreach (var field in fields) field.Refresh(manager != null ? manager.Progress : default);
             status.gameObject.SetActive(manager == null || manager.Phase != GameDevPhase.Developing);
             if (manager == null) { status.text = "개발 준비 중"; return; }

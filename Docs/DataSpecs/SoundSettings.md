@@ -47,3 +47,5 @@
 SoundManager 필드/PlayerPrefs 호출, 실제 Resources 프리팹, SoundSettingsRelay, SoundCue, SceneMusic을 확인했다. 기본 볼륨 → 사용자 저장값 우선 적용 → 개별 음원 gain과 곱셈이라는 역할로 구분한다. 기본값과 사용자 값은 의도된 계층이며 독립 편집 정본 중복이 아니다. 개별 씬의 SceneMusic에는 음악 클립/전환 설정이 있으나 사용자 음량이나 글로벌 풀 설정을 복제하는 용도로 사용하지 않는다.
 
 기존 검증 결과/사용법은 [SoundManager.md](../SoundManager.md). 이번 작업은 계약/현재 프리팹 값을 문서화했으며 사용자 설정·게임 데이터·오디오 코드는 변경하지 않았다.
+
+매니저 프리팹의 `gameCues`는 사운드 표 번호로 [역할별 SoundCue](SoundCue.md)를 참조한다. 0번은 비워 두며 각 역할의 gain과 반복은 Cue에 저장한다. 이벤트·중간 발표의 일시적 음악 감쇠는 현재 벙커 음악에만 적용한다.

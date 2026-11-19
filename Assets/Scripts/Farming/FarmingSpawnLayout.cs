@@ -30,7 +30,7 @@ namespace ShelterRun
             public readonly FarmingRoom2D Room;
             public readonly FarmingRules.RoomSpawnRule Rule;
             public readonly List<Transform> Tabletop = new List<Transform>();
-            public readonly List<float> Aisles = new List<float>();
+            public readonly List<float> DeskFronts = new List<float>();
 
             public RoomSlots(FarmingRoom2D room, FarmingRules.RoomSpawnRule rule)
             {
@@ -43,11 +43,10 @@ namespace ShelterRun
                     if (slots == null || slots.Count == 0 || slots.Any(s => !s))
                         throw new InvalidOperationException($"Missing tabletop slots on {room.name}/{tables[i].name}.");
                     Tabletop.AddRange(slots);
-                    if (i > 0)
-                        Aisles.Add((tables[i - 1].transform.position.x + tables[i].transform.position.x) * .5f);
+                    DeskFronts.Add(tables[i].transform.position.x);
                 }
-                if (Aisles.Count < rule.People || Tabletop.Count == 0 || Tabletop.Distinct().Count() != Tabletop.Count)
-                    throw new InvalidOperationException($"Invalid table or aisle capacity in {room.name}.");
+                if (DeskFronts.Count < rule.People || Tabletop.Count == 0 || Tabletop.Distinct().Count() != Tabletop.Count)
+                    throw new InvalidOperationException($"Invalid desk capacity in {room.name}.");
             }
 
             public Placement PlaceItem(FarmingRecord record)
@@ -57,7 +56,7 @@ namespace ShelterRun
             }
         }
 
-        public static List<Placement> Create(FarmingMap2D map, FarmingBunker bunker, FarmingRules rules, FarmingDatabase database)
+        public static List<Placement> Create(FarmingMap2D map, FarmingBunker bunker, FarmingRules rules, FarmingDatabase database, string startingPersonId = null)
         {
             var rooms = map.Doors.Where(d => d.Area == map.Corridor)
                 .OrderBy(d => Mathf.Abs(d.transform.position.x - bunker.LandingPosition.x))
@@ -68,7 +67,7 @@ namespace ShelterRun
 
             var slots = rooms.Select((room, index) => new RoomSlots(room, rules.RoomSpawns[index])).ToArray();
             var people = database.Records.Where(r => r.Type == FarmingObjectType.Person).ToList();
-            var starter = database.Get(rules.StartingPersonId);
+            var starter = database.Get(startingPersonId ?? rules.StartingPersonId);
             if (!people.Remove(starter))
                 throw new InvalidOperationException($"The farming player {starter.Id} must be a Person.");
             var can = database.Get(FarmingDataKeys.SpaghettiCan);
@@ -82,7 +81,7 @@ namespace ShelterRun
             {
                 result.Add(room.PlaceItem(can));
                 for (int i = 0; i < room.Rule.People; i++)
-                    result.Add(new Placement(TakeRandom(people), room.Room, TakeRandom(room.Aisles)));
+                    result.Add(new Placement(TakeRandom(people), room.Room, TakeRandom(room.DeskFronts)));
             }
             // Reserve legendary placements before ordinary items can fill a room.
             var byRank = items.ToLookup(item => ShelterItems.Get(item.Id).rank == "legend");

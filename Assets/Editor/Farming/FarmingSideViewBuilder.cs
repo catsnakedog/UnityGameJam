@@ -32,8 +32,8 @@ namespace ShelterRun.Editor
             UpdateHud();
             var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             var map=new GameObject("Side View Map").AddComponent<FarmingMap2D>();
-            var corridor=Area("복도",0,32,true);var rooms=new List<FarmingRoom2D>();
-            for(int r=0;r<3;r++)rooms.Add(Area((325-r)+"호",(r+1)*20,rules.MapHalfExtents.x*2,false));
+            var corridor=Area("복도",0,32);var rooms=new List<FarmingRoom2D>();
+            for(int r=0;r<3;r++)rooms.Add(Area((325-r)+"호",(r+1)*20,rules.MapHalfExtents.x*2));
             var doorPrefab=DoorPrefab();var doors=new List<FarmingDoor2D>();
             for(int r=0;r<rooms.Count;r++)
             {
@@ -49,7 +49,6 @@ namespace ShelterRun.Editor
                 {
                     float x=4+i*(room.Right-6)/5;
                     var table=(GameObject)PrefabUtility.InstantiatePrefab(tablePrefab);table.name="Table "+(i+1);table.transform.SetParent(interior);table.transform.position=new Vector3(x,room.GroundY,0);
-                    SpriteObject("Chair","chair",interior,new Vector3(x-.6f,room.GroundY,0),5);
                 }
             }
             var player=Player();player.transform.position=new Vector3(5,0,0);
@@ -62,20 +61,15 @@ namespace ShelterRun.Editor
             var camera=cameraObject.GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=4.5f;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=FarmingSideViewArt.C("192E39");camera.nearClipPlane=.1f;camera.farClipPlane=100;camera.transparencySortMode=TransparencySortMode.Orthographic;
             var follow=cameraObject.AddComponent<FarmingCamera>();Set(follow,"target",player.transform);Number(follow,"referenceSize",4.5f);cameraObject.transform.position=new Vector3(8,2,-20);ConfigureRenderer(camera);
             var events=new GameObject("EventSystem",typeof(EventSystem),typeof(InputSystemUIInputModule));events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
-            corridor.Apply(1);foreach(var room in rooms)room.Apply(0);
+            FarmingMapArtwork.Apply(map,follow);
             AssetDatabase.SaveAssets();EditorSceneManager.SaveScene(scene,FarmingSceneBuilder.ScenePath);
             if(SceneView.lastActiveSceneView){SceneView.lastActiveSceneView.in2DMode=true;SceneView.lastActiveSceneView.LookAt(new Vector3(10,2,0),Quaternion.identity,8);}
             Debug.Log($"Farming side view saved with {pickupPrefabs.Count} pickup prefabs.");
         }
-        static FarmingRoom2D Area(string name,float y,float width,bool hall)
+        static FarmingRoom2D Area(string name,float y,float width)
         {
             var root=new GameObject(name);var room=root.AddComponent<FarmingRoom2D>();var visuals=new GameObject("Visuals").transform;visuals.SetParent(root.transform);
             var left=Anchor("Walk left",root.transform,new Vector3(0,y,0));var right=Anchor("Walk right",root.transform,new Vector3(width,y,0));var camera=Anchor("Camera height",root.transform,new Vector3(width*.5f,y+2,0));
-            var wall=SpriteObject("Wall",hall?"wall_hall":"wall_room",visuals,new Vector3(0,y,0),-100);wall.GetComponent<SpriteRenderer>().drawMode=SpriteDrawMode.Tiled;wall.GetComponent<SpriteRenderer>().size=new Vector2(width,4);
-            var floor=SpriteObject("Floor","floor",visuals,new Vector3(0,y-.75f,0),-90);floor.GetComponent<SpriteRenderer>().drawMode=SpriteDrawMode.Tiled;floor.GetComponent<SpriteRenderer>().size=new Vector2(width,.75f);
-            if(hall)for(float x=12.5f;x<width-1;x+=9)SpriteObject("Window","window",visuals,new Vector3(x,y+1.45f,0),-50);
-            else {SpriteObject("Window","window",visuals,new Vector3(width*.5f,y+1.6f,0),-50);Label(name+"  /  파밍 구역",visuals,new Vector3(width*.5f,y+3.65f,0),2.8f,30);}
-            Label(hall?"CONFERENCE HALL":"",visuals,new Vector3(width*.5f,y+4.4f,0),2.8f,30);
             var so=new SerializedObject(room);so.FindProperty("footprint").rectValue=new Rect(0,y-2,width,8);so.ApplyModifiedPropertiesWithoutUndo();Set(room,"walkLeft",left);Set(room,"walkRight",right);Set(room,"cameraAnchor",camera);Set(room,"interior",visuals);return room;
         }
         static GameObject DoorPrefab()

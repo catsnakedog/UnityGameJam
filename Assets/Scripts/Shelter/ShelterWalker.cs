@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -14,7 +15,11 @@ namespace UnityGameJam.Shelter
         public bool playerSelectable = true;
         [HideInInspector] public bool externallyDriven;
         readonly HashSet<object> movementLocks = new HashSet<object>();
-        public bool IsMovementLocked => movementLocks.Count > 0 || (Identity && !Identity.CanAct);
+        public bool IsMovementLocked => InTent || movementLocks.Count > 0 || (Identity && !Identity.CanAct);
+        ShelterTent reservedTent;
+        public bool InTent => reservedTent && reservedTent.Occupied;
+        readonly List<Canvas> hiddenCanvases = new List<Canvas>();
+        readonly List<Renderer> hiddenRenderers = new List<Renderer>();
         public void AcquireMovementLock(object owner) { if (owner != null) movementLocks.Add(owner); }
         public void ReleaseMovementLock(object owner) { if (owner != null) movementLocks.Remove(owner); }
         UnityGameJam.Characters.CharacterIdentity identity;
@@ -34,7 +39,18 @@ namespace UnityGameJam.Shelter
         public Transform rightLeg;
 
         public ShelterArea Destination { get; private set; }
-        public ShelterArea CurrentRoom { get; private set; }
+        ShelterArea currentRoom;
+        public ShelterArea CurrentRoom
+        {
+            get => currentRoom;
+            private set
+            {
+                if (currentRoom == value) return;
+                if (currentRoom) currentRoom.Leave(this);
+                currentRoom = value;
+                if (currentRoom) currentRoom.Enter(this);
+            }
+        }
         public ShelterElevator CurrentElevator { get; private set; }
         public ShelterElevator RequestedElevator { get; private set; }
         public bool IsInElevator => CurrentElevator != null;
@@ -55,9 +71,7 @@ namespace UnityGameJam.Shelter
         private ShelterWalker rescueTarget;
         private ShelterWalker rescuedBy;
         private ShelterArea rescueBed;
-        private ShelterArea rescueReturnArea;
         private float patientOffset;
-        private bool stayingWithPatient;
         private bool carrying;
         public string RoomOrderFailure { get; private set; }
         public bool IsBeingCarried => rescuedBy && rescuedBy.carrying;
@@ -68,7 +82,13 @@ namespace UnityGameJam.Shelter
         private float facing = 1f;
         internal bool FacingLeft => facing < 0;
         internal bool AnimationPaused => simulation && simulation.IsPaused;
-        internal bool CanAnimateDevelopment => CanWorkInCurrentRoom && simulation && simulation.CanDevelopIn(CurrentRoom.roomType);
+        internal bool CanDoDevelopmentWork => CanWorkInCurrentRoom && simulation && simulation.CanDevelopIn(CurrentRoom.roomType)
+            && CurrentRoom.HasWorkSlot(this, simulation.Rules.WorkRoomCapacity);
+        internal bool TryGetAssignedWorkstation(out ShelterArea.Workstation station)
+        {
+            station = default;
+            return CanWorkInCurrentRoom && Identity && CurrentRoom.TryGetWorkstation(Identity.Definition, out station);
+        }
         private float phase;
         private BunkerSimulation simulation;
         private bool started;
@@ -113,6 +133,7 @@ namespace UnityGameJam.Shelter
 
         public bool ContainsClick(Vector2 point)
         {
+            if (InTent) return false;
             var p = transform.InverseTransformPoint(point);
             return Mathf.Abs(p.x) <= 0.48f && p.y >= -0.08f && p.y <= 2.15f;
         }
@@ -127,16 +148,9 @@ namespace UnityGameJam.Shelter
                 return true;
             }
             if (!IsMoving) return !IsBeingCarried && CurrentRoom == room;
-            if (Destination != room || stopAfterRide || (IsRescuing && !stayingWithPatient)) return false;
+            if (Destination != room || stopAfterRide || (IsRescuing && !carrying)) return false;
             position = room.ArrivalPoint(destinationOffset).x;
             return true;
-        }
-
-        bool TryRoomPosition(ShelterArea room, ShelterWalker survivor, out float offset, ShelterWalker leaving = null)
-        {
-            bool sleeping = room.roomType == ShelterRoomType.Sleeping;
-            int capacity = sleeping ? (Identity.Rules ? Identity.Rules.SleepingRoomCapacity : 0) : int.MaxValue;
-            return room.TryFindStandingOffset(survivor, capacity, out offset, leaving);
         }
 
         public bool MoveTo(ShelterArea room)
@@ -144,12 +158,51 @@ namespace UnityGameJam.Shelter
             RoomOrderFailure = null;
             if (!room || IsRescuing || IsMovementLocked) return false;
             float offset = arrivalOffset;
-            if (Identity && room.kind == ShelterArea.AreaKind.Room && !TryRoomPosition(room, this, out offset))
-            {
-                RoomOrderFailure = Identity.Rules ? "수면실 정원이 찼습니다" : "수면실을 준비하고 있습니다";
-                return false;
-            }
-            return MoveTo(room, offset);
+            if (Identity && room.kind == ShelterArea.AreaKind.Room) offset = room.StandingOffset(this);
+            if (!MoveTo(room, offset)) return false;
+            LeaveTent();
+            return true;
+        }
+
+        public bool UseTent(ShelterTent tent)
+        {
+            RoomOrderFailure = null;
+            if (!Identity || IsRescuing || IsMovementLocked || !tent) return false;
+            if (!tent.AvailableTo(this, Identity.Rules)) { RoomOrderFailure = "사용할 수 없는 텐트입니다"; return false; }
+            if (Identity.CurrentMental >= Identity.Rules.MentalMaximum) { RoomOrderFailure = "멘탈이 이미 가득 찼습니다"; return false; }
+            if (!MoveTo(tent.Room, tent.Offset)) return false;
+            ReserveTent(tent);
+            return true;
+        }
+
+        void ReserveTent(ShelterTent tent)
+        {
+            LeaveTent();
+            reservedTent = tent;
+            tent.Reserve(this);
+        }
+
+        void EnterTent()
+        {
+            if (!reservedTent || CurrentRoom != reservedTent.Room || !CurrentRoom.IsOperational ||
+                Identity.CurrentMental >= Identity.Rules.MentalMaximum) { LeaveTent(); return; }
+            if (!reservedTent.Occupied) GameAudio.Play(GameSound.Sleep);
+            reservedTent.Enter();
+            foreach (var renderer in GetComponentsInChildren<Renderer>(true))
+                if (!renderer.forceRenderingOff) { renderer.forceRenderingOff = true; hiddenRenderers.Add(renderer); }
+            foreach (var canvas in GetComponentsInChildren<Canvas>(true))
+                if (canvas.enabled) { canvas.enabled = false; hiddenCanvases.Add(canvas); }
+        }
+
+        internal void LeaveTent()
+        {
+            if (InTent && isActiveAndEnabled) GameAudio.Play(GameSound.Wake);
+            if (reservedTent) reservedTent.Release();
+            reservedTent = null;
+            foreach (var renderer in hiddenRenderers) if (renderer) renderer.forceRenderingOff = false;
+            foreach (var canvas in hiddenCanvases) if (canvas) canvas.enabled = true;
+            hiddenRenderers.Clear();
+            hiddenCanvases.Clear();
         }
 
         private bool MoveTo(ShelterArea room, float offset)
@@ -174,6 +227,7 @@ namespace UnityGameJam.Shelter
 
         public void Stop()
         {
+            if (!InTent) LeaveTent();
             if (IsInElevator) { stopAfterRide = true; afterRideDestination = null; Status = "도착층에서 정지"; return; }
             ReleaseRescueTarget(false);
             ReleaseRequest();
@@ -200,8 +254,44 @@ namespace UnityGameJam.Shelter
                 return;
             }
         }
-        public void BeginRide(ShelterElevator lift) { CurrentElevator = lift; CurrentRoom = null; Status = "엘리베이터 탑승"; }
+        // Keep the authored order of the body, name, emote and gauges inside the cabin.
+        const int PassengerOrderOffset = -80;
+        bool behindPassage;
+        internal int RideOrderOffset => behindPassage ? PassengerOrderOffset : 0;
+
+        internal void SetRideDepth(bool aboard)
+        {
+            if (behindPassage == aboard) return;
+            behindPassage = aboard;
+            int delta = aboard ? PassengerOrderOffset : -PassengerOrderOffset;
+            foreach (var renderer in GetComponentsInChildren<Renderer>(true)) renderer.sortingOrder += delta;
+            foreach (var canvas in GetComponentsInChildren<Canvas>(true)) canvas.sortingOrder += delta;
+            if (carrying && rescueTarget) rescueTarget.SetRideDepth(aboard);
+        }
+
+        public void BeginRide(ShelterElevator lift)
+        {
+            CurrentElevator = lift;
+            CurrentRoom = null;
+            Status = "엘리베이터 탑승";
+        }
         public void ApplyRidePosition(Vector2 point, float dt) => ApplyMovementPosition(point, dt);
+        internal void TakeCombatPosition(Vector2 point, bool faceLeft)
+        {
+            facing = faceLeft ? -1f : 1f;
+            ApplyMovementPosition(point, 0f);
+        }
+
+        internal void LeaveCombatPosition()
+        {
+            if (!IsMoving && Identity && (!CurrentRoom || !CurrentRoom.ContainsFeet(transform.position)))
+                ResolveInitialRoom();
+            if (!IsMoving && !IsMovementLocked && Identity && CurrentRoom &&
+                CurrentRoom.TryGetWorkstation(Identity.Definition, out var station) &&
+                !station.IsAt(transform.position.x))
+                MoveTo(CurrentRoom);
+        }
+
         internal void ApplyMovementPosition(Vector2 point, float dt)
         {
             var previous = (Vector2)transform.position;
@@ -214,6 +304,7 @@ namespace UnityGameJam.Shelter
         public void FinishRide(ShelterElevator lift)
         {
             if (CurrentElevator != lift) return;
+            SetRideDepth(false);
             CurrentElevator = null; RequestedElevator = null; waypoint = rideIndex + 1; rideIndex = -1;
             Velocity = Vector2.zero;
             if (stopAfterRide) { stopAfterRide = false; Stop(); ResolveInitialRoom(); return; }
@@ -228,32 +319,38 @@ namespace UnityGameJam.Shelter
         }
         public void CancelRide(ShelterElevator lift)
         {
-            if (CurrentElevator == lift) { CurrentElevator = null; route = null; afterRideDestination = null; stopAfterRide = false; }
+            if (CurrentElevator == lift) { SetRideDepth(false); CurrentElevator = null; route = null; afterRideDestination = null; stopAfterRide = false; }
             if (RequestedElevator == lift) RequestedElevator = null;
             rideIndex = -1; Velocity = Vector2.zero;
             Status = IsMoving ? "엘리베이터 호출 대기" : "STOPPED";
         }
         void OnDisable()
         {
+            LeaveTent();
             if (CurrentElevator) CurrentElevator.Cancel(this, true);
             ResetRescue();
             ReleaseRequest(); route = null;
+            CurrentRoom = null;
         }
         void Arrive()
         {
             CurrentRoom = Destination && Destination.kind == ShelterArea.AreaKind.Room ? Destination : null;
             Status = "ARRIVED";
-            if (!rescueTarget) return;
+            if (!rescueTarget)
+            {
+                if (reservedTent) EnterTent();
+                return;
+            }
             if (carrying)
             {
-                bool delivered = CurrentRoom == rescueBed && rescueBed && rescueBed.IsOperational;
-                bool returning = delivered && !stayingWithPatient;
-                ShelterArea returnArea = rescueReturnArea;
+                bool delivered = CurrentRoom == rescueBed && rescueBed && rescueBed.IsOperational && rescueTarget.reservedTent;
                 ReleaseRescueTarget(delivered);
-                if (returning)
+                if (delivered)
                 {
+                    // Step clear of the opening after handing the patient over.
+                    var room = CurrentRoom;
                     CurrentRoom = null;
-                    if (!MoveTo(returnArea)) Stop();
+                    if (!MoveTo(room)) ResolveInitialRoom();
                 }
                 return;
             }
@@ -266,8 +363,7 @@ namespace UnityGameJam.Shelter
             carrying = true;
             rescueTarget.CurrentRoom = null;
             SyncPassengerPosition();
-            stayingWithPatient = TryRoomPosition(rescueBed, this, out float carrierOffset);
-            if (!MoveTo(rescueBed, stayingWithPatient ? carrierOffset : patientOffset)) Stop();
+            if (!MoveTo(rescueBed, patientOffset)) Stop();
         }
 
         // The patient's reservation spans both trips so a second rescuer cannot take the same patient.
@@ -284,24 +380,19 @@ namespace UnityGameJam.Shelter
             foreach (var bed in navigation.Areas)
             {
                 if (bed.kind != ShelterArea.AreaKind.Room || bed.roomType != ShelterRoomType.Sleeping || !bed.IsOperational) continue;
-                if (!TryRoomPosition(bed, target, out float bedOffset, this))
+                var tent = System.Array.Find(bed.GetComponentsInChildren<ShelterTent>(), t => t.AvailableTo(target, Identity.Rules));
+                if (!tent)
                 {
-                    RoomOrderFailure = "수면실 정원이 찼습니다";
+                    RoomOrderFailure = "빈 텐트가 없습니다";
                     continue;
                 }
+                float bedOffset = tent.Offset;
                 if (!navigation.TryFindElevatorPath(target.transform.position, bed, bedOffset, walkSpeed, out _)) continue;
-                var origin = CurrentRoom ? CurrentRoom : navigation.AreaAt(transform.position);
-                // Returning to an ordinary area lets one remaining bed take a patient even if the rescuer started in a bedroom.
-                var returnArea = origin && origin.roomType != ShelterRoomType.Sleeping ? origin : pickup;
-                if (returnArea.roomType == ShelterRoomType.Sleeping)
-                    foreach (var area in navigation.Areas)
-                        if (area.roomType != ShelterRoomType.Sleeping &&
-                            navigation.TryFindElevatorPath(bed.ArrivalPoint(bedOffset), area, 0, walkSpeed, out _))
-                        { returnArea = area; break; }
                 if (!MoveTo(pickup, target.transform.position.x - pickup.Centre.x)) return false;
+                LeaveTent();
+                target.ReserveTent(tent);
                 rescueTarget = target;
                 rescueBed = bed;
-                rescueReturnArea = returnArea;
                 patientOffset = bedOffset;
                 target.rescuedBy = this;
                 RoomOrderFailure = null;
@@ -344,6 +435,7 @@ namespace UnityGameJam.Shelter
                 target.rescuedBy = null;
                 if (carrying)
                 {
+                    target.SetRideDepth(false);
                     Vector3 drop = transform.position;
                     if (delivered)
                         drop.x = rescueBed.ArrivalPoint(patientOffset).x;
@@ -353,14 +445,14 @@ namespace UnityGameJam.Shelter
                     {
                         target.CurrentRoom = rescueBed;
                         target.Identity.BeginBedRest();
+                        target.EnterTent();
                     }
                 }
+                if (!delivered) target.LeaveTent();
             }
             carrying = false;
             rescueTarget = null;
             rescueBed = null;
-            rescueReturnArea = null;
-            stayingWithPatient = false;
         }
 
         public void Tick(float deltaTime, System.Func<Vector2, Vector2, float> movementFraction = null)
@@ -374,6 +466,13 @@ namespace UnityGameJam.Shelter
             Velocity = Vector2.zero;
             if (IsInElevator) return; // The single vehicle update carries its passenger; never simulate it per requester.
             if (rescueTarget && !IsMoving) Stop();
+            if (deltaTime > 0f && !IsMoving && !externallyDriven && CanDoDevelopmentWork &&
+                TryGetAssignedWorkstation(out var station) && !station.IsAt(transform.position.x))
+            {
+                var desk = CurrentRoom.ArrivalPoint(station.feet.position.x - CurrentRoom.Centre.x);
+                ApplyMovementPosition(Vector2.MoveTowards(transform.position, desk, walkSpeed * deltaTime), deltaTime);
+                return;
+            }
             if (deltaTime <= 0f || !IsMoving || IsMovementLocked) return;
             if (navigation == null || Destination == null || !Destination.IsWalkable)
             {
@@ -439,7 +538,6 @@ namespace UnityGameJam.Shelter
             {
                 if (area.gameObject.scene != gameObject.scene || area.kind != ShelterArea.AreaKind.Room ||
                     !area.IsWalkable || !area.ContainsFeet(transform.position)) continue;
-                if (Identity && area.roomType == ShelterRoomType.Sleeping && !TryRoomPosition(area, this, out _)) continue;
                 CurrentRoom = area;
                 break;
             }

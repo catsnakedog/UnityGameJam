@@ -44,6 +44,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 619d77d01f0ab3444a6f64cd08753471, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GameJam.Audio::GameJam.Audio.SoundManager
+  gameCues:
+  - {fileID: 0}
+  - {fileID: 11400000, guid: e01d49a5543938843bf340cc719cee7e, type: 2}
+  - {fileID: 11400000, guid: dacc5041c0c01e345a087f0e3c362bf4, type: 2}
+  - {fileID: 11400000, guid: c77457684cfe8e64db2a9be0bf90a9a1, type: 2}
+  - {fileID: 11400000, guid: 7c8c2f91784f9d94780505c10d46f8c1, type: 2}
+  - {fileID: 11400000, guid: 01baafba2448743418731f8ce242475a, type: 2}
+  - {fileID: 11400000, guid: d2fc523a2732be945bd060a4a7c45d3d, type: 2}
+  - {fileID: 11400000, guid: 3449a1fdfdc27594bbb433d73c44a982, type: 2}
+  - {fileID: 11400000, guid: 179b2aaf45d9c5340921e3c50a831f5a, type: 2}
+  - {fileID: 11400000, guid: 586f71e076e4ef846a9c7604ad168254, type: 2}
+  - {fileID: 11400000, guid: 6da159228393cb146beed0c85f3aacba, type: 2}
+  - {fileID: 11400000, guid: eb6bebac7edc82048b1e859ac64ff58f, type: 2}
+  - {fileID: 11400000, guid: c3a0bce7fc7c1e54faaa9dce9520b325, type: 2}
+  - {fileID: 11400000, guid: fe996c7ec24084849981e0ec83122e05, type: 2}
+  - {fileID: 11400000, guid: de59d56a059c81d4faf722a018eed0fc, type: 2}
+  - {fileID: 11400000, guid: aca12ee5b2bfb3847a43d422c7269d28, type: 2}
+  - {fileID: 11400000, guid: 22fe1165795cc2840b8206b564237d70, type: 2}
+  - {fileID: 11400000, guid: 5960dc755f18eb641bd47cd1470e3175, type: 2}
+  - {fileID: 11400000, guid: d20eef68be4a1674db6225465aff81cf, type: 2}
+  - {fileID: 11400000, guid: 0c2a2b46cb68e7e43af2d4bffa25f05e, type: 2}
+  - {fileID: 11400000, guid: 4506df5be9c3de64e98a319596fa9f29, type: 2}
+  - {fileID: 11400000, guid: e417dc7357c01cd43931fd7a7519e40e, type: 2}
+  - {fileID: 11400000, guid: e2309ef8c43f3944999644225d70d886, type: 2}
+  - {fileID: 11400000, guid: 4723651d235005e46afcee5298b617f5, type: 2}
+  - {fileID: 11400000, guid: adae9e499500d154ab4ab069a54147f1, type: 2}
+  - {fileID: 11400000, guid: 6108a51d38d645940be127f9034610db, type: 2}
+  - {fileID: 11400000, guid: e9c0273d88376cd47a0f111ad77f644b, type: 2}
+  - {fileID: 11400000, guid: 7b2c4112c184f7f498f244c88365f2c0, type: 2}
+  - {fileID: 11400000, guid: cbdc63a2de108454f9a3bd54d0efc6e7, type: 2}
+  - {fileID: 11400000, guid: a3627d354cc6a624f94f1daf6a66aafb, type: 2}
+  - {fileID: 11400000, guid: ee98d2ae00e0c3546a0763d192906ed7, type: 2}
+  - {fileID: 11400000, guid: 13cee28eb70723f40ba55dbf6b1d8054, type: 2}
+  - {fileID: 11400000, guid: 661362008e1bcbb489864d5aac8031c7, type: 2}
   initialVoices: 8
   maxVoices: 32
   stopEffectsOnSceneChange: 1

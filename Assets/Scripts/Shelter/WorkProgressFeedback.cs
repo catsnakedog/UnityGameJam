@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,6 +29,7 @@ namespace UnityGameJam.Shelter
 
         internal void Show(GameDevField field, float amount)
         {
+            GameAudio.Play(GameSound.Progress);
             icon.sprite = field == GameDevField.Planning ? planningIcon :
                 field == GameDevField.Graphics ? graphicsIcon : programmingIcon;
             // Trim floating-point noise from subtracting two near-equal progress values.

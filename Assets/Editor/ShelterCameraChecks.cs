@@ -54,10 +54,10 @@ public static class ShelterCameraChecks
         try
         {
             Time.timeScale = 0;
-            FarmingRunTransfer.Reset();
-            var camera = await Load();
-            Check(camera.roster.Characters.Count == 0 && !camera.PressCharacterSlot(1), "Direct shelter entry has no invented characters");
             var database = AssetDatabase.LoadAssetAtPath<FarmingDatabase>("Assets/Settings/Farming/FarmingDatabase.asset");
+            FarmingRunTransfer.Capture(System.Array.Empty<string>(), database);
+            var camera = await Load();
+            Check(camera.roster.Characters.Count == 0 && !camera.PressCharacterSlot(1), "An empty farming result has no selectable characters");
             FarmingRunTransfer.Capture(new[] { "person_06", "person_04", "person_02", "person_05", "person_01", "person_03" }, database);
             camera = await Load();
             var view = camera.GetComponent<Camera>();
@@ -102,33 +102,46 @@ public static class ShelterCameraChecks
             {
                 var expected = camera.GetCharacterSlot(Math.Min(slot, 4));
                 camera.Unlock();
+                var beforeDigit = camera.transform.position;
                 KeyPress((Key)((int)Key.Digit1 + slot - 1));
-                Check(!camera.IsFollowing && Near(camera.transform.position, Centre(slot)), "Digit " + slot + " centres existing person ID without locking");
+                Check(!camera.IsFollowing && Near(camera.transform.position, slot <= 4 ? beforeDigit : Centre(slot)), "Digit " + slot + " uses single-press framing");
                 Check(camera.commander.Selected == expected.GetComponent<ShelterWalker>() && card.SelectedCharacter == expected,
                     "Digit " + slot + " leaves movement selection and card on " + expected.Id);
                 KeyPress((Key)((int)Key.Digit1 + slot - 1));
-                Check(camera.IsFollowing && camera.FollowTarget.Id == "person_" + slot.ToString("00"), "Digit " + slot + " double tap locks correct character");
+                Check(Near(camera.transform.position, Centre(slot)) && (slot <= 4 ? !camera.IsFollowing : camera.FollowTarget == camera.GetCharacterSlot(slot)), "Digit " + slot + " double tap centres correct character");
                 KeyPress(Key.Y);
                 Check(!camera.IsFollowing, "Y unlocks slot " + slot);
                 if (slot <= 4) camera.Pan(Vector2.right, 0.1f);
+                var beforeNumpad = camera.transform.position;
                 KeyPress((Key)((int)Key.Numpad1 + slot - 1));
-                Check(!camera.IsFollowing && Near(camera.transform.position, Centre(slot)), "Numpad " + slot + " centres correct character");
+                Check(!camera.IsFollowing && Near(camera.transform.position, slot <= 4 ? beforeNumpad : Centre(slot)), "Numpad " + slot + " uses single-press framing");
                 Check(camera.commander.Selected == expected.GetComponent<ShelterWalker>() && card.SelectedCharacter == expected,
                     "Numpad " + slot + " leaves movement selection and card on " + expected.Id);
             }
+            var beforeDifferent = camera.transform.position;
             camera.Unlock(); KeyPress(Key.Digit1); KeyPress(Key.Digit2);
-            Check(!camera.IsFollowing && Near(camera.transform.position, Centre(2)), "Different digits do not count as a double tap");
+            Check(!camera.IsFollowing && Near(camera.transform.position, beforeDifferent), "Different digits do not count as a double tap");
             camera.Unlock(); KeyPress(Key.Digit1);
             await Task.Delay((int)(camera.doubleTapSeconds * 1000) + 120);
             KeyPress(Key.Digit1);
-            Check(!camera.IsFollowing, "Slow repeated digit stays unlocked even at timeScale zero");
+            Check(!camera.IsFollowing && Near(camera.transform.position, beforeDifferent), "Slow repeated digit stays unlocked even at timeScale zero");
             KeyPress(Key.Digit1);
-            Check(camera.IsFollowing, "Fast second press locks at timeScale zero");
+            Check(!camera.IsFollowing && Near(camera.transform.position, Centre(1)), "Fast second press centres once at timeScale zero");
+            var clicked = camera.GetCharacterSlot(1);
+            var feet = clicked.transform.position;
+            clicked.transform.position += Vector3.up * 2;
+            camera.SendMessage("LateUpdate");
+            var beforeClick = camera.transform.position;
+            var screen = view.WorldToScreenPoint(clicked.transform.position + Vector3.up);
+            Check(!Near(beforeClick, Centre(1)) && camera.commander.ClickScreen(screen) && Near(camera.transform.position, beforeClick), "First character click selects without moving");
+            Check(camera.commander.ClickScreen(screen) && !camera.IsFollowing && Near(camera.transform.position, Centre(1)), "Double click centres once");
+            clicked.transform.position = feet;
+            camera.Unlock(); KeyPress(Key.Digit5); KeyPress(Key.Digit5);
             var target = camera.FollowTarget;
             var originalTargetPosition = target.transform.position;
             target.transform.position += new Vector3(2, 3, 0);
             camera.SendMessage("LateUpdate");
-            Check(Near(camera.transform.position, Centre(1)), "Locked camera tracks target on both axes");
+            Check(Near(camera.transform.position, Centre(5)), "Locked camera tracks target on both axes");
             var lockedPosition = camera.transform.position;
             Wheel(1, view.pixelRect.center);
             Check(view.orthographicSize < camera.viewHalfHeight && camera.IsFollowing && Near(camera.transform.position, lockedPosition),
@@ -142,8 +155,8 @@ public static class ShelterCameraChecks
             camera.SendMessage("LateUpdate");
             Check(Near(camera.transform.position, lockedPosition), "Y keeps current view when character moves away");
             KeyPress(Key.RightArrow);
-            var selectedWalker = target.GetComponent<ShelterWalker>();
-            Check(camera.transform.position.x > lockedPosition.x && camera.commander.Selected == selectedWalker && card.SelectedCharacter == target,
+            var selectedWalker = clicked.GetComponent<ShelterWalker>();
+            Check(camera.transform.position.x > lockedPosition.x && camera.commander.Selected == selectedWalker && card.SelectedCharacter == clicked,
                 "Arrow input moves free camera while keeping the survivor and card selected");
             foreach (var input in new[] { (Key.W, Vector2.up), (Key.A, Vector2.left), (Key.S, Vector2.down), (Key.D, Vector2.right) })
             {
@@ -194,14 +207,14 @@ public static class ShelterCameraChecks
             EventSystem.current.SetSelectedGameObject(null);
             UnityEngine.Object.Destroy(field); field = null;
 
-            camera.Unlock(); KeyPress(Key.Digit1); KeyPress(Key.Digit1);
+            camera.Unlock(); KeyPress(Key.Digit5); KeyPress(Key.Digit5);
             target.gameObject.SetActive(false);
             camera.SendMessage("LateUpdate");
             Check(!camera.IsFollowing && camera.FollowTarget == null, "Inactive follow target releases lock");
             target.gameObject.SetActive(true);
             var absent = camera.GetCharacterSlot(6);
             absent.gameObject.SetActive(false);
-            camera.Unlock(); KeyPress(Key.Digit1); KeyPress(Key.Digit1);
+            camera.Unlock(); KeyPress(Key.Digit5); KeyPress(Key.Digit5);
             var beforeMissing = camera.transform.position;
             KeyPress(Key.Digit6);
             Check(camera.IsFollowing && camera.FollowTarget == target && Near(camera.transform.position, beforeMissing), "Unavailable slot preserves camera and existing lock");
@@ -246,10 +259,10 @@ public static class ShelterCameraChecks
             Check(zombie && Near(camera.transform.position, beforeSpawn) && camera.GetComponent<Camera>().orthographicSize == beforeSpawnSize,
                 "Zombie spawn preserves free camera position and zoom");
             camera.Unlock();
-            camera.PressCharacterSlot(1); camera.PressCharacterSlot(1);
+            camera.PressCharacterSlot(5); camera.PressCharacterSlot(5);
             invasion.SpawnWave();
             camera.SendMessage("LateUpdate");
-            Check(camera.IsFollowing && Near(camera.transform.position, Centre(1)), "Incoming waves respect an explicit follow lock");
+            Check(camera.IsFollowing && Near(camera.transform.position, Centre(5)), "Incoming waves respect an explicit follow lock");
             camera.Unlock();
             invasion.Simulation.Paused = true;
             return string.Join("\n", results);

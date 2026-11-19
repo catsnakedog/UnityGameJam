@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -131,7 +132,7 @@ namespace UnityGameJam.Shelter
             {
                 int mental = actor.ClampMental((long)actor.CurrentMental + supply.MentalRestore);
                 if (mental == actor.CurrentMental) return false;
-                actor.SetMental(mental);
+                actor.SetMental(mental, SurvivorEmotion.Cause.ItemUse);
                 if (item != null) pickups.Remove(item);
                 else counts[supply.Id]--;
             }
@@ -158,6 +159,10 @@ namespace UnityGameJam.Shelter
                 if (actor.EquippedPickup != null) pickups.Add(actor.EquippedPickup);
                 actor.SetEquipment(item, view, supply);
             }
+            if (supply.UseKind == "mental" || supply.UseKind == "hunger") GameAudio.Play(GameSound.Eat);
+            // Mental supplies already show joy through the actual mental change.
+            if (supply.UseKind != "mental" && actor.TryGetComponent<SurvivorEmotion>(out var emotion))
+                emotion.ShowJoy(SurvivorEmotion.Cause.ItemUse);
             Changed?.Invoke();
             return true;
         }

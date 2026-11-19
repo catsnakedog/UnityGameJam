@@ -10,6 +10,9 @@ namespace GameJam.Audio
     [AddComponentMenu("Audio/Sound Manager")]
     public sealed class SoundManager : MonoBehaviour
     {
+        [SerializeField] SoundCue[] gameCues;
+        internal SoundCue Cue(GameSound id) => gameCues != null && (uint)id < gameCues.Length ? gameCues[(int)id] : null;
+        internal int ProgressFrame = -1;
         public const string ResourceName = "SoundManager";
         private const string PrefsKey = "GameJam.Audio.";
         private static SoundManager instance;
@@ -153,6 +156,9 @@ namespace GameJam.Audio
                 priority, 1f, 30f, null);
 
         public SoundHandle Play(SoundCue cue, Vector3 position = default, Transform follow = null)
+            => Play(cue, position, follow, 1f);
+
+        internal SoundHandle Play(SoundCue cue, Vector3 position, Transform follow, float pitchScale)
         {
             if (cue == null) return default;
             ReclaimFinishedVoices();
@@ -167,7 +173,7 @@ namespace GameJam.Audio
             AudioClip clip = cue.PickClip();
             float low = Mathf.Clamp(Finite(cue.minPitch, 1f), 0.01f, 3f);
             float high = Mathf.Clamp(Finite(cue.maxPitch, low), low, 3f);
-            SoundHandle handle = StartVoice(clip, cue.channel, cue.volume, Random.Range(low, high),
+            SoundHandle handle = StartVoice(clip, cue.channel, cue.volume, Random.Range(low, high) * pitchScale,
                 cue.loop, position, follow, cue.spatialBlend, cue.priority,
                 cue.minDistance, cue.maxDistance, cue);
             if (handle.IsValid && cue.cooldown > 0f)

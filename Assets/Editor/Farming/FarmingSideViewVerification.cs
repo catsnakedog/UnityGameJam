@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -122,7 +122,7 @@ namespace ShelterRun.Editor
             int placedCount = s.Pickups.Count;
             var db = AssetDatabase.LoadAssetAtPath<FarmingDatabase>(FarmingCsvImporter.DatabasePath);
             Check(s.PeopleTotal==6 && p.Inventory.Capacity==4,"Six people and four carry slots");
-            string starter = s.Rules.StartingPersonId;
+            string starter = s.StartingPersonId;
             Check(starter == "person_01" && s.Rules.RoomSpawns.Select(rule => rule.People).SequenceEqual(new[] { 2, 2, 1 }),
                 "Survivor 1 is the player and the rooms hold two, two, and one other survivors");
             Check(p.Inventory.Used == 0 && p.Inventory.Carried.Count == 0 && !p.GetComponentInChildren<FarmingPickup>(),
@@ -140,10 +140,10 @@ namespace ShelterRun.Editor
             {
                 var room = entrances[i].Target.Area;
                 var tables = room.GetComponentsInChildren<FarmingSpawnTable>().OrderBy(t => t.transform.position.x).ToArray();
-                var aisles = tables.Zip(tables.Skip(1), (a,b) => (a.transform.position.x + b.transform.position.x) * .5f).ToArray();
+                var desks = tables.Select(t => t.transform.position.x).ToArray();
                 var inRoom = s.Pickups.Where(x => map.RoomAt(x.transform.position) == room).ToArray();
                 var peopleInRoom = inRoom.Where(x => x.Record.Type == FarmingObjectType.Person).ToArray();
-                Check(peopleInRoom.Length == s.Rules.RoomSpawns[i].People && peopleInRoom.All(x => aisles.Contains(x.transform.position.x)), room.name + " person quota and aisle placement");
+                Check(peopleInRoom.Length == s.Rules.RoomSpawns[i].People && peopleInRoom.All(x => desks.Contains(x.transform.position.x) && Mathf.Approximately(x.transform.position.y, room.GroundY)), room.name + " person quota and desk-front placement");
                 Check(inRoom.Count(x => x.RecordId == FarmingDataKeys.SpaghettiCan) == 1 && inRoom.Where(x => x.Record.Type == FarmingObjectType.Item).All(x =>
                     tables.SelectMany(t => t.TabletopSlots).Any(slot => Vector3.Distance(slot.position, x.AimPosition) < .001f)), room.name + " can and items on tabletops");
                 Check(inRoom.Select(x => x.transform.position.x).Distinct().Count() == inRoom.Length, room.name + " unique reachable positions");
@@ -197,12 +197,13 @@ namespace ShelterRun.Editor
                 foreach (var person in s.Pickups.Where(x => x.Record.Type == FarmingObjectType.Person && map.RoomAt(x.transform.position) == map.ActiveRoom))
                 {
                     var art = artSource.FindArtwork(person.RecordId);
-                    var motion = art.Get(SurvivorAnimation.Pose.Idle);
+                    var motion = art.Get(art.workingUsesChair ? SurvivorAnimation.Pose.Type : SurvivorAnimation.Pose.Idle);
+                    if (motion?.firstFrame == null) motion = art.Get(SurvivorAnimation.Pose.Idle);
                     if (motion?.clip)
                     {
                         var binding = AnimationUtility.GetObjectReferenceCurveBindings(motion.clip).Single(b => b.propertyName == "m_Sprite");
                         var keyframes = AnimationUtility.GetObjectReferenceCurve(motion.clip, binding);
-                        Check(keyframes.Any(key => key.value == ImageOf(person).sprite), person.RecordId + " displays its shelter idle clip");
+                        Check(keyframes.Any(key => key.value == ImageOf(person).sprite), person.RecordId + " displays its desk animation");
                     }
                     else Check(ImageOf(person).sprite == art.standing, person.RecordId + " uses its authored standing sprite");
                 }

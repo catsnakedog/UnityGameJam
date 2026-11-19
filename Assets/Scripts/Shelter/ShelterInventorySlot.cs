@@ -29,7 +29,13 @@ namespace UnityGameJam.Shelter
         }
         public void OnBeginDrag(PointerEventData data) => inventory?.BeginItemDrag(this, stock, icon.sprite, data);
         public void OnDrag(PointerEventData data) => inventory?.MoveItemDrag(this, data);
-        public void OnEndDrag(PointerEventData data) => inventory?.DropItem(this, data);
+        public void OnEndDrag(PointerEventData data)
+        {
+            inventory?.DropItem(this, data);
+            var hit = data.pointerCurrentRaycast.gameObject;
+            var slot = hit ? hit.GetComponentInParent<ShelterInventorySlot>() : null;
+            if (slot && slot.pointerInside) slot.UpdateHover();
+        }
 
         public void OnPointerEnter(PointerEventData data)
         {

@@ -8,7 +8,8 @@
 | 일정 표식 | 지름의 40%와 50% 반경에 16×16 | 테두리 안쪽의 붉은 원은 좀비 습격, 바깥 가장자리의 청록 마름모는 중간 발표다. 같은 틱에도 두 표식 중심이 17.6px 떨어진다. 다이얼 오른쪽에는 같은 그림과 한글 범례가 있다. |
 | Planning / Programming / Graphics | 좌측 486, 740, 994. 상단 24. 카드 각각 240×68, 간격 14 | 윗줄에 분야와 퍼센트, 아래에 왼쪽부터 채워지는 독립 게이지. 카드 위에서 월드 클릭을 차단한다. 틈새는 월드 클릭을 통과시킨다. |
 | Status | 진행도 카드 아래 | 데이터 준비·실패·집계·결과 상태를 표시한다. 개발 중에는 숨긴다. 이벤트·엔딩 팝업은 기존 순서로 위에 뜬다. |
-| Mental gauge | Survivor 루트의 로컬 높이 2.22, 폭 1.04, 높이 0.14 월드 단위 | 생존자별 현재 멘탈 비율. 이름은 높이 2.34에 한 줄로 표시하며 탈진하면 이름 뒤에 ‘탈진’을 표시한다. 좌우 이동·엘리베이터 탑승 시 캐릭터를 따라간다. 선택 카드에서는 정확한 수치를 계속 볼 수 있다. |
+| 작업 잠금 | 프로그래밍·그래픽 카드의 이름과 퍼센트 사이 | 기획 진척도가 벙커 규칙의 해금 기준 이하이면 자물쇠가 뜬다. 카드에 마우스를 올리면 현재 기준과 작업 가능 조건을 보여 준다. 기준을 초과하면 자물쇠와 안내가 함께 사라진다. |
+| Mental gauge | 각 생존자의 서 있는 그림에서 머리 위로 원본 도트 2칸을 띄워 게이지를 놓고, 바로 위에 이름을 한 줄로 표시한다. 게이지 폭은 1.04, 높이는 0.14 월드 단위다. | 현재 멘탈 비율을 표시하고 탈진하면 이름 뒤에 ‘탈진’을 붙인다. 캐릭터가 이동하거나 엘리베이터에 타면 함께 움직이며, 숨쉬기·걷기 프레임이 바뀌어도 발 기준 높이는 고정된다. |
 
 ## 데이터와 전환
 
@@ -19,7 +20,7 @@
 
 ## 프리팹과 이미지 교체
 
-- 개발 HUD와 시계는 `Assets/Prefabs/UI/DevGageUI.prefab`, 멘탈 바는 `Assets/Prefabs/Shelter/Survivor.prefab`에서 편집한다. 선택 카드 `Assets/Prefabs/UI/ShelterCharacterCard.prefab`는 시계 아래에 뜬다.
+- 개발 HUD와 시계는 `Assets/Prefabs/UI/DevGageUI.prefab`에서 편집한다. `Assets/Prefabs/Shelter/Survivor.prefab`의 `CharacterIdentity → Head Clearance Pixels`로 머리와 멘탈 바 사이의 간격을 조절한다. 평상시 이름은 바 가운데에 놓고, ‘탈진’이 붙으면 오른쪽 끝을 바에 맞춰 오른쪽 말풍선이 문구를 가리지 않게 한다. 선택 카드 `Assets/Prefabs/UI/ShelterCharacterCard.prefab`는 시계 아래에 뜬다.
 - `Assets/Art/UI/ShelterClockDial.png`와 `ShelterClockElapsed.png`는 112×112 투명 PNG다. 같은 중심·지름에 맞춰 원본 경로의 파일을 교체한다. Single Sprite, 100 PPU, Bilinear, 압축·mipmap 끔과 기존 .meta를 유지한다. 동적 링은 uGUI Image의 Filled / Radial360을 사용한다.
 - `Assets/Art/UI/ShelterClockInvasion.png`와 `ShelterClockPresentation.png`는 32×32 투명 PNG이며 다이얼과 같은 임포트 설정을 사용한다. 일정 표식은 저장된 `Assets/Prefabs/UI/ShelterClockMarker.prefab`을 복제해 배치하며 범례는 같은 Sprite를 쓴다.
 - 분야 카드·트랙은 기존 `Assets/Art/UI/Farming/panel.png` (64×64, 9-slice), 채움은 `gauge.png` (64×16), 문자에는 기존 한글 폰트를 사용한다. 공유 원화를 교체하면 파밍과 캐릭터 카드에도 반영된다.

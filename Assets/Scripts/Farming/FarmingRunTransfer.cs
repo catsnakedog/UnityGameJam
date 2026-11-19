@@ -5,6 +5,12 @@ namespace ShelterRun
 {
     public static class FarmingRunTransfer
     {
+        public static string SelectedStarter { get; private set; }
+        public static void BeginRun(string personId)
+        {
+            Reset();
+            SelectedStarter = personId;
+        }
         public static IReadOnlyList<string> People { get; private set; } = System.Array.Empty<string>();
         public static IReadOnlyList<FarmingRecord> Items { get; private set; } = System.Array.Empty<FarmingRecord>();
         public static bool HasResult { get; private set; }
@@ -25,6 +31,11 @@ namespace ShelterRun
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void Reset()
+        {
+            SelectedStarter = null;
+            ClearResults();
+        }
+        internal static void ClearResults()
         {
             People = System.Array.Empty<string>();
             Items = System.Array.Empty<FarmingRecord>();

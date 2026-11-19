@@ -1,35 +1,36 @@
 PASS Built Addressables + four rescued survivors + scene wiring
 PASS Shared settings loader cache
-PASS Clicking the shared landing and guard-room area assigns the guard room
-PASS Spawn distance is six walking ticks, ranged interval two, melee interval five
+PASS Select a guard for the landing command
+PASS Clicking the shared landing and guard-room area assigns the guard room and clears selection
+PASS Spawn distance is one walking tick, ranged interval two, melee interval five
 PASS Camera can pan to the outdoor spawn
 PASS Zombie walks smoothly between clock ticks
 PASS Pause freezes approach and attacks
-PASS No early attack or breach at tick one
-PASS Four guards fire on tick two without distant retaliation
-PASS No additional volley on tick three
-PASS The second volley on tick four can stop the zombie before it breaches
-PASS Every guard loses two mental per assigned tick
-PASS Two volleys before tick six and no early entry
-PASS At tick six the last volley hits, breach costs everyone two, then melee hits one guard immediately
+PASS Exactly one guard hits on arrival without breaching
+PASS Multiple guards share the hit limit and a lethal door hit prevents entry
+PASS A strong zombie waits at the door after two fixed hits
+PASS Three door hits followed immediately by a melee exchange
 PASS Melee does not repeat at the shorter ranged interval
 PASS Melee repeats five ticks after the breach
-PASS A living guard holds after three melee rounds and the same breach is charged only once
-PASS When the last guarding survivor faints the invader continues with its remaining HP
+PASS A surviving invader continues after its last defender faints
+PASS A fainted defender's last bubble expires without playing queued combat dialogue
 PASS Fainted guard waits for rescue beyond the former timer
-PASS One sleep tick and fourteen guard ticks use the respective room rates
+PASS Fourteen guard ticks drain mental; waiting outside a tent gives no recovery
 PASS Guard duty drains while no zombies are present
-PASS A lethal final volley prevents both entry and shelter-wide mental loss
-PASS One guard can hit while a teammate ties
-PASS Only the tied shot rerolls; it cannot cause melee damage outside
-PASS An undefended room gets six ticks of warning and charges one breach
+PASS Losing the last defender opens the door immediately
+PASS An undefended room is breached on arrival and charges one breach
 PASS Invader intercepts survivors on its indoor route
 PASS All four route contacts fight and one takes damage; melee continues
 PASS Road movement resumes only when no active fighters remain
+PASS Invader has a route through the corridor
+PASS First contact stages the zombie on the left of the corridor
+PASS Reinforcements take distinct right-hand slots on the same corridor floor
+PASS A crowded corridor preserves the original scale of the zombie and every developer
 PASS Empty combat room chooses connected noncombat target
 PASS Elevator graph reaches target and occupies without blocking entry
 PASS Occupied room stops work
 PASS Entering occupied room automatically starts combat
+PASS Occupant and developer face off in opposite halves of the occupied room
 PASS Popup-style simulation pause freezes combat and movement
 PASS Clearing occupant restores room functionality
 PASS Invasion kill rewards combat participant once

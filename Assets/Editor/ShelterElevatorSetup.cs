@@ -74,26 +74,25 @@ public static class ShelterElevatorSetup
     {
         var root = new GameObject("Elevator"); var lift = root.AddComponent<ShelterElevator>();
         var shaft = new GameObject("Open shaft").transform; shaft.SetParent(root.transform, false); lift.shaftVisual = shaft;
-        Rect("Shaft tint", shaft, new Vector2(0, 0), new Vector2(2.2f, 1), new Color(0.12f, 0.2f, 0.22f, 0.32f), 4);
-        Rect("Left rail", shaft, new Vector2(-1.08f, 0), new Vector2(0.055f, 1), new Color(0.34f, 0.46f, 0.47f), 12);
-        Rect("Right rail", shaft, new Vector2(1.08f, 0), new Vector2(0.055f, 1), new Color(0.34f, 0.46f, 0.47f), 12);
+        Rect("Shaft tint", shaft, new Vector2(0, 0), new Vector2(2.2f, 1), new Color(0.12f, 0.2f, 0.22f, 0.32f), -120);
+        Rect("Left rail", shaft, new Vector2(-1.08f, 0), new Vector2(0.055f, 1), new Color(0.34f, 0.46f, 0.47f), -119);
+        Rect("Right rail", shaft, new Vector2(1.08f, 0), new Vector2(0.055f, 1), new Color(0.34f, 0.46f, 0.47f), -119);
         var car = new GameObject("Visible cabin").transform; car.SetParent(root.transform, false); lift.cabin = car;
-        Rect("Cabin glass", car, new Vector2(0, 1.2f), new Vector2(2.1f, 2.4f), new Color(0.21f, 0.36f, 0.38f, 0.32f), 17);
-        Rect("Platform", car, new Vector2(0, -0.08f), new Vector2(2.2f, 0.16f), new Color(0.63f, 0.76f, 0.73f), 33);
-        Rect("Roof", car, new Vector2(0, 2.47f), new Vector2(2.2f, 0.08f), new Color(0.63f, 0.76f, 0.73f), 33);
-        Rect("Left frame", car, new Vector2(-1.06f, 1.2f), new Vector2(0.07f, 2.5f), new Color(0.63f, 0.76f, 0.73f), 33);
-        Rect("Right frame", car, new Vector2(1.06f, 1.2f), new Vector2(0.07f, 2.5f), new Color(0.63f, 0.76f, 0.73f), 33);
+        var artwork = car.gameObject.AddComponent<SpriteRenderer>();
+        artwork.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Shelter/Elevator.png");
+        artwork.sharedMaterial = Material;
+        artwork.sortingOrder = -100;
         var label = new GameObject("Elevator ownership").AddComponent<TextMesh>(); label.transform.SetParent(root.transform, false);
         var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NeoDunggeunmo.ttf"); label.font = font; label.GetComponent<MeshRenderer>().sharedMaterial = font.material;
-        label.anchor = TextAnchor.LowerCenter; label.alignment = TextAlignment.Center; label.fontSize = 48; label.characterSize = 0.05f; label.color = new Color(0.65f, 0.88f, 0.86f);
-        label.GetComponent<MeshRenderer>().sortingOrder = 50; lift.statusLabel = label; lift.RefreshVisuals(); return root;
+        label.anchor = TextAnchor.LowerCenter; label.alignment = TextAlignment.Center; label.fontSize = 48; label.characterSize = 0.034f; label.color = new Color(0.65f, 0.88f, 0.86f);
+        label.GetComponent<MeshRenderer>().sortingOrder = -20; lift.statusLabel = label; lift.RefreshVisuals(); return root;
     }
     static void AddLanding(Scene scene, ShelterElevator lift, float y, ElevatorRules rules)
     {
         var root = new GameObject("Elevator landing " + y); SceneManager.MoveGameObjectToScene(root, scene); root.transform.position = new Vector3(lift.Bottom.x, y);
         var area = root.AddComponent<ShelterArea>(); area.kind = ShelterArea.AreaKind.Corridor; area.displayName = "엘리베이터 승강장";
         area.width = rules.BoardingOffset * 2 + 1.2f; area.height = 3.1f;
-        area.floorVisual = Rect("Landing floor", root.transform, Vector2.zero, Vector2.one, new Color(0.2f, 0.29f, 0.3f), 14).transform;
+        area.floorVisual = Rect("Landing floor", root.transform, Vector2.zero, Vector2.one, new Color(0.2f, 0.29f, 0.3f), -12).transform;
         area.RefreshVisuals();
     }
     static SpriteRenderer Rect(string name, Transform parent, Vector2 point, Vector2 size, Color color, int order)

@@ -190,7 +190,11 @@ namespace UnityGameJam.Shelter
                     BoardWaitingCompanion();
                     bool seated = true;
                     foreach (var rider in riders) seated &= MovePassenger(rider, Seat(rider), dt);
-                    if (seated) Phase = ElevatorPhase.Travelling;
+                    if (seated)
+                    {
+                        foreach (var rider in riders) rider.actor.SetRideDepth(true);
+                        Phase = ElevatorPhase.Travelling;
+                    }
                     break;
                 case ElevatorPhase.Travelling:
                     float destination = TripDestination;
@@ -243,7 +247,7 @@ namespace UnityGameJam.Shelter
                 if (!Application.isPlaying) statusLabel.text = "ELEVATOR";
                 else if (riders.Count == 2) statusLabel.text = riders[0].actor.characterName + " · " + riders[1].actor.characterName + " 탑승 · 대기 " + waiting.Count;
                 else statusLabel.text = Owner ? Owner.characterName + " 이용 중 · 대기 " + (QueueCount - 1) : "호출 대기";
-                statusLabel.transform.position = new Vector3(Bottom.x, (cabin ? cabin.position.y : Bottom.y) + 2.8f, -0.1f);
+                statusLabel.transform.position = new Vector3(Bottom.x, (cabin ? cabin.position.y : Bottom.y) + 2.42f, -0.1f);
             }
         }
         void OnDrawGizmosSelected()

@@ -70,10 +70,11 @@ public static class ZombieQueueChecks
             var outside = Mathf.Sign(positions[0] - z[0].Doorway.x);
             int die = 0; ctrl.RollDie = sides => ++die % 2 == 0 ? sides : 1;
             int period = ctrl.Simulation.Rules.GuardVolleyEveryTicks;
-            ctrl.Simulation.Advance(period * ctrl.Simulation.Rules.SecondsPerTick);
+            int travel = ctrl.Simulation.Rules.InvasionApproachTicks;
+            ctrl.Simulation.Advance(travel * ctrl.Simulation.Rules.SecondsPerTick);
             for (int i = 0; i < z.Length; i++)
-                Check(Mathf.Abs(outside * (positions[i] - z[i].transform.position.x) - period * ctrl.Simulation.Rules.SecondsPerTick * ctrl.Data.WalkSpeed) < 0.001f, "Every approaching zombie walks at the same speed");
-            Check(z[0].Hp == 1 && z[1].Hp == 2 && z[2].Hp == 2 && hero.CurrentMental == hero.Definition.Mental - period * ctrl.Simulation.Rules.GuardMentalLossPerTick, "A guard shoots only the front target, and waiting zombies do not retaliate");
+                Check(Mathf.Abs(outside * (positions[i] - z[i].transform.position.x) - travel * ctrl.Simulation.Rules.SecondsPerTick * ctrl.Data.WalkSpeed) < 0.001f, "Every approaching zombie walks at the same speed");
+            Check(z[0].Hp == 1 && z[1].Hp == 2 && z[2].Hp == 2 && hero.CurrentMental == hero.Definition.Mental - travel * ctrl.Simulation.Rules.GuardMentalLossPerTick, "A guard shoots only the front target, and waiting zombies do not retaliate");
             ctrl.Simulation.Advance(period * ctrl.Simulation.Rules.SecondsPerTick);
             Check(ctrl.Zombies.SequenceEqual(z.Skip(1)) && z[1].Hp == 2 && z[2].Hp == 2, "Killing the front never spills that shot into the queue");
 

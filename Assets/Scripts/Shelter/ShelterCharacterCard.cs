@@ -31,6 +31,7 @@ namespace UnityGameJam.Shelter
 
         void OnEnable()
         {
+            if (!commander) return;
             commander.SelectionChanged += Select;
             closeButton.onClick.AddListener(Close);
             Select(commander.Selected);
@@ -38,7 +39,7 @@ namespace UnityGameJam.Shelter
 
         void OnDisable()
         {
-            commander.SelectionChanged -= Select;
+            if (commander) commander.SelectionChanged -= Select;
             closeButton.onClick.RemoveListener(Close);
             Close();
         }
@@ -49,11 +50,7 @@ namespace UnityGameJam.Shelter
             if (!walker || !walker.isActiveAndEnabled || !walker.TryGetComponent(out character) || character.Definition == null)
                 return;
 
-            var definition = character.Definition;
-            characterName.text = definition.DisplayName;
-            role.text = definition.Role;
-            portrait.sprite = Array.Find(portraits, sprite => sprite && sprite.name == definition.Id);
-            portrait.enabled = portrait.sprite != null;
+            SetHeader(character.Definition);
             equipment = walker.GetComponent<ICharacterEquipmentView>();
             if (equipment != null) equipment.EquipmentChanged += RefreshEquipment;
             panel.SetActive(true);
@@ -63,6 +60,30 @@ namespace UnityGameJam.Shelter
             RefreshEquipment();
             equipmentList.StopMovement();
             equipmentList.verticalNormalizedPosition = 1;
+        }
+
+        void SetHeader(CharacterDefinition definition)
+        {
+            characterName.text = definition.DisplayName;
+            role.text = definition.Role;
+            portrait.sprite = Array.Find(portraits, sprite => sprite && sprite.name == definition.Id);
+            portrait.enabled = portrait.sprite != null;
+        }
+
+        public void Preview(CharacterDefinition definition, BunkerRules rules)
+        {
+            SetHeader(definition);
+            closeButton.gameObject.SetActive(false);
+            mental.text = $"{definition.Mental} / {rules.MentalMaximum}";
+            mentalFill.fillAmount = (float)definition.Mental / rules.MentalMaximum;
+            foreach (var cell in hungerCells) cell.enabled = true;
+            planning.text = definition.Planning.ToString();
+            programming.text = definition.Programming.ToString();
+            art.text = definition.Art.ToString();
+            combat.text = definition.Combat.ToString();
+            emptyEquipment.SetActive(true);
+            equipmentList.gameObject.SetActive(false);
+            panel.SetActive(true);
         }
 
         void Close()
@@ -75,7 +96,7 @@ namespace UnityGameJam.Shelter
 
         void LateUpdate()
         {
-            if (!panel.activeSelf) return;
+            if (!commander || !panel.activeSelf) return;
             if (!character || !character.isActiveAndEnabled) Close();
             else RefreshMental();
         }

@@ -1,34 +1,44 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace UnityGameJam.Shelter
 {
     [DisallowMultipleComponent, DefaultExecutionOrder(100)]
     public sealed class SurvivorEmotion : MonoBehaviour
     {
+        public enum Cause { MentalChange, Work, GuardDuty, Rest, ItemUse, Combat, Breach, Victory, Presentation, Event }
         [SerializeField] SpriteRenderer icon;
         [SerializeField] SpriteRenderer characterSprite;
         [SerializeField] RectTransform mentalGauge;
         [SerializeField] Sprite anger;
         [SerializeField] Sprite gloom;
-        [Tooltip("Offset in pixels from the character's top-right corner to the mark's bottom-left corner.")]
-        [SerializeField] Vector2Int cornerOffsetPixels = new Vector2Int(1, -5);
+        [SerializeField] Sprite joy;
+        [Tooltip("Offset of the mark's center from the top of the character, in sprite pixels. Positive X is screen right.")]
+        [SerializeField] Vector2Int headOffsetPixels = new Vector2Int(3, -1);
         [SerializeField, Min(0.1f)] float duration = 1.35f;
+        [SerializeField, Min(0f)] float repeatCooldown = 10f;
 
         float elapsed;
+        readonly Dictionary<(Cause, Sprite), double> nextAllowed = new Dictionary<(Cause, Sprite), double>();
 
         void Awake() => Hide();
 
-        public void ShowAnger() => Show(anger);
-        public void ShowGloom() => Show(gloom);
+        public void ShowAnger() => Show(anger, Cause.Combat);
+        public void ShowGloom(Cause cause = Cause.MentalChange) => Show(gloom, cause);
+        public void ShowJoy(Cause cause = Cause.MentalChange) => Show(joy, cause);
 
-        void Show(Sprite sprite)
+        void Show(Sprite sprite, Cause cause)
         {
-            if (!sprite || !isActiveAndEnabled || !characterSprite || !characterSprite.sprite) return;
+            if (!sprite || !isActiveAndEnabled || !characterSprite || !characterSprite.sprite || icon.forceRenderingOff) return;
+            var key = (cause, sprite);
+            double now = Time.timeAsDouble;
+            if (nextAllowed.TryGetValue(key, out double allowed) && now < allowed) return;
+            nextAllowed[key] = now + repeatCooldown;
             elapsed = 0f;
             icon.sprite = sprite;
             icon.color = Color.white;
             icon.enabled = true;
-            Place(Vector2.zero);
+            Place(sprite == joy ? Vector2.down * 2 : Vector2.zero);
         }
 
         // SurvivorAnimation samples the current pose and facing in LateUpdate, before this component.
@@ -47,7 +57,8 @@ namespace UnityGameJam.Shelter
             }
             else
             {
-                offset = Vector2.down * Mathf.Min(2, Mathf.FloorToInt(elapsed / 0.22f));
+                int step = Mathf.Min(2, Mathf.FloorToInt(elapsed / 0.22f));
+                offset = Vector2.down * (icon.sprite == joy ? 2 - step : step);
             }
             Place(offset);
         }
@@ -55,21 +66,25 @@ namespace UnityGameJam.Shelter
         void Place(Vector2 motionPixels)
         {
             Vector2 pixel = (Vector2)icon.transform.lossyScale / icon.sprite.pixelsPerUnit;
-            Vector2 corner = characterSprite.bounds.max;
-            Vector2 inset = cornerOffsetPixels;
+            var crown = new Vector2(characterSprite.transform.position.x, characterSprite.bounds.max.y);
             var mark = icon.bounds;
+            Vector2 center = crown + Vector2.Scale(headOffsetPixels, pixel);
             if (mentalGauge && mentalGauge.gameObject.activeInHierarchy)
             {
-                var bar = mentalGauge.rect;
-                var barEdge = mentalGauge.TransformPoint(new Vector3(bar.xMax, bar.yMin));
-                if (corner.y + inset.y * pixel.y + mark.size.y > barEdge.y)
-                    inset.x = Mathf.Max(inset.x, Mathf.Ceil((barEdge.x - corner.x) / pixel.x) + 1f);
+                float barBottom = mentalGauge.TransformPoint(mentalGauge.rect.min).y;
+                float overlap = center.y + mark.extents.y + pixel.y - barBottom;
+                if (overlap > 0f) center.y -= Mathf.Ceil(overlap / pixel.y) * pixel.y;
             }
-            Vector2 bottomLeft = corner + Vector2.Scale(inset + motionPixels, pixel);
-            icon.transform.position += (Vector3)(bottomLeft - (Vector2)mark.min);
+            center += Vector2.Scale(motionPixels, pixel);
+            icon.transform.position += (Vector3)(center - (Vector2)mark.center);
         }
 
         public void Hide() => icon.enabled = false;
+        internal void ResetForRun()
+        {
+            nextAllowed.Clear();
+            Hide();
+        }
         void OnDisable() { if (icon) Hide(); }
     }
 }

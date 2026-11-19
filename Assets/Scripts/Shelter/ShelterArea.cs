@@ -16,17 +16,59 @@ namespace UnityGameJam.Shelter
         public bool accessible = true;
         [Tooltip("Native-size room sprite. Its pivot marks the walkable floor.")]
         public SpriteRenderer roomArtwork;
+        public ShelterRoomHeader roomHeader;
+        [System.Serializable]
+        public struct Workstation
+        {
+            public string characterId;
+            public Transform feet;
+            public bool flipArtwork;
+            public bool IsAt(float x) => Mathf.Abs(x - feet.position.x) < .025f;
+        }
+        [SerializeField] Workstation[] workstations = System.Array.Empty<Workstation>();
+
+        internal bool TryGetWorkstation(UnityGameJam.Characters.CharacterDefinition person, out Workstation station)
+        {
+            string department = roomType switch
+            {
+                ShelterRoomType.Planning => "기획",
+                ShelterRoomType.Graphics => "아트",
+                ShelterRoomType.Programming => "개발",
+                _ => null
+            };
+            if (person != null && person.Role == department)
+                foreach (var seat in workstations)
+                    if (seat.characterId == person.Id && seat.feet) { station = seat; return true; }
+            station = default;
+            return false;
+        }
+        readonly List<ShelterWalker> residents = new List<ShelterWalker>();
+        internal void Enter(ShelterWalker walker) => residents.Add(walker);
+        internal void Leave(ShelterWalker walker) => residents.Remove(walker);
+        internal bool HasWorkSlot(ShelterWalker walker, int capacity)
+        {
+            foreach (var resident in residents)
+            {
+                if (!resident || !resident.CanWorkInCurrentRoom) continue;
+                if (resident == walker) return true;
+                if (--capacity == 0) break;
+            }
+            return false;
+        }
         public Transform backgroundVisual;
         public Transform floorVisual;
         public TextMesh nameLabel;
         public SpriteRenderer highlight;
         readonly HashSet<object> occupiers = new HashSet<object>();
         public bool IsOccupied => occupiers.Count > 0;
+        public event System.Action<bool> OccupationChanged;
         public bool IsOperational => IsWalkable && !IsOccupied;
         public void SetOccupied(object owner, bool occupied)
         {
             if (owner == null) return;
+            bool previouslyOccupied = IsOccupied;
             if (occupied) occupiers.Add(owner); else occupiers.Remove(owner);
+            if (previouslyOccupied != IsOccupied) OccupationChanged?.Invoke(IsOccupied);
             RefreshVisuals();
         }
 
@@ -58,9 +100,9 @@ namespace UnityGameJam.Shelter
         }
 
         // Consider both residents and trips already ordered, including a patient still awaiting pickup.
-        internal bool TryFindStandingOffset(ShelterWalker survivor, int capacity, out float offset, ShelterWalker leaving = null)
+        internal float StandingOffset(ShelterWalker survivor)
         {
-            offset = survivor.arrivalOffset;
+            float offset = survivor.arrivalOffset;
             var positions = new List<float>();
             int rosterSize = 0;
             foreach (var identity in FindObjectsByType<UnityGameJam.Characters.CharacterIdentity>(FindObjectsSortMode.None))
@@ -68,16 +110,22 @@ namespace UnityGameJam.Shelter
                 if (identity.gameObject.scene != gameObject.scene) continue;
                 rosterSize++;
                 var other = identity.GetComponent<ShelterWalker>();
-                if (other && other != survivor && other != leaving && other.TryGetReservedX(this, out float occupied))
+                if (other && other != survivor && other.TryGetReservedX(this, out float occupied))
                     positions.Add(occupied);
             }
-            if (positions.Count >= capacity) return false;
+            if (TryGetWorkstation(survivor.GetComponent<UnityGameJam.Characters.CharacterIdentity>().Definition, out var station))
+            {
+                return station.feet.position.x - Centre.x;
+            }
             if (survivor.TryGetReservedX(this, out float existing))
             {
-                offset = existing - Centre.x;
-                return true;
+                return existing - Centre.x;
             }
-            int places = Mathf.Min(capacity, rosterSize);
+            int places = rosterSize;
+            // Guests leave the assigned desks free, including while their owners are elsewhere.
+            foreach (var seat in workstations)
+                if (seat.feet) positions.Add(seat.feet.position.x);
+            if (workstations.Length > 0) places += workstations.Length;
             float bestDistance = float.NegativeInfinity;
             for (int i = 0; i < places; i++)
             {
@@ -88,7 +136,7 @@ namespace UnityGameJam.Shelter
                 bestDistance = distance;
                 offset = x - Centre.x;
             }
-            return true;
+            return offset;
         }
 
         public void RefreshVisuals()
@@ -97,6 +145,7 @@ namespace UnityGameJam.Shelter
             {
                 var size = roomArtwork.sprite.bounds.size;
                 width = size.x;
+                if (kind == AreaKind.Corridor) roomArtwork.transform.localScale = Vector3.one;
                 height = size.y;
             }
             else
@@ -114,7 +163,8 @@ namespace UnityGameJam.Shelter
                 floorVisual.localPosition = new Vector3(0f, -0.12f, 0f);
                 floorVisual.localScale = new Vector3(width, 0.24f, 1f);
             }
-            if (nameLabel != null)
+            if (roomHeader) roomHeader.Place(this);
+            else if (nameLabel != null)
             {
                 nameLabel.text = IsOccupied ? displayName + " [점거 / 기능 정지]" : displayName;
                 nameLabel.color = IsOccupied ? new Color(1f, 0.35f, 0.28f) : new Color(0.75f, 0.8f, 0.76f);

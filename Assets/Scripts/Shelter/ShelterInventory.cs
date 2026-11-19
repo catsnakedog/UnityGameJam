@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using System;
 using System.Linq;
 using TMPro;
@@ -10,7 +11,7 @@ using ShelterRun;
 namespace UnityGameJam.Shelter
 {
     [DisallowMultipleComponent]
-    public sealed class ShelterInventory : MonoBehaviour
+    public sealed class ShelterInventory : MonoBehaviour, IScrollHandler
     {
         [Serializable]
         struct ItemArt
@@ -35,7 +36,8 @@ namespace UnityGameJam.Shelter
         ShelterStock dragged;
         int dragRun;
         EquippedItemView draggedView;
-        long page;
+        const int Columns = 2;
+        long firstRow;
 
         void OnEnable()
         {
@@ -63,30 +65,37 @@ namespace UnityGameJam.Shelter
         void Toggle()
         {
             EndDragVisual();
-            page = 0;
+            firstRow = 0;
             panel.SetActive(!panel.activeSelf);
             Refresh();
         }
 
-        void Previous() { page--; Refresh(); }
-        void Next() { page++; Refresh(); }
+        void Previous() { firstRow--; Refresh(); }
+        void Next() { firstRow++; Refresh(); }
+
+        public void OnScroll(PointerEventData data)
+        {
+            if (!panel.activeSelf || dragSource || data.scrollDelta.y == 0f) return;
+            if (data.scrollDelta.y > 0f) Previous(); else Next();
+            data.Use();
+        }
 
         void Refresh()
         {
             if (!panel.activeSelf) return;
             var stock = supplies.OwnedItems().ToList();
             long total = stock.Sum(entry => (long)entry.Count);
-            long lastPage = Math.Max(0, total - 1) / slots.Length;
-            page = Math.Max(0, Math.Min(page, lastPage));
+            long lastRow = Math.Max(0, (total + Columns - 1) / Columns - slots.Length / Columns);
+            firstRow = Math.Max(0, Math.Min(firstRow, lastRow));
             totalLabel.text = $"보유 {total:N0}개";
             footer.text = total == 0 ? "보관한 아이템이 없습니다." : "생존자에게 끌어 사용하거나 장착하세요.";
-            pageNavigation.SetActive(lastPage > 0);
-            previousPage.interactable = page > 0;
-            nextPage.interactable = page < lastPage;
-            pageLabel.text = $"{page + 1} / {lastPage + 1}";
+            pageNavigation.SetActive(lastRow > 0);
+            previousPage.interactable = firstRow > 0;
+            nextPage.interactable = firstRow < lastRow;
+            pageLabel.text = $"{firstRow + 1} / {lastRow + 1}";
 
             // Skip whole stacks before the page. Bind at most one page even for large rewards.
-            long skip = page * slots.Length;
+            long skip = firstRow * Columns;
             int cell = 0;
             foreach (var entry in stock)
             {
@@ -99,9 +108,15 @@ namespace UnityGameJam.Shelter
                 if (entry.Id == FarmingDataKeys.SpaghettiCan)
                     detail = $"허기 +{supplies.Rules.FoodRestore}칸\n남은 사용 {entry.Instance?.RemainingServings ?? supplies.Rules.ServingsPerCan}/{supplies.Rules.ServingsPerCan}회";
                 else if (entry.Supply?.IsEquipment == true)
-                    detail = "생존자에게 장착 · 교체\n카드에서 두 번 눌러 해제";
+                {
+                    var gear = entry.Supply;
+                    string bonus = gear.PlusAttack > 0 ? $"전투력 +{gear.PlusAttack}" : string.Empty;
+                    if (gear.PlusSkill > 0)
+                        bonus += (bonus.Length > 0 ? " · " : string.Empty) + $"개발력 +{gear.PlusSkill}";
+                    detail = $"{bonus}\n장착 시 기존 장비 교체";
+                }
                 else if (entry.Supply != null)
-                    detail = $"멘탈 +{entry.Supply.MentalRestore}\n보유 {entry.Count:N0}개";
+                    detail = $"멘탈 +{entry.Supply.MentalRestore}\n보유 {supplies.GetCount(entry.Id):N0}개";
                 else
                     detail = $"운반 비용 {entry.Pickup.Weight}칸\n보관 물자";
                 int visible = (int)Math.Min(entry.Count - skip, slots.Length - cell);
@@ -114,10 +129,12 @@ namespace UnityGameJam.Shelter
 
         internal void ShowTooltip(ShelterInventorySlot slot)
         {
-            if (dragSource) return;
+            if (dragSource || !panel.activeInHierarchy) return;
             hovered = slot;
             var rect = (RectTransform)slot.transform;
-            tooltip.position = rect.TransformPoint(new Vector2(rect.rect.xMin - 10f, rect.rect.center.y));
+            var bag = (RectTransform)panel.transform;
+            var rowCenter = bag.InverseTransformPoint(rect.TransformPoint(rect.rect.center));
+            tooltip.position = bag.TransformPoint(new Vector2(bag.rect.xMin - 10f, rowCenter.y));
             tooltipTitle.text = slot.Title;
             tooltipDetail.text = slot.Detail;
             tooltip.gameObject.SetActive(true);
@@ -126,6 +143,7 @@ namespace UnityGameJam.Shelter
         {
             if (dragSource || commander.InputBlocked || data.button != PointerEventData.InputButton.Left ||
                 (stock.Instance == null && stock.Supply == null)) return;
+            GameAudio.Play(GameSound.Pickup);
             dragSource = source;
             dragged = stock;
             dragRun = supplies.RunVersion;
@@ -162,7 +180,9 @@ namespace UnityGameJam.Shelter
                 var walker = commander.SurvivorAtScreen(data.position);
                 if (walker) target = walker.GetComponent<CharacterIdentity>();
             }
-            if (target && !supplies.TryUse(item, target, view))
+            bool applied = target && supplies.TryUse(item, target, view);
+            GameAudio.Play(applied ? GameSound.Drop : GameSound.Wrong);
+            if (target && !applied)
                 footer.text = target.IsFainted ? "기절한 생존자는 아이템을 사용할 수 없습니다." : "지금은 이 아이템을 사용할 수 없습니다.";
         }
         void EndDragVisual()

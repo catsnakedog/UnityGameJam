@@ -1,4 +1,4 @@
-﻿# 데이터 목록과 중복 방지 규칙
+# 데이터 목록과 중복 방지 규칙
 
 AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다. 현재 계약은 이 목록과 `DataSpecs`에, 과거 값과 변경 근거는 [DataHistory](DataHistory)에 기록한다. 목록과 명세는 현재 상태에 맞춰 갱신하고 과거 이력은 새 파일로만 추가한다.
 
@@ -16,7 +16,9 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 중간 발표의 시각·등급별 멘탈과 첫 좀비 습격 틱은 기존 `data.bunker.rules`에서 편집한다. 시계·팝업은 이 규칙과 시뮬레이션의 회차 상태를 읽는다. [필드 명세](DataSpecs/BunkerRules.md) · [원문 대조와 검증](DataHistory/20261119-midterm-clock.md)
 
-수면실 정원은 기존 `data.bunker.rules.sleepingRoomCapacity`가 소유한다. 이동 중 자리 예약과 구조 대상의 병상은 생존자의 회차 상태로 계산한다. [방 규칙](DataSpecs/BunkerRules.md) · [변경 전 조사](DataHistory/20261119-sleep-capacity-plan.md)
+작업방의 동시 작업 인원은 `data.bunker.rules.workRoomCapacity`에서 편집한다. 각 방 인원판은 도착한 생존자 수를 표시한다. [명세](DataSpecs/BunkerRules.md) · [변경 이력](DataHistory/20261119-room-activity-capacity.md)
+
+수면실의 텐트 동시 예약·사용 상한은 기존 `data.bunker.rules.sleepingRoomCapacity`가 소유한다. 방 바닥에는 여러 명이 입장하며, 텐트별 예약·점유는 현재 회차에서 관리한다. [방 규칙](DataSpecs/BunkerRules.md) · [변경 전 조사](DataHistory/20261119-sleep-capacity-plan.md)
 
 수면실·전투방의 틱당 멘탈과 구조 후 각성 기준은 기존 `data.bunker.rules`에서 편집한다. 구조 대상과 운반자는 회차 상태다. [규칙 명세](DataSpecs/BunkerRules.md) · [파밍·벙커 통합 Play 검증](DataHistory/20261119-farming-shelter-play-verified.md)
 
@@ -24,13 +26,13 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 게임 실행 소스는 기존 `editor.data-tool`에서 선택한다. 연결 목록은 SpreadConfig를 재사용하며 켜면 실행 때마다 활성 시트를 읽고, 끄면 내부 CSV 기반 데이터를 사용한다. [설정 명세](DataSpecs/DataToolSettings.md) · [두 모드 Windows 실행 검증](DataHistory/20261119-live-sheets-02-verified.md)
 
-파밍 플레이어는 `data.farming.rules.startingPersonId`가 참조하는 `data.farming.pickups`의 Person이다. 현재 1번은 빈손으로 시작하며 처음부터 벙커 명단에 들어간다. 나머지 다섯 명은 세 방에 2·2·1명씩 배치한다. [필드 명세](DataSpecs/FarmingRules.md) · [변경 이력](DataHistory/20261119-farming-starting-player.md)
+파밍 플레이어는 타이틀에서 선택한 `data.farming.pickups`의 Person이다. 파밍 씬을 직접 열면 `data.farming.rules.startingPersonId`가 기본 인물을 지정한다. 선택한 사람은 빈손으로 시작하며 처음부터 벙커 명단에 들어간다. 나머지 다섯 명은 세 방에 2·2·1명씩 배치한다. [필드 명세](DataSpecs/FarmingRules.md) · [변경 이력](DataHistory/20261119-farming-starting-player.md)
 
 파밍 무작위 배치는 기존 `data.farming.rules`의 거리순 방별 인원과 레전드 가중치를 사용한다. 생성 대상은 `data.farming.pickups`, 물자 등급은 `data.shelter.items.rank`에서 조회한다. [배치 규칙](DataSpecs/FarmingRules.md) · [3,000회 배치와 Play 검증](DataHistory/20261119-farming-spawns-02-verified.md)
 
 확정 아이템은 기존 `data.shelter.items`의 12종과 `data.farming.pickups`의 물자 12종으로 연결한다. 멘탈 회복 물자 4종은 ShelterItems의 useKind와 mentalRestore로 가방 사용 효과를 결정한다. 통조림의 회분과 허기 회복량은 `data.bunker.rules`에서 읽는다. [아이템 효과](DataSpecs/ShelterItems.md) · [기존 12종 연결](DataHistory/20261118-item-roster-02-verified.md)
 
-좀비 접근 시간 6틱과 보초 원거리 사격 주기 2틱은 `data.bunker.rules`가 담당한다. `data.zombies`는 좀비의 공용 보행 속도와 근접전 주기를 공급한다. [벙커 규칙](DataSpecs/BunkerRules.md) · [거리·사격 검증](DataHistory/20261119-zombie-volley-02-verified.md)
+좀비 접근 시간 1틱, 문 앞 피격 한도 3회와 보초 공격 주기 2틱은 `data.bunker.rules`가 담당한다. `data.zombies`는 좀비의 공용 보행 속도와 근접전 주기를 공급한다. [벙커 규칙](DataSpecs/BunkerRules.md) · [거리·사격 검증](DataHistory/20261119-zombie-volley-02-verified.md)
 
 좀비 다인 전투는 기존 `data.zombies`의 공용 속도·판정 주기·피해와 `data.characters`의 개인 전투력을 사용한다. 공격 대상, 남은 HP, 점거 여부는 전투 중인 개체가 관리한다. [전투 명세](DataSpecs/Zombies.md) · [다인 전투 도입 이력](DataHistory/20261118-zombie-group-combat.md)
 
@@ -75,12 +77,12 @@ SpreadConfig 연결 작업 `Codex spread-config-20261118` 완료: 기존 `editor
 | `data.shelter.elevators` | active (밸런스 임시) / Codex shelter-elevators-20261118 | 공용 엘리베이터 차량 속도·승하차 지점·호출 대기 간격 | `Assets/Settings/Shelter/ElevatorRules.asset` | [ElevatorRules](DataSpecs/ElevatorRules.md) |
 | `data.zombies` | active (이동 수치 임시) / Codex zombie-sheets-20261118 | 좀비 ID·웨이브 구간·기본 HP·전투력·주사위 판정·이동/접촉 | [Zombies](https://docs.google.com/spreadsheets/d/1mk2k50Kk5fqtwSMTrCEui_cuhgOGMbh1aIX9e0zETl8/edit?gid=1826540193#gid=1826540193) / [ZombieRules](https://docs.google.com/spreadsheets/d/1mk2k50Kk5fqtwSMTrCEui_cuhgOGMbh1aIX9e0zETl8/edit?gid=551346486#gid=551346486) → `Assets/Settings/Shelter/Zombies.csv`, `ZombieRules.csv` → 기존 `ZombieData.asset` | [Zombies](DataSpecs/Zombies.md), [ZombieRules](DataSpecs/ZombieRules.md) |
 | `data.shelter.items` | active (사용·장착 연결) / 벙커 물자 | 물자 ID·표시명·사용 또는 장착 분류·멘탈 회복량·등급·획득 이벤트·장착 전투/개발 보정 | [ShelterItems](https://docs.google.com/spreadsheets/d/158_0ouUqo0t8b6hI9U_r-ilHkHkzPqoQ_tOVGc4wjp4/edit?gid=1351218376#gid=1351218376) → `Assets/Settings/Data/Csv/ShelterItems.csv` | [ShelterItems](DataSpecs/ShelterItems.md) |
-| `data.events` | active (사용자 예시) / 선택형 이벤트 / Codex event-effects-20261118 | 사건 ID·타이틀·본문·Yes/No 효과·발생 조건, Events, eventId, laptop; 《60 Seconds!》식 사건 알림 참고 | [Events](https://docs.google.com/spreadsheets/d/1OCAvPsKuDhUua0sQuHHT0L1Hr6R24ZBA2fU4QzJ6CMU/edit?gid=1622955486#gid=1622955486) → `Assets/Settings/Data/Csv/Events.csv` | [Events](DataSpecs/Events.md) |
-| `data.bunker.rules` | active / Codex 벙커 시뮬레이션 | 벙커 전체 틱, 초/틱, 이벤트·작업·습격 주기, 좀비 접근 시간, 보초 원거리 사격 주기, 침입 시 전원 멘탈 손실, 전투방 틱당 멘탈 소모·수면실 회복, 개발 효율·작업 멘탈, 멘탈 상한·기절·회복, 허기·통조림 | `Assets/Settings/Shelter/BunkerRules.asset` | [BunkerRules](DataSpecs/BunkerRules.md) |
+| `data.events` | active (사용자 예시) / 선택형 이벤트 / Codex event-effects-20261118 | 사건 ID·타이틀·본문·선택별 결과 문장·Yes/No 효과·발생 조건, Events, eventId, laptop; 《60 Seconds!》식 사건 알림 참고 | [Events](https://docs.google.com/spreadsheets/d/1OCAvPsKuDhUua0sQuHHT0L1Hr6R24ZBA2fU4QzJ6CMU/edit?gid=1622955486#gid=1622955486) → `Assets/Settings/Data/Csv/Events.csv` | [Events](DataSpecs/Events.md) |
+| `data.bunker.rules` | active / Codex 벙커 시뮬레이션 | 벙커 전체 틱, 초/틱, 이벤트·작업·습격 주기, 좀비 접근 시간, 문 앞 피격 한도와 공격 주기, 침입 시 전원 멘탈 손실, 전투방 틱당 멘탈 소모·수면실 회복, 개발 효율·작업 멘탈, 멘탈 상한·기절·회복, 허기·통조림 | `Assets/Settings/Shelter/BunkerRules.asset` | [BunkerRules](DataSpecs/BunkerRules.md) |
 | `data.example-items` | deprecated (삭제 완료) / Codex example-cleanup-20261118 | 폐기한 도구 시연 데이터, ExampleItems | 없음. 시트/CSV/생성 DB/연결 설정에서 제거 | [폐기 명세](DataSpecs/ExampleItems.md) |
 | `data.farming.pickups` | active / 파밍 | 사람·물자 종류, 파밍 운반 무게/슬롯 비용, pickup weight, carry cost | [FarmingData](https://docs.google.com/spreadsheets/d/1-Lh4oAsNLFpcfi4KGDePAxdBvVdU3pueHlGUxzibsM8/edit?gid=1800384264#gid=1800384264) → `Assets/Settings/Farming/FarmingData.csv` | [FarmingData](DataSpecs/FarmingData.md) |
 | `data.farming.rules` | active / 파밍 | 제한시간, 운반 용량, 이동속도, 상호작용 거리, 던지기, 경고, 기본 호실 크기, 방 노출 시간, 기본 확보된 플레이어, 거리순 호실별 인원과 레전드 스폰 가중치 | `Assets/Settings/Farming/FarmingRules.asset` | [FarmingRules](DataSpecs/FarmingRules.md) |
-| `audio.cue.ui-click` | placeholder / 오디오 | 공용 UI 클릭음, UI_Click, button click | `Assets/Settings/Audio/UI_Click.asset` | [SoundCue](DataSpecs/SoundCue.md) |
+| `audio.cue.ui-click` | active / 오디오 | 공용 UI 클릭음, UI_Click, button click | `Assets/Settings/Audio/UI_Click.asset` | [SoundCue](DataSpecs/SoundCue.md) |
 | `audio.cue.sfx-default` | placeholder / 오디오 | 기본 효과음 설정 예제, SFX_Default | `Assets/Settings/Audio/SFX_Default.asset` | [SoundCue](DataSpecs/SoundCue.md) |
 | `audio.cue.ambience-loop` | placeholder / 오디오 | 반복 환경음 설정 예제, Ambience_Loop | `Assets/Settings/Audio/Ambience_Loop.asset` | [SoundCue](DataSpecs/SoundCue.md) |
 | `audio.manager-defaults` | active / 오디오 | 음성 풀, 채널 기본 볼륨, 씬 전환/포커스 정책, 믹서 경로 | `Assets/Prefabs/Audio/Resources/SoundManager.prefab` | [SoundSettings](DataSpecs/SoundSettings.md) |
@@ -140,3 +142,39 @@ rg -n 'm_Address:' Assets/AddressableAssetsData/AssetGroups -g '*.asset'
 - 이전 작업은 모든 소비자를 정본으로 전환한 뒤 구 정본을 `deprecated`로 표시하고 남은 참조/저장 ID 호환성을 확인한다. 이름에 New/V2를 붙여 두 정본을 영구 유지하지 않는다.
 
 현재 임포터는 CSV의 중복 파일명/열/ID와 타입 오류를 검사한다. 이 문서의 **의미가 같은 데이터 간 중복 방지와 명세 존재 여부는 AI 작업 절차**이며, 임포터가 Markdown을 읽어 자동 차단하는 기능은 아니다. 이 목록은 프로젝트 게임 데이터·오디오 설정·데이터 도구 설정을 다루며 Unity 패키지 내부 데이터와 렌더러/머티리얼 설정 전체의 명세는 아니다.
+
+## 사운드 표 v4 · 오디오
+
+기존 UI 클릭을 재사용한다. 신규 역할별 정본과 재생 연결은 [SoundCue 명세](DataSpecs/SoundCue.md)에 등록한다.
+
+- `audio.cue.01_title` · 완료 · `Assets/Settings/Audio/01_title.asset`
+- `audio.cue.02_prologue` · 완료 · `Assets/Settings/Audio/02_prologue.asset`
+- `audio.cue.03_farming` · 완료 · `Assets/Settings/Audio/03_farming.asset`
+- `audio.cue.04_bunker` · 완료 · `Assets/Settings/Audio/04_bunker.asset`
+- `audio.cue.05_Victory` · 완료 · `Assets/Settings/Audio/05_Victory.asset`
+- `audio.cue.06_Fail` · 완료 · `Assets/Settings/Audio/06_Fail.asset`
+- `audio.cue.07_pickup` · 완료 · `Assets/Settings/Audio/07_pickup.asset`
+- `audio.cue.08_drop` · 완료 · `Assets/Settings/Audio/08_drop.asset`
+- `audio.cue.09_wrong` · 완료 · `Assets/Settings/Audio/09_wrong.asset`
+- `audio.cue.11_laptop` · 완료 · `Assets/Settings/Audio/11_laptop.asset`
+- `audio.cue.12_hour` · 완료 · `Assets/Settings/Audio/12_hour.asset`
+- `audio.cue.13_progress` · 완료 · `Assets/Settings/Audio/13_progress.asset`
+- `audio.cue.14_sleep` · 완료 · `Assets/Settings/Audio/14_sleep.asset`
+- `audio.cue.15_wake` · 완료 · `Assets/Settings/Audio/15_wake.asset`
+- `audio.cue.16_faint` · 완료 · `Assets/Settings/Audio/16_faint.asset`
+- `audio.cue.17_alarm` · 완료 · `Assets/Settings/Audio/17_alarm.asset`
+- `audio.cue.18_doorbust` · 완료 · `Assets/Settings/Audio/18_doorbust.asset`
+- `audio.cue.19_melee_hit` · 완료 · `Assets/Settings/Audio/19_melee_hit.asset`
+- `audio.cue.20_melee_miss` · 완료 · `Assets/Settings/Audio/20_melee_miss.asset`
+- `audio.cue.21_zombieDown` · 완료 · `Assets/Settings/Audio/21_zombieDown.asset`
+- `audio.cue.22_farmPickup` · 완료 · `Assets/Settings/Audio/22_farmPickup.asset`
+- `audio.cue.23_tick` · 완료 · `Assets/Settings/Audio/23_tick.asset`
+- `audio.cue.24_hatch` · 완료 · `Assets/Settings/Audio/24_hatch.asset`
+- `audio.cue.25_stamp` · 미제작 · `Assets/Settings/Audio/25_stamp.asset`
+- `audio.cue.26_eat` · 미제작 · `Assets/Settings/Audio/26_eat.asset`
+- `audio.cue.27_zombieSteps_loop` · 미제작 · `Assets/Settings/Audio/27_zombieSteps_loop.asset`
+- `audio.cue.28_canThrow` · 미제작 · `Assets/Settings/Audio/28_canThrow.asset`
+- `audio.cue.29_canHit` · 미제작 · `Assets/Settings/Audio/29_canHit.asset`
+- `audio.cue.30_canMiss` · 미제작 · `Assets/Settings/Audio/30_canMiss.asset`
+- `audio.cue.31_doorBang` · 미제작 · `Assets/Settings/Audio/31_doorBang.asset`
+- `audio.cue.32_defend` · 미제작 · `Assets/Settings/Audio/32_defend.asset`

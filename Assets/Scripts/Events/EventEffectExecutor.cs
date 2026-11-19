@@ -75,7 +75,7 @@ namespace UnityGameJam.Events
             long waveDelta=(long)wave-simulation.PendingWaveHpModifier;
             if(waveDelta!=0) result.Add("다음 적 HP "+waveDelta.ToString("+0;-0;0",CultureInfo.InvariantCulture));
             // No writes happen above this point, including for insufficient stock or overflow.
-            foreach(var pair in mental) pair.Key.SetMental(pair.Value);
+            foreach(var pair in mental) pair.Key.SetMental(pair.Value, SurvivorEmotion.Cause.Event);
             foreach(var pair in progress) development.SetProgress(pair.Key,pair.Value);
             supplies.SetCounts(items);
             simulation.SetPendingWaveHpModifier(wave);

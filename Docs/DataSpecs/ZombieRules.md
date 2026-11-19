@@ -23,7 +23,7 @@
 | diceSides | int | 주사위 면 수 | >=2 / 6 | ZombieData.Validate |
 | combatEveryTicks | int | 근접전 판정 간격, 벙커 기본 틱. 보초의 원거리 사격 간격은 BunkerRules.guardVolleyEveryTicks에서 조회 | >0 / 5 | 동일 |
 | attemptsPerDefender | int | 시트 호환용 구 판정 한도. 현재 교전 종료에 미사용 | >0 / 3 | 동일 |
-| damageToZombie | int | 캐릭터 승리당 HP 감소, 포인트 | >0 / 1 | 동일 |
+| damageToZombie | int | 문 앞 명중 또는 근접전 승리당 HP 감소, 포인트 | >0 / 1 | 동일 |
 | mentalDamage | int | 좀비 승리당 해당 캐릭터 멘탈 감소, 포인트 | >0 / 2 | 동일 |
 | mentalRecovery | int | 처치 시 참가자 멘탈 회복, 포인트 | >=0 / 5 | 동일 |
 | walkSpeed | float | 수평 속도, world units/sec | 유한 >0 / 임시 2 | 동일 |

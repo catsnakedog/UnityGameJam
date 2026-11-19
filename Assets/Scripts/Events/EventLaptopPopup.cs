@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -52,6 +53,7 @@ namespace UnityGameJam.Events
         void No() => RequestChoice(false);
         public void Show(EventDefinition entry)
         {
+            GameAudio.Play(GameSound.Laptop);
             Open(Page.Event, "EVENT / "+entry.Id, entry.Title, entry.Content);
             Canvas.ForceUpdateCanvases(); body.ForceMeshUpdate();
             var boundaries=StringInfo.ParseCombiningCharacters(entry.Content);
@@ -69,6 +71,7 @@ namespace UnityGameJam.Events
         {
             string progressLine = $"기획 {Percent(progress.Planning)}   프로그래밍 {Percent(progress.Programming)}   그래픽 {Percent(progress.Graphics)}";
             string summary = $"{progressLine}\n평가 점수  {score:0.000}\n팀원 1인당 기본 멘탈  {grade.MentalDelta:+0;-0;0}";
+            GameAudio.Play(GameSound.Stamp);
             Open(Page.Presentation, $"{round}차 발표  ·  {tick}틱", "중간 발표", summary);
             resultLabel.text = grade.Label;
             resultLabel.color = grade.Color;
@@ -79,6 +82,7 @@ namespace UnityGameJam.Events
         void Open(Page nextPage, string heading, string caption, string content)
         {
             if(IsOpen) throw new InvalidOperationException("Event popup is already open.");
+            GameAudio.DuckBunker(true);
             page=nextPage;
             number.text=heading; title.text=caption; body.richText=false; body.text=content;
             body.maxVisibleCharacters=int.MaxValue;
@@ -98,6 +102,7 @@ namespace UnityGameJam.Events
         }
         void Update()
         {
+            if (GameOptions.BlocksInput) return;
             if(!IsOpen) return;
             if(page == Page.EventResult)
             {
@@ -129,17 +134,23 @@ namespace UnityGameJam.Events
             if(!CanChoose || Time.frameCount==lastInputFrame) return;
             lastInputFrame=Time.frameCount; ChoiceRequested?.Invoke(yes);
         }
-        public void ShowResult(string result)
+        public void ShowResult(string result, string narrative = null)
         {
             if(page != Page.Event) return;
-            body.maxVisibleCharacters=body.textInfo.characterCount;
-            resultLabel.text=result; page=Page.EventResult; resultElapsed=0; lastInputFrame=Time.frameCount; SetButtons();
+            bool hasNarrative = !string.IsNullOrWhiteSpace(narrative);
+            body.text = hasNarrative ? narrative : result;
+            body.maxVisibleCharacters=int.MaxValue;
+            resultLabel.text = hasNarrative ? result : string.Empty;
+            Canvas.ForceUpdateCanvases();
+            scroll.StopMovement(); scroll.verticalNormalizedPosition=1;
+            page=Page.EventResult; resultElapsed=0; lastInputFrame=Time.frameCount; SetButtons();
         }
         public void ShowUnavailable(string message) => ShowResult(message);
         public void ShowChoiceError(string message) { resultLabel.text=message; SetButtons(); }
         public void Close()
         {
             if(!IsOpen) return;
+            GameAudio.DuckBunker(false);
             page=Page.Hidden; panel.SetActive(false);
             body.text=title.text=number.text=resultLabel.text=string.Empty; visibleSteps.Clear();
             if(EventSystem.current && previousSelection && previousSelection.activeInHierarchy) EventSystem.current.SetSelectedGameObject(previousSelection);

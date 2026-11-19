@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace ShelterRun
         bool restarting;
         public FarmingPhase Phase { get; private set; } = FarmingPhase.Loading;
         public FarmingRules Rules => loader?.Rules;
+        public string StartingPersonId { get; private set; }
         public FarmingPlayer Player => player;
         public FarmingBunker Bunker => bunker;
         public IReadOnlyList<FarmingPickup> Pickups => pickups;
@@ -37,7 +39,7 @@ namespace ShelterRun
 
         async void Start()
         {
-            FarmingRunTransfer.Reset();
+            FarmingRunTransfer.ClearResults();
             hud.Bind(this);
             loader = new FarmingDataLoader();
             try
@@ -47,11 +49,13 @@ namespace ShelterRun
                 await GameJam.Data.GameData.InitializeAsync();
                 if (this == null) return;
                 new UnityGameJam.Characters.CharacterCatalog(GameJam.Data.GameData.GetTable(UnityGameJam.Characters.CharacterKeys.Table)).ValidateFarming(loader.Database);
+                StartingPersonId = FarmingRunTransfer.SelectedStarter ?? Rules.StartingPersonId;
                 player.Initialize(this);
                 SpawnPickups();
                 Remaining = Rules.Duration;
                 Phase = FarmingPhase.Ready;
                 hud.Prepare(Rules);
+                if (FarmingRunTransfer.SelectedStarter != null) Begin();
             }
             catch (Exception exception)
             {
@@ -66,13 +70,13 @@ namespace ShelterRun
         void SpawnPickups()
         {
             var prefabs = pickupPrefabs.ToDictionary(prefab => prefab.RecordId, StringComparer.Ordinal);
-            var placements = FarmingSpawnLayout.Create(FarmingMap2D.Instance, bunker, Rules, loader.Database);
+            var placements = FarmingSpawnLayout.Create(FarmingMap2D.Instance, bunker, Rules, loader.Database, StartingPersonId);
             foreach (var placement in placements)
                 if (!prefabs.ContainsKey(placement.Record.Id))
                     throw new InvalidOperationException($"Missing farming pickup prefab for {placement.Record.Id}.");
 
             PeopleTotal = loader.Database.Records.Count(record => record.Type == FarmingObjectType.Person);
-            RecordSecured(loader.Database.Get(Rules.StartingPersonId));
+            RecordSecured(loader.Database.Get(StartingPersonId));
             foreach (var placement in placements)
             {
                 var record = placement.Record;
@@ -86,6 +90,7 @@ namespace ShelterRun
 
         void Update()
         {
+            if (GameOptions.BlocksInput) return;
             var keyboard = Keyboard.current;
             if (Phase == FarmingPhase.Ready && keyboard != null && keyboard.eKey.wasPressedThisFrame) Begin();
             else if (Phase == FarmingPhase.Preparing || Phase == FarmingPhase.Running) Tick(Time.deltaTime);
@@ -98,6 +103,7 @@ namespace ShelterRun
             startFrame = Time.frameCount;
             PreparationRemaining = Rules.PreparationDuration;
             Phase = FarmingPhase.Preparing;
+            GameAudio.Music(GameSound.Prologue);
         }
 
         public void Tick(float deltaTime)
@@ -110,12 +116,18 @@ namespace ShelterRun
                 if (PreparationRemaining > 0) return;
                 deltaTime -= elapsed;
                 Phase = FarmingPhase.Running;
+                GameAudio.Music(GameSound.Farming);
                 hud.Notify("파밍 시작 · 사람과 물자를 벙커로 옮기세요");
             }
             if (Phase != FarmingPhase.Running) return;
+            int previousSecond = Mathf.CeilToInt(Remaining);
             Remaining = Mathf.Max(0, Remaining - deltaTime);
+            int second = Mathf.CeilToInt(Remaining);
+            if (second != previousSecond && second >= 1 && second <= 10) GameAudio.Play(GameSound.Tick);
             if (Remaining > 0) return;
             Phase = FarmingPhase.Finished;
+            SoundManager.Instance?.StopMusic();
+            GameAudio.Play(GameSound.Hatch);
             player.StopInteraction();
             Completed?.Invoke(this);
         }

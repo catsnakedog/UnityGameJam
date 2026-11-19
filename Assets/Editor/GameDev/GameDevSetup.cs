@@ -79,6 +79,7 @@ public static class GameDevSetup
     const string ClockArc = "Assets/Art/UI/ShelterClockElapsed.png";
     const string WaveMark = "Assets/Art/UI/ShelterClockInvasion.png";
     const string PresentationMark = "Assets/Art/UI/ShelterClockPresentation.png";
+    const string LockSprite = "Assets/Art/UI/ShelterWorkLock.png";
     const string MarkerPrefabPath = "Assets/Prefabs/UI/ShelterClockMarker.prefab";
     const int ClockDiameter = 176;
     static readonly Vector2 TopLeft = new Vector2(0, 1);
@@ -94,6 +95,13 @@ public static class GameDevSetup
 
     static void EnsurePrefab()
     {
+        var lockImporter = (TextureImporter)AssetImporter.GetAtPath(LockSprite);
+        ImportClockSprite(LockSprite);
+        if (lockImporter.filterMode != FilterMode.Point)
+        {
+            lockImporter.filterMode = FilterMode.Point;
+            lockImporter.SaveAndReimport();
+        }
         ImportClockSprite(ClockDial);
         ImportClockSprite(ClockArc);
         ImportClockSprite(WaveMark);
@@ -165,9 +173,38 @@ public static class GameDevSetup
     static bool ConfigureDevelopmentHud(GameObject root)
     {
         var ui = new SerializedObject(root.GetComponent<DevGageUI>());
-        if (ui.FindProperty("clockMarkerPrefab").objectReferenceValue && ui.FindProperty("presentationMarkerSprite").objectReferenceValue) return false;
         var viewport = root.transform.Find("Viewport 1920x1080");
         if (!ui.FindProperty("clockFill").objectReferenceValue) ConfigureDevelopmentPanel(ui, viewport);
+        var fields = ui.FindProperty("fields");
+        bool addedLock = false;
+        for (int i = 0; i < fields.arraySize; i++)
+        {
+            var entry = fields.GetArrayElementAtIndex(i);
+            var field = (GameDevField)entry.FindPropertyRelative("field").enumValueIndex;
+            var hint = entry.FindPropertyRelative("lockHint");
+            if (field == GameDevField.Planning || hint.objectReferenceValue) continue;
+            var percent = (TMP_Text)entry.FindPropertyRelative("percentage").objectReferenceValue;
+            var card = percent.transform.parent;
+            var padlock = Picture("Work lock", card, 134, -12, 20, 20, LockSprite);
+            padlock.type = Image.Type.Simple;
+            var tip = Picture("Work lock tooltip", card, 0, -72, 402, 42, ArtRoot + "panel.png");
+            var caption = Text("Hint", tip.transform, 12, -2, 378, 38, 18);
+            caption.font = percent.font;
+            caption.alignment = TextAlignmentOptions.MidlineLeft;
+            tip.gameObject.SetActive(false);
+            padlock.gameObject.SetActive(false);
+            var component = card.gameObject.AddComponent<DevelopmentLockHint>();
+            Set(component, "padlock", padlock.gameObject);
+            Set(component, "tooltip", tip.gameObject);
+            Set(component, "caption", caption);
+            hint.objectReferenceValue = component;
+            addedLock = true;
+        }
+        if (ui.FindProperty("clockMarkerPrefab").objectReferenceValue && ui.FindProperty("presentationMarkerSprite").objectReferenceValue)
+        {
+            ui.ApplyModifiedPropertiesWithoutUndo();
+            return addedLock;
+        }
         var dial = Picture("Shelter clock", viewport, 24, -20, ClockDiameter, ClockDiameter, ClockDial);
         dial.type = Image.Type.Simple;
         var arc = Picture("Elapsed day", dial.transform, 0, 0, ClockDiameter, ClockDiameter, ClockArc);

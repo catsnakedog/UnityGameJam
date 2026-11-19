@@ -38,12 +38,14 @@ namespace UnityGameJam.Shelter
         public bool IsFollowing => FollowTarget && FollowTarget.isActiveAndEnabled;
         public const int ShortcutCount = 6;
 
+        Vector2 edgeMotion;
         Camera view;
         ZombieInvasionController invasion;
         float zoomScale = 1f;
         Rect mapBounds;
         bool hasMapBounds;
         int previousSlot;
+        ShelterWalker previousClick;
         double previousPressTime;
 
         void OnEnable()
@@ -82,13 +84,15 @@ namespace UnityGameJam.Shelter
             Unlock();
         }
 
-        void OnApplicationFocus(bool focused) { if (!focused) previousSlot = 0; }
+        void OnApplicationFocus(bool focused) { if (!focused) { previousSlot = 0; previousClick = null; } }
 
         void Update()
         {
             if (!Application.isPlaying || !HasGameFocus() || InputBlocked())
             {
                 previousSlot = 0;
+                previousClick = null;
+                edgeMotion = Vector2.zero;
                 return;
             }
 
@@ -121,7 +125,7 @@ namespace UnityGameJam.Shelter
                 }
             }
 
-            if (IsFollowing) return;
+            if (IsFollowing) { edgeMotion = Vector2.zero; return; }
             Vector2 direction = Vector2.zero;
             if (keyboard != null)
             {
@@ -130,9 +134,10 @@ namespace UnityGameJam.Shelter
                 direction.y = (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed ? 1f : 0f)
                             - (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed ? 1f : 0f);
             }
-            if (edgePan && inViewport && (!EventSystem.current || !EventSystem.current.IsPointerOverGameObject()))
-                direction += EdgeDirection(pointer, view.pixelRect);
-            Pan(direction, Time.unscaledDeltaTime);
+            bool allowEdge = edgePan && inViewport && (!EventSystem.current || !EventSystem.current.IsPointerOverGameObject());
+            var target = allowEdge ? EdgeDirection(pointer, view.pixelRect) : Vector2.zero;
+            edgeMotion = allowEdge ? Vector2.MoveTowards(edgeMotion, target, 7f * Time.unscaledDeltaTime) : Vector2.zero;
+            Pan(direction + edgeMotion, Time.unscaledDeltaTime);
         }
 
         void LateUpdate()
@@ -179,6 +184,7 @@ namespace UnityGameJam.Shelter
 
         public bool PressCharacterSlot(int slot)
         {
+            previousClick = null;
             if (InputBlocked()) { previousSlot = 0; return false; }
             var target = GetCharacterSlot(slot);
             if (!target) { previousSlot = 0; return false; }
@@ -186,16 +192,33 @@ namespace UnityGameJam.Shelter
                 commander.SelectSurvivor(walker);
             double now = Time.unscaledTimeAsDouble;
             bool doubleTap = previousSlot == slot && now - previousPressTime <= doubleTapSeconds;
-            FollowTarget = doubleTap ? target : null;
+            edgeMotion = Vector2.zero;
+            FollowTarget = slot > 4 && doubleTap ? target : null;
             previousSlot = doubleTap ? 0 : slot;
             previousPressTime = now;
-            MoveCentre((Vector2)target.transform.position + characterOffset);
+            if (slot > 4 || doubleTap) MoveCentre((Vector2)target.transform.position + characterOffset);
             return true;
+        }
+
+        internal void RegisterPointerSelection(ShelterWalker survivor)
+        {
+            previousSlot = 0;
+            double now = Time.unscaledTimeAsDouble;
+            if (survivor && !InputBlocked() && previousClick == survivor && now - previousPressTime <= doubleTapSeconds)
+            {
+                Unlock();
+                edgeMotion = Vector2.zero;
+                MoveCentre((Vector2)survivor.transform.position + characterOffset);
+                return;
+            }
+            previousClick = survivor;
+            previousPressTime = now;
         }
 
         public void Unlock()
         {
             FollowTarget = null;
+            previousClick = null;
             previousSlot = 0;
         }
 
@@ -210,8 +233,9 @@ namespace UnityGameJam.Shelter
         {
             if (viewport.width <= 0 || viewport.height <= 0 || !viewport.Contains(pointer)) return Vector2.zero;
             float band = edgeSize * viewport.height / FixedAspectCamera.ReferenceHeight;
-            return new Vector2(pointer.x < viewport.xMin + band ? -1f : pointer.x > viewport.xMax - band ? 1f : 0f,
-                pointer.y < viewport.yMin + band ? -1f : pointer.y > viewport.yMax - band ? 1f : 0f);
+            float Edge(float distance) => Mathf.SmoothStep(1f, 0f, Mathf.InverseLerp(1f, Mathf.Max(2f, band), distance));
+            return new Vector2(Edge(viewport.xMax - pointer.x) - Edge(pointer.x - viewport.xMin),
+                Edge(viewport.yMax - pointer.y) - Edge(pointer.y - viewport.yMin));
         }
 
         public void RefreshMapBounds()

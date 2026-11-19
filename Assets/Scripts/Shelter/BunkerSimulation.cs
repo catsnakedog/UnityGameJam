@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -64,12 +65,18 @@ namespace UnityGameJam.Shelter
             await roster.InitializeAsync();
             if (!this) return;
             Rules = rules;
+            var people = roster.Characters;
+            var walkers = new ShelterWalker[people.Count];
+            for (int i = 0; i < people.Count; i++) walkers[i] = people[i].GetComponent<ShelterWalker>();
+            foreach (var header in FindObjectsByType<ShelterRoomHeader>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (header.gameObject.scene == gameObject.scene) header.Bind(walkers);
             development.SetScoreCalculator(new GameDevScoreCalculator(Rules.EvaluationTargetProgress, Rules.EvaluationReferenceTicks, () => CurrentTick));
             development.DevelopmentRestarted += ResetClock;
             ResetClock();
         }
         void ResetClock()
         {
+            GameAudio.Music(GameSound.Bunker);
             if (TryGetComponent<ShelterSpeech>(out var speech)) speech.Clear();
             foreach (var actor in roster.Characters)
             {
@@ -112,10 +119,12 @@ namespace UnityGameJam.Shelter
                 var grade = Rules.GradePresentation(score);
                 LastPresentationTick = tick;
                 foreach (var actor in roster.Characters)
-                    if (actor) actor.ApplyMentalChange(grade.MentalDelta);
+                    if (actor) actor.ApplyMentalChange(grade.MentalDelta, SurvivorEmotion.Cause.Presentation);
                 PresentationDue?.Invoke(tick, score, grade);
             }
             else if (tick < Rules.TotalTicks && tick % Rules.RandomEventEveryTicks == 0) RandomEventDue?.Invoke(tick);
+            if (tick < Rules.TotalTicks && (long)tick * 24 / Rules.TotalTicks != (long)(tick - 1) * 24 / Rules.TotalTicks && !IsPaused)
+                GameAudio.Play(GameSound.Hour);
             if(IsPaused) { pendingPostEventTick=tick; clock.Paused=true; return; }
             CompleteTick(tick);
         }
@@ -130,16 +139,17 @@ namespace UnityGameJam.Shelter
             if (tick == Rules.TotalTicks) { development.FinishDevelopment(); DurationEnded?.Invoke(); }
             clock.Paused = IsPaused || development.Phase != GameDevPhase.Developing || !isActiveAndEnabled;
         }
+        internal bool PlanningUnlocksDepartments => Rules && development && development.Progress.Planning > Rules.PlanningUnlockPercent;
+
         internal bool CanDevelopIn(ShelterRoomType room)
         {
             if (!Rules || !development || development.Phase != GameDevPhase.Developing || Rules.PercentPerAbility == 0) return false;
             var progress = development.Progress;
-            bool unlocked = progress.Planning > Rules.PlanningUnlockPercent;
             switch (room)
             {
                 case ShelterRoomType.Planning: return progress.Planning < GameDevProgress.MaximumPercent;
-                case ShelterRoomType.Graphics: return unlocked && progress.Graphics < GameDevProgress.MaximumPercent;
-                case ShelterRoomType.Programming: return unlocked && progress.Programming < GameDevProgress.MaximumPercent;
+                case ShelterRoomType.Graphics: return PlanningUnlocksDepartments && progress.Graphics < GameDevProgress.MaximumPercent;
+                case ShelterRoomType.Programming: return PlanningUnlocksDepartments && progress.Programming < GameDevProgress.MaximumPercent;
                 default: return false;
             }
         }
@@ -158,9 +168,7 @@ namespace UnityGameJam.Shelter
                 if (!walker || !walker.CanWorkInCurrentRoom) continue;
                 var room = walker.CurrentRoom.roomType;
                 if (room == ShelterRoomType.ZombieInvasion) actor.Speak("guard");
-                if ((room == ShelterRoomType.Programming || room == ShelterRoomType.Graphics) &&
-                    development.Progress.Planning <= Rules.PlanningUnlockPercent) actor.Speak("wait_plan");
-                if (!CanDevelopIn(room)) continue;
+                if (!walker.CanDoDevelopmentWork) continue;
                 GameDevField field;
                 int ability;
                 switch (walker.CurrentRoom.roomType)
@@ -182,9 +190,10 @@ namespace UnityGameJam.Shelter
                 }
                 workers.Add((actor, field, ability));
                 totalAbility[(int)field] += ability;
-                if (Rules.MentalCostPerWork > 0)
-                    actor.ApplyMentalChange(-Rules.MentalCostPerWork);
             }
+            if (Rules.MentalCostPerWork > 0)
+                foreach (var worker in workers)
+                    worker.actor.ApplyMentalChange(-Rules.MentalCostPerWork, SurvivorEmotion.Cause.Work);
             ApplyWork(GameDevField.Programming);
             ApplyWork(GameDevField.Graphics);
             ApplyWork(GameDevField.Planning);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using GameJam.Data;
 using ShelterRun;
@@ -25,9 +26,13 @@ namespace UnityGameJam.Shelter
             {
                 await GameData.InitializeAsync();
                 if (this == null) return;
-                var catalog = new CharacterCatalog(GameData.GetTable(CharacterKeys.Table));
+                var table = GameData.GetTable(CharacterKeys.Table);
+                var catalog = new CharacterCatalog(table);
+                IEnumerable<string> ids = FarmingRunTransfer.People;
+                if (Application.isEditor && !FarmingRunTransfer.HasResult)
+                    ids = table.Rows.Select(row => row.Id);
                 var definitions = new List<CharacterDefinition>();
-                foreach (var id in FarmingRunTransfer.People) definitions.Add(catalog.Get(id));
+                foreach (var id in ids) definitions.Add(catalog.Get(id));
                 if (!survivorPrefab || spawnPoints == null || definitions.Count > spawnPoints.Length)
                     throw new InvalidOperationException("Shelter roster prefab/spawn points are missing or insufficient.");
                 for (int i = 0; i < definitions.Count; i++)

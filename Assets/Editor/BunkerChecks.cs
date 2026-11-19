@@ -75,7 +75,7 @@ public static class BunkerChecks
         var spare = roster.Characters[2].GetComponent<ShelterWalker>();
         Check(!spare.TryRescue(fallen) && !carrier.MoveTo(lower), "Only one rescuer can claim the patient", checks);
         bool carriedInLift = false;
-        for (int i = 0; i < 6000 && carrier.IsRescuing; i++)
+        for (int i = 0; i < 6000 && (carrier.IsRescuing || carrier.IsMoving); i++)
         {
             foreach (var lift in carrier.navigation.Elevators) lift.Advance(.02f);
             carrier.Tick(.02f);
@@ -96,7 +96,10 @@ public static class BunkerChecks
         }
         sim.Advance(sim.Rules.SecondsPerTick);
         Check(patient.CanAct && !patient.IsRestingAfterRescue && patient.CurrentMental >= sim.Rules.WakeMental,
-            "The delivered survivor regains control at the threshold", checks);
+            "The delivered survivor regains consciousness at the threshold", checks);
+        for (int i = 0; i < Mathf.CeilToInt((float)sim.Rules.MentalMaximum / sim.Rules.SleepMentalPerTick); i++)
+            patient.AdvanceMentalTick();
+        Check(!fallen.InTent && !fallen.IsMovementLocked, "Full recovery opens the tent", checks);
     }
 
     static void CheckRoomCapacity(BunkerSimulation sim, ShelterRoster roster, ShelterArea[] rooms, List<string> checks)
@@ -110,29 +113,32 @@ public static class BunkerChecks
         var positions = walkers.Select(w => w.transform.position.x).OrderBy(x => x).ToArray();
         Check(positions.Skip(1).Zip(positions, (right, left) => right - left).All(gap => gap > .96f),
             "Three survivors stand at separately clickable positions in one room", checks);
-        Check(sim.Rules.SleepingRoomCapacity == 2 && resident.MoveTo(bed) && patient.MoveTo(bed) && !carrier.MoveTo(bed),
-            "Two simultaneous sleeping-room orders reserve the beds before arrival", checks);
-        patient.Stop();
-        Check(carrier.MoveTo(bed), "Stopping a trip immediately releases its sleeping-room place", checks);
-        carrier.Stop();
-        ShelterElevatorChecks.Move(resident, bed);
+        foreach (var walker in walkers) ShelterElevatorChecks.Move(walker, bed);
+        var tents = bed.GetComponentsInChildren<ShelterTent>();
+        Check(walkers.All(w => w.CurrentRoom == bed) && tents.Length == 2, "Three residents share a room with two tents", checks);
+        var residentId = roster.Characters[2];
+        residentId.SetMental(1);
+        residentId.AdvanceMentalTick();
+        Check(residentId.CurrentMental == 1, "The floor provides no rest", checks);
+        Check(resident.UseTent(tents[0]) && !carrier.UseTent(tents[0]), "One reservation per tent", checks);
+        resident.Stop();
+        Check(!tents[0].Guest && resident.UseTent(tents[0]), "Cancellation releases the tent", checks);
+        for (int i = 0; i < 400 && resident.IsMoving; i++) resident.Tick(.02f);
+        Check(resident.InTent && tents[0].Occupied, "Arrival closes the tent", checks);
         ShelterElevatorChecks.Move(patient, guard);
         ShelterElevatorChecks.Move(carrier, common);
         roster.Characters[1].SetMental(0);
-        Check(carrier.TryRescue(patient), "A rescue can use the single remaining bed", checks);
+        Check(carrier.TryRescue(patient), "A rescue can reserve the remaining tent", checks);
         carrier.Stop();
-        Check(carrier.MoveTo(bed), "Cancelling pickup releases the patient's reservation", checks);
-        ShelterElevatorChecks.Move(carrier, common);
-        Check(carrier.TryRescue(patient), "The cancelled rescue can be requested again", checks);
+        Check(!tents[1].Guest && carrier.TryRescue(patient), "Cancelling rescue releases the patient's reservation", checks);
         for (int i = 0; i < 6000 && (carrier.IsRescuing || carrier.IsMoving); i++)
         {
             foreach (var lift in carrier.navigation.Elevators) lift.Advance(.02f);
             carrier.Tick(.02f);
         }
-        Check(patient.CurrentRoom == bed && resident.CurrentRoom == bed && carrier.CurrentRoom == common &&
-            roster.Characters[1].IsRestingAfterRescue && !carrier.MoveTo(bed) &&
-            Mathf.Abs(patient.transform.position.x - resident.transform.position.x) > .96f,
-            "Last bed takes the patient beside the resident and the carrier returns to their original room", checks);
+        Check(patient.InTent && resident.InTent && carrier.CurrentRoom == bed && !carrier.InTent,
+            "Two occupied tents and a visible rescuer share the room", checks);
+        residentId.SetMental(sim.Rules.MentalMaximum);
         roster.Characters[1].ResetMental();
         foreach (var walker in walkers) ShelterElevatorChecks.Move(walker, common);
     }
@@ -223,8 +229,7 @@ public static class BunkerChecks
                 int beforeRoom = actor.CurrentMental;
                 plan.roomType = type;
                 sim.Advance(sim.Rules.SecondsPerTick);
-                int roomDelta = type == ShelterRoomType.Sleeping ? sim.Rules.SleepMentalPerTick :
-                    type == ShelterRoomType.ZombieInvasion ? -sim.Rules.GuardMentalLossPerTick : 0;
+                int roomDelta = type == ShelterRoomType.ZombieInvasion ? -sim.Rules.GuardMentalLossPerTick : 0;
                 Check(Mathf.Approximately(dev.Progress.Planning, expected) && actor.CurrentMental == actor.ClampMental(beforeRoom + roomDelta),
                     "Room changes mental without producing development: " + type, checks);
             }

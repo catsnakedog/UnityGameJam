@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f0bc444368363a468f803025a217124, type: 3}
   m_Name: UI_Click
   m_EditorClassIdentifier: GameJam.Audio::GameJam.Audio.SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: dcb35f61d9fc46449b8df437b3849a7c, type: 3}
   channel: 1
   volume: 1
   minPitch: 1

@@ -1051,6 +1051,7 @@ MonoBehaviour:
   characters:
   - characterId: person_01
     standing: {fileID: -5721954723193433207, guid: a0c719c3d065ea64f88b2d031c1f276d, type: 3}
+    workingUsesChair: 0
     motions:
     - clip: {fileID: 3172135971258091552, guid: a0c719c3d065ea64f88b2d031c1f276d, type: 3}
       firstFrame: {fileID: -5721954723193433207, guid: a0c719c3d065ea64f88b2d031c1f276d, type: 3}
@@ -1060,18 +1061,23 @@ MonoBehaviour:
       firstFrame: {fileID: 7141508708801281710, guid: 636985baad41f50499e7c33416ba0819, type: 3}
     - clip: {fileID: -3256486028613876420, guid: b531510ed1ab4334f910f40bba2a61c4, type: 3}
       firstFrame: {fileID: -8635845107935452516, guid: b531510ed1ab4334f910f40bba2a61c4, type: 3}
+    - clip: {fileID: 6323978960297368858, guid: 0bf97ba982bb4a74bb1d6c4607fcc321, type: 3}
+      firstFrame: {fileID: -6292264901550687356, guid: 0bf97ba982bb4a74bb1d6c4607fcc321, type: 3}
+    - clip: {fileID: -3406108324312276562, guid: 87eebf06ad30f27428e4ee3b240a5454, type: 3}
+      firstFrame: {fileID: -5232381665843724403, guid: 87eebf06ad30f27428e4ee3b240a5454, type: 3}
     - clip: {fileID: 0}
       firstFrame: {fileID: 0}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: -3057451413241490466, guid: 7cf3061f50332ec4e8dbfba670700950, type: 3}
+    - clip: {fileID: -6239216113759591374, guid: 594359653512bb945a048c94b760856e, type: 3}
+      firstFrame: {fileID: 4066331735602813372, guid: 594359653512bb945a048c94b760856e, type: 3}
+    - clip: {fileID: 2459078804267041145, guid: 5ecfc10329f213d4fa42281f2791d0b1, type: 3}
+      firstFrame: {fileID: -6801969203907747984, guid: 5ecfc10329f213d4fa42281f2791d0b1, type: 3}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: -8002122097491837348, guid: 0aa2e361e16afff4288b9273703326af, type: 3}
   - characterId: person_02
     standing: {fileID: 2725105885671643213, guid: 299890d126ee9264b92eba386df15173, type: 3}
+    workingUsesChair: 0
     motions:
     - clip: {fileID: 3172135971258091552, guid: 87ab84d05b22cd54db75f05ed90bfcbd, type: 3}
       firstFrame: {fileID: -9217439677697321784, guid: 87ab84d05b22cd54db75f05ed90bfcbd, type: 3}
@@ -1081,18 +1087,23 @@ MonoBehaviour:
       firstFrame: {fileID: 1231979010222026963, guid: 7ece5fa278ecbfe41a28679652824219, type: 3}
     - clip: {fileID: -3256486028613876420, guid: fce3a7ff29f957b43a673bc7ccdaec45, type: 3}
       firstFrame: {fileID: -1752386108522027949, guid: fce3a7ff29f957b43a673bc7ccdaec45, type: 3}
+    - clip: {fileID: 6323978960297368858, guid: fc593b95621973745a84e281265b87ab, type: 3}
+      firstFrame: {fileID: 5568352749324025383, guid: fc593b95621973745a84e281265b87ab, type: 3}
+    - clip: {fileID: -3406108324312276562, guid: 127357b1f27e57d48be4cfe4eab59da6, type: 3}
+      firstFrame: {fileID: 9148777870882369369, guid: 127357b1f27e57d48be4cfe4eab59da6, type: 3}
     - clip: {fileID: 0}
       firstFrame: {fileID: 0}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: -5651077878229858963, guid: 348c45e705a42e64a8b5649622de24a9, type: 3}
+    - clip: {fileID: -6239216113759591374, guid: 41bd659f053d85447b8b21c899fcffad, type: 3}
+      firstFrame: {fileID: -4970522283167618406, guid: 41bd659f053d85447b8b21c899fcffad, type: 3}
+    - clip: {fileID: 2459078804267041145, guid: 25a0df3f44a9793408933083d15534dc, type: 3}
+      firstFrame: {fileID: -4106425049494442117, guid: 25a0df3f44a9793408933083d15534dc, type: 3}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: -2019481029334085407, guid: 5a39726542f8db64799265876c45fce9, type: 3}
   - characterId: person_03
     standing: {fileID: -123074452735280288, guid: ddcf908550cadcb40a668371b0c606b3, type: 3}
+    workingUsesChair: 1
     motions:
     - clip: {fileID: 3172135971258091552, guid: 9de61e83560a5d4468d26262e4d2434e, type: 3}
       firstFrame: {fileID: 165350858431575666, guid: 9de61e83560a5d4468d26262e4d2434e, type: 3}
@@ -1102,18 +1113,23 @@ MonoBehaviour:
       firstFrame: {fileID: 3258876036545305618, guid: fa48f53c8b2d6ba4baaaf58ca15802c2, type: 3}
     - clip: {fileID: -3256486028613876420, guid: 5e06b023ba09c774f8b1e879f1cee70f, type: 3}
       firstFrame: {fileID: 8207266157287283430, guid: 5e06b023ba09c774f8b1e879f1cee70f, type: 3}
+    - clip: {fileID: 6323978960297368858, guid: ea5b2234f830bf34986cb87eb60afb1c, type: 3}
+      firstFrame: {fileID: 3848559978091656266, guid: ea5b2234f830bf34986cb87eb60afb1c, type: 3}
+    - clip: {fileID: -3406108324312276562, guid: aa3ab67576ba6254789842df746d4820, type: 3}
+      firstFrame: {fileID: -1071492870097718442, guid: aa3ab67576ba6254789842df746d4820, type: 3}
     - clip: {fileID: 0}
       firstFrame: {fileID: 0}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: -6588287471708735404, guid: 59edf90082023d944a9462292e0bbf4b, type: 3}
+    - clip: {fileID: -6239216113759591374, guid: 5f5dc19d19c846643bb278c3ea55e13a, type: 3}
+      firstFrame: {fileID: -4975980945408362068, guid: 5f5dc19d19c846643bb278c3ea55e13a, type: 3}
+    - clip: {fileID: 2459078804267041145, guid: 43031f141dd780447bb93066b2284e90, type: 3}
+      firstFrame: {fileID: 992260794461541461, guid: 43031f141dd780447bb93066b2284e90, type: 3}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: 5463338199794107209, guid: 6b664e0d24f256a4880a1e3c9f40cadb, type: 3}
   - characterId: person_04
     standing: {fileID: 4898871321020763208, guid: 93d7bfb37120b974ab9393ca967c6b3f, type: 3}
+    workingUsesChair: 1
     motions:
     - clip: {fileID: 3172135971258091552, guid: 88908d1dccb7e2041832aeff024424e1, type: 3}
       firstFrame: {fileID: -3607541595660303689, guid: 88908d1dccb7e2041832aeff024424e1, type: 3}
@@ -1123,18 +1139,23 @@ MonoBehaviour:
       firstFrame: {fileID: -7142917547318464880, guid: e8c3425aeeb2ffb47aeff45bc0f016ad, type: 3}
     - clip: {fileID: -3256486028613876420, guid: b805756ba2f3bbb4babe971afadad1f0, type: 3}
       firstFrame: {fileID: 8066550524984769594, guid: b805756ba2f3bbb4babe971afadad1f0, type: 3}
+    - clip: {fileID: 6323978960297368858, guid: 2e6ead4dfeb2f7f4097cf2fe2958ab63, type: 3}
+      firstFrame: {fileID: 6391415127214693458, guid: 2e6ead4dfeb2f7f4097cf2fe2958ab63, type: 3}
+    - clip: {fileID: -3406108324312276562, guid: c14cd140a5ae06943a5af93e912ee01f, type: 3}
+      firstFrame: {fileID: 8015932032625297706, guid: c14cd140a5ae06943a5af93e912ee01f, type: 3}
     - clip: {fileID: 0}
       firstFrame: {fileID: 0}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: -776455986775214573, guid: 72e55b371f703234d82029863519784e, type: 3}
+    - clip: {fileID: -6239216113759591374, guid: 2262348c94f65984e8a0735bb4e38d12, type: 3}
+      firstFrame: {fileID: 7090244730674593544, guid: 2262348c94f65984e8a0735bb4e38d12, type: 3}
+    - clip: {fileID: 2459078804267041145, guid: 8014837df02f1634186cc4c6d2a7b95b, type: 3}
+      firstFrame: {fileID: 7214043621664241924, guid: 8014837df02f1634186cc4c6d2a7b95b, type: 3}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: -7740191913946059271, guid: c3ebc4ace5cf1b84bb0762bef7ec4a21, type: 3}
   - characterId: person_05
     standing: {fileID: -2077052590953723219, guid: 329779dcc17a2da4594a50879156519e, type: 3}
+    workingUsesChair: 1
     motions:
     - clip: {fileID: 3172135971258091552, guid: dbe082051dd0444419d438cefcb4a5e6, type: 3}
       firstFrame: {fileID: -7482434523636138286, guid: dbe082051dd0444419d438cefcb4a5e6, type: 3}
@@ -1144,18 +1165,23 @@ MonoBehaviour:
       firstFrame: {fileID: 151363512489653036, guid: e1a7503de2ec79f4fb759da364aed24e, type: 3}
     - clip: {fileID: -3256486028613876420, guid: 9115a3132b7693a4985055a5b8b33b17, type: 3}
       firstFrame: {fileID: -8206210938660913247, guid: 9115a3132b7693a4985055a5b8b33b17, type: 3}
+    - clip: {fileID: 6323978960297368858, guid: 552f0d907c7e68a429bf7f307d8a82f3, type: 3}
+      firstFrame: {fileID: 8839028734264803622, guid: 552f0d907c7e68a429bf7f307d8a82f3, type: 3}
+    - clip: {fileID: -3406108324312276562, guid: 6774fc9f49338dc4aa538417a040300c, type: 3}
+      firstFrame: {fileID: -8764463407047871557, guid: 6774fc9f49338dc4aa538417a040300c, type: 3}
     - clip: {fileID: 0}
       firstFrame: {fileID: 0}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: 3047737688259972262, guid: b199a5e70a2cd224284772c96a5adde6, type: 3}
+    - clip: {fileID: -6239216113759591374, guid: 52bba6f70225ea94ebac2ae0766334c3, type: 3}
+      firstFrame: {fileID: 5743326417731716579, guid: 52bba6f70225ea94ebac2ae0766334c3, type: 3}
+    - clip: {fileID: 2459078804267041145, guid: 8ad416c1712310648b4b01f7a2dd8fc3, type: 3}
+      firstFrame: {fileID: 907057334129798961, guid: 8ad416c1712310648b4b01f7a2dd8fc3, type: 3}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: 1286670281547695692, guid: 7f3f1ab795929064592e30f33f63e34a, type: 3}
   - characterId: person_06
     standing: {fileID: 6113843755750713040, guid: fd084d1b2298e6d4db64cc32614e8f25, type: 3}
+    workingUsesChair: 1
     motions:
     - clip: {fileID: 3172135971258091552, guid: 75284ffe73490fa4e93ce4431e7c90d0, type: 3}
       firstFrame: {fileID: 659879433093974609, guid: 75284ffe73490fa4e93ce4431e7c90d0, type: 3}
@@ -1165,16 +1191,20 @@ MonoBehaviour:
       firstFrame: {fileID: -7557987932889513438, guid: 97bd139bea119164692a19672eaab054, type: 3}
     - clip: {fileID: -3256486028613876420, guid: 8398b67162454184e8accd31fe88b408, type: 3}
       firstFrame: {fileID: -6810556155032255868, guid: 8398b67162454184e8accd31fe88b408, type: 3}
+    - clip: {fileID: 6323978960297368858, guid: 2624d973d343fa442aa6403ad9d8f9d9, type: 3}
+      firstFrame: {fileID: -98092347102781613, guid: 2624d973d343fa442aa6403ad9d8f9d9, type: 3}
+    - clip: {fileID: -3406108324312276562, guid: d9ad617f831e84943a9c6f7eea8d3363, type: 3}
+      firstFrame: {fileID: 7573229354391658724, guid: d9ad617f831e84943a9c6f7eea8d3363, type: 3}
     - clip: {fileID: 0}
       firstFrame: {fileID: 0}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: -2348307554268807484, guid: 8bbbb7826d2950b4ca5b4afa5a4a2a6a, type: 3}
+    - clip: {fileID: -6239216113759591374, guid: b39f2720ba87a254d82598d56873a378, type: 3}
+      firstFrame: {fileID: -7643145946180991983, guid: b39f2720ba87a254d82598d56873a378, type: 3}
+    - clip: {fileID: 2459078804267041145, guid: 3319b94e0d0a15943873366ef4d5b90e, type: 3}
+      firstFrame: {fileID: -7205335903508856732, guid: 3319b94e0d0a15943873366ef4d5b90e, type: 3}
     - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
-    - clip: {fileID: 0}
-      firstFrame: {fileID: 0}
+      firstFrame: {fileID: -356671031212485199, guid: 0f90783d42df121459757681bbf0be9d, type: 3}
 --- !u!114 &448657256301128375
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1188,6 +1218,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnityGameJam.Characters.CharacterIdentity
   mentalFill: {fileID: 4507164839199858862}
+  headClearancePixels: 2
 --- !u!114 &4837621984429831204
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1225,8 +1256,10 @@ MonoBehaviour:
   mentalGauge: {fileID: 1410060857440351606}
   anger: {fileID: 21300000, guid: 087bec4eace65414eba5d50ca120836d, type: 3}
   gloom: {fileID: 21300000, guid: 6f412eda5ef6c214ea3fa6749877ddb9, type: 3}
-  cornerOffsetPixels: {x: 1, y: -5}
+  joy: {fileID: 21300000, guid: 89d5699a6b6e6634692a11ebf09fc238, type: 3}
+  headOffsetPixels: {x: 3, y: -1}
   duration: 1.35
+  repeatCooldown: 10
 --- !u!114 &5998710114907285072
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1239,10 +1272,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05c2aed4e01d6d54da6cb85c6a896ba4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnityGameJam.Shelter.ShelterSpeechAnchor
-  head: {fileID: 2342466878525430219}
-  nameplate: {fileID: 424502770072177374}
-  gauge: {fileID: 1410060857440351606}
-  gap: 0.07
+  offset: {x: 0.55, y: 1.8}
 --- !u!1 &4125611162352228921
 GameObject:
   m_ObjectHideFlags: 0

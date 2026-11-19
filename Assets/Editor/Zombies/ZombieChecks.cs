@@ -149,60 +149,71 @@ public static class ZombieChecks
             var z = ctrl.SpawnWave();
             var entry = z.Doorway;
             float speed = ctrl.Data.WalkSpeed;
-            Check(travel == 6 && volley == 2 && period == 5 && Mathf.Abs(Mathf.Abs(z.transform.position.x - entry.x) - travel * speed * sim.Rules.SecondsPerTick) < 0.001f,
-                "Spawn distance is six walking ticks, ranged interval two, melee interval five");
+            Check(travel == 1 && volley == 2 && period == 5 && Mathf.Abs(Mathf.Abs(z.transform.position.x - entry.x) - travel * speed * sim.Rules.SecondsPerTick) < 0.001f,
+                "Spawn distance is one walking tick, ranged interval two, melee interval five");
             var spawnX = z.transform.position.x;
             var camera = UnityEngine.Object.FindFirstObjectByType<ShelterCamera>();
             camera.Pan(Vector2.right * Mathf.Sign(spawnX - entry.x), 100f);
-            Check(Mathf.Abs(camera.transform.position.x - spawnX) <= camera.boundaryPadding + 0.001f, "Camera can pan to the outdoor spawn");
+            float spawnViewportX = camera.GetComponent<Camera>().WorldToViewportPoint(z.transform.position).x;
+            Check(spawnViewportX >= 0 && spawnViewportX <= 1, "Camera can pan to the outdoor spawn");
             sim.Advance(0.5 * sim.Rules.SecondsPerTick); Advance(ctrl, 0.5f * sim.Rules.SecondsPerTick);
             Check(Mathf.Abs(z.transform.position.x - Mathf.MoveTowards(spawnX, entry.x, speed * sim.Rules.SecondsPerTick * 0.5f)) < 0.001f, "Zombie walks smoothly between clock ticks");
             sim.AcquirePause(checks); var pausedAt = z.transform.position; Ticks(10); Advance(ctrl, 10); sim.ReleasePause(checks);
             Check(z.transform.position == pausedAt && z.ResolvedCombats == 0, "Pause freezes approach and attacks");
             sim.Advance(0.5 * sim.Rules.SecondsPerTick);
-            Check(z.State == ZombieState.Approaching && z.ResolvedCombats == 0 && !guard.IsOccupied, "No early attack or breach at tick one");
-            var rolls = ScriptRolls(ctrl, 6, 1, 1, 1, 1); Ticks(1);
-            Check(rolls.Count == 0 && z.ResolvedCombats == 4 && z.Hp == z.InitialHp && actors.All(a => a.CurrentMental == 56), "Four guards fire on tick two without distant retaliation");
-            Ticks(1);
-            Check(z.ResolvedCombats == 4 && !guard.IsOccupied, "No additional volley on tick three");
-            rolls = ScriptRolls(ctrl, 1, 6, 6, 6, 6); Ticks(1);
-            Check(rolls.Count == 0 && z.State == ZombieState.Dead && ctrl.Zombies.Count == 0 && actors.All(a => a.CurrentMental == 57), "The second volley on tick four can stop the zombie before it breaches");
-            Ticks(4);
-            Check(actors.All(a => a.CurrentMental == 49), "Every guard loses two mental per assigned tick");
-
-            Reset(); Move(actors[0], guard); z = ctrl.SpawnWave(); ctrl.RollDie = Outcome(false); Ticks(travel - 1);
-            Check(z.ResolvedCombats == 2 && z.State == ZombieState.Approaching && !guard.IsOccupied, "Two volleys before tick six and no early entry");
-            rolls = ScriptRolls(ctrl, 1, 6, 6, 1); Ticks(1);
-            Check(rolls.Count == 0 && z.State == ZombieState.Defending && z.Hp == 1 && guard.IsOccupied &&
-                z.ResolvedCombats == 4 && actors[0].CurrentMental == 44 && actors.Skip(1).All(a => a.CurrentMental == 58), "At tick six the last volley hits, breach costs everyone two, then melee hits one guard immediately");
-            ctrl.RollDie = Outcome(false); Ticks(period - 1);
+            Check(z.State == ZombieState.Approaching && z.ResolvedCombats == 1 && !guard.IsOccupied &&
+                z.Hp == z.InitialHp - ctrl.Data.DamageToZombie, "Exactly one guard hits on arrival without breaching");
+            var rolls = ScriptRolls(ctrl); // Any door roll would fail this fixture.
+            Ticks(volley);
+            Check(z.State == ZombieState.Dead && ctrl.Zombies.Count == 0 && !guard.IsOccupied,
+                "Multiple guards share the hit limit and a lethal door hit prevents entry");
+            Reset(); Move(actors[0], guard);
+            for (int wave = 1; wave < 4; wave++) { ctrl.SpawnWave(); Ticks(travel + volley); }
+            actors[0].ResetMental();
+            z = ctrl.SpawnWave(); ctrl.RollDie = Outcome(false);
+            Ticks(travel + volley);
+            Check(z.ResolvedCombats == 2 && z.State == ZombieState.Approaching && !guard.IsOccupied &&
+                z.Hp == 2 && Mathf.Abs(z.transform.position.x-z.Doorway.x)<.001f, "A strong zombie waits at the door after two fixed hits");
+            Ticks(volley);
+            Check(z.State == ZombieState.Defending && z.Hp == 1 && guard.IsOccupied && z.ResolvedCombats == 4,
+                "Three door hits followed immediately by a melee exchange");
+            Ticks(period - 1);
             Check(z.ResolvedCombats == 4, "Melee does not repeat at the shorter ranged interval");
             Ticks(1);
             Check(z.ResolvedCombats == 5, "Melee repeats five ticks after the breach");
-            Ticks(2 * period);
-            Check(z.State == ZombieState.Defending && actors[0].CanAct && actors.Skip(1).All(a => a.CurrentMental == 58), "A living guard holds after three melee rounds and the same breach is charged only once");
             actors[0].SetMental(2); Ticks(period);
-            Check(!actors[0].CanAct && z.State == ZombieState.Invading && !guard.IsOccupied && z.Hp == 1, "When the last guarding survivor faints the invader continues with its remaining HP");
+            Check(!actors[0].CanAct && z.State == ZombieState.Invading && z.Hp == 1, "A surviving invader continues after its last defender faints");
+            var fallen = actors[0];
+            var faintLines = GameData.GetTable("ShelterDialogue").Rows
+                .Where(row => row.Get<string>("role") == fallen.Definition.Role && row.Get<string>("situation") == "faint")
+                .Select(row => row.Get<string>("line")).ToHashSet();
+            var speech = UnityEngine.Object.FindFirstObjectByType<ShelterSpeech>();
+            var faintBubble = speech.GetComponentsInChildren<TMPro.TMP_Text>().Single(text => faintLines.Contains(text.text));
+            ShelterSpeech.Say(fallen.transform, fallen.Definition.Role, "melee_loss");
+            sim.AcquirePause(checks);
+            try
+            {
+                Time.timeScale = 4;
+                float deadline = Time.time + 3f;
+                while (faintBubble.gameObject.activeInHierarchy && Time.time < deadline) await Frame();
+                Check(!faintBubble.gameObject.activeInHierarchy && faintLines.Contains(faintBubble.text),
+                    "A fainted defender's last bubble expires without playing queued combat dialogue");
+            }
+            finally { Time.timeScale = 0; sim.ReleasePause(checks); }
             for (int i = 0; i < 41; i++) actors[0].AdvanceMentalTick();
             Check(actors[0].IsFainted && actors[0].CurrentMental == 0, "Fainted guard waits for rescue beyond the former timer");
 
             Reset(); Move(actors[0], guard); Ticks(7);
             Move(actors[0], sleeping); Ticks(1); Move(actors[0], guard); Ticks(7);
-            Check(actors[0].CurrentMental == 37, "One sleep tick and fourteen guard ticks use the respective room rates");
+            Check(actors[0].CurrentMental == actors[0].Definition.Mental - 14 * sim.Rules.GuardMentalLossPerTick, "Fourteen guard ticks drain mental; waiting outside a tent gives no recovery");
             Ticks(1);
-            Check(actors[0].CurrentMental == 35 && actors[1].CurrentMental == 60, "Guard duty drains while no zombies are present");
-            Reset(); Move(actors[0], guard); z = ctrl.SpawnWave(); ctrl.RollDie = Outcome(false); Ticks(volley);
-            ctrl.RollDie = Outcome(true); Ticks(travel - volley);
-            Check(z.State == ZombieState.Dead && actors.Skip(1).All(a => a.CurrentMental == 60) && !guard.IsOccupied, "A lethal final volley prevents both entry and shelter-wide mental loss");
-
-            Reset(); Move(actors[0], guard); Move(actors[1], guard); z = ctrl.SpawnWave();
-            rolls = ScriptRolls(ctrl, 4, 4, 6); Ticks(volley);
-            Check(rolls.Count == 0 && z.Hp == 1, "One guard can hit while a teammate ties");
-            rolls = ScriptRolls(ctrl, 6, 1); Advance(ctrl, 0.01f);
-            Check(rolls.Count == 0 && z.Hp == 1 && actors[0].CurrentMental == 56, "Only the tied shot rerolls; it cannot cause melee damage outside");
-
+            Check(actors[0].CurrentMental == actors[0].Definition.Mental - 15 * sim.Rules.GuardMentalLossPerTick && actors[1].CurrentMental == 60, "Guard duty drains while no zombies are present");
+            Reset(); Move(actors[0], guard); z = ctrl.SpawnWave(); Ticks(travel);
+            actors[0].SetMental(0); Advance(ctrl, .01f);
+            Check(z.State == ZombieState.Invading && z.Hp == z.InitialHp - ctrl.Data.DamageToZombie,
+                "Losing the last defender opens the door immediately");
             Reset(); z = ctrl.SpawnWave(); Ticks(travel);
-            Check(z.State == ZombieState.Invading && actors.All(a => a.CurrentMental == 58), "An undefended room gets six ticks of warning and charges one breach");
+            Check(z.State == ZombieState.Invading && actors.All(a => a.CurrentMental == 58), "An undefended room is breached on arrival and charges one breach");
             foreach (var actor in actors) actor.transform.position = z.transform.position - Vector3.right * 0.3f;
             Advance(ctrl, 0.04f);
             Check(z.State == ZombieState.Encounter, "Invader intercepts survivors on its indoor route");
@@ -211,6 +222,27 @@ public static class ZombieChecks
             foreach (var actor in actors) actor.SetMental(0);
             Advance(ctrl, 0.04f);
             Check(z.State == ZombieState.Invading, "Road movement resumes only when no active fighters remain");
+
+            Reset(); z = ctrl.SpawnWave(); Ticks(travel);
+            var corridor = ctrl.Navigation.Areas.Where(a => a.kind == ShelterArea.AreaKind.Corridor &&
+                Mathf.Approximately(a.FloorY, common.FloorY) && a.Right <= common.Left + 0.01f)
+                .OrderBy(a => a.Right - a.Left).First();
+            var invader = z.GetComponent<ShelterWalker>();
+            invader.Stop(); z.transform.position = corridor.Centre;
+            Check(invader.MoveTo(common), "Invader has a route through the corridor");
+            var zombieScale = z.transform.localScale;
+            var developerScales = actors.Select(a => a.transform.localScale).ToArray();
+            actors[0].transform.position = corridor.Centre; Advance(ctrl, 0); Advance(ctrl, 0.01f);
+            Check(z.State == ZombieState.Encounter && corridor.ContainsFeet(z.transform.position) &&
+                z.transform.position.x < corridor.Centre.x, "First contact stages the zombie on the left of the corridor");
+            foreach (var reinforcement in actors.Skip(1)) reinforcement.transform.position = corridor.ArrivalPoint(corridor.width);
+            Advance(ctrl, 0.01f);
+            var slots = actors.Select(a => a.transform.position.x).ToArray();
+            Check(actors.All(a => corridor.ContainsFeet(a.transform.position)) && slots[0] > corridor.Centre.x &&
+                slots.Zip(slots.Skip(1), (a, b) => b > a).All(inOrder => inOrder),
+                "Reinforcements take distinct right-hand slots on the same corridor floor");
+            Check(z.transform.localScale == zombieScale && actors.Select(a => a.transform.localScale).SequenceEqual(developerScales),
+                "A crowded corridor preserves the original scale of the zombie and every developer");
 
             Reset(); foreach (var actor in actors) actor.SetMental(0);
             z = ctrl.SpawnWave(); Ticks(travel); var target = z.TargetRoom;
@@ -223,6 +255,9 @@ public static class ZombieChecks
             Check(!actors[0].GetComponent<ShelterWalker>().CanWorkInCurrentRoom, "Occupied room stops work");
             ctrl.RollDie = Outcome(true); Advance(ctrl, 0.05f);
             Check(z.State == ZombieState.Encounter, "Entering occupied room automatically starts combat");
+            Check(z.transform.position.x < target.Centre.x && actors[0].transform.position.x > target.Centre.x &&
+                target.ContainsFeet(z.transform.position) && target.ContainsFeet(actors[0].transform.position),
+                "Occupant and developer face off in opposite halves of the occupied room");
             sim.AcquirePause(checks); var position = z.transform.position; int hp = z.Hp; z.ProcessTick(100); Advance(ctrl, 10);
             Check(z.Hp == hp && z.transform.position == position, "Popup-style simulation pause freezes combat and movement"); sim.ReleasePause(checks);
             Ticks(period); Ticks(period);
@@ -256,12 +291,12 @@ public static class ZombieChecks
             ladder.gameObject.SetActive(true); ctrl.Navigation.Refresh(); Advance(ctrl, 0.05f);
             Check(z.State == ZombieState.Invading && z.TargetRoom, "Reconnecting designer elevator automatically restores route");
             Reset();
-            sim.Advance((sim.Rules.TotalTicks - volley) * sim.Rules.SecondsPerTick);
+            sim.Advance((sim.Rules.TotalTicks - travel - volley) * sim.Rules.SecondsPerTick);
             ctrl.ResetRun();
             foreach (var actor in actors) { actor.ResetMental(); Move(actor, guard); }
             z = ctrl.SpawnWave(); var follower = ctrl.SpawnWave();
             ScriptRolls(ctrl, 1, 6, 6, 6, 6);
-            sim.Advance(volley * sim.Rules.SecondsPerTick); await Frame();
+            sim.Advance((travel + volley) * sim.Rules.SecondsPerTick); await Frame();
             Check(!z && ctrl.Zombies.SequenceEqual(new[] { follower }) && follower.isActiveAndEnabled && follower.Hp == follower.InitialHp && !ctrl.CanAdvance && actors.All(c => !c.GetComponent<ShelterWalker>().IsMovementLocked), "A kill on the final game tick freezes the surviving zombie in place");
             dev.RestartDevelopment();
             Check(ctrl.Zombies.Count == 0 && ctrl.SceneRooms().All(r => !r.IsOccupied), "Restart clears the surviving end-of-run zombie");

@@ -42,14 +42,17 @@ PASS Still unconscious after bed tick 6
 PASS Still unconscious after bed tick 7
 PASS Still unconscious after bed tick 8
 PASS Still unconscious after bed tick 9
-PASS The delivered survivor regains control at the threshold
+PASS The delivered survivor regains consciousness at the threshold
+PASS Full recovery opens the tent
 PASS Three survivors stand at separately clickable positions in one room
-PASS Two simultaneous sleeping-room orders reserve the beds before arrival
-PASS Stopping a trip immediately releases its sleeping-room place
-PASS A rescue can use the single remaining bed
-PASS Cancelling pickup releases the patient's reservation
-PASS The cancelled rescue can be requested again
-PASS Last bed takes the patient beside the resident and the carrier returns to their original room
+PASS Three residents share a room with two tents
+PASS The floor provides no rest
+PASS One reservation per tent
+PASS Cancellation releases the tent
+PASS Arrival closes the tent
+PASS A rescue can reserve the remaining tent
+PASS Cancelling rescue releases the patient's reservation
+PASS Two occupied tents and a visible rescuer share the room
 PASS Pause suspends cost and ticks
 PASS Ends at N exactly once
 PASS Presentations replace random events, scheduled popups and waves stop before the final work tick

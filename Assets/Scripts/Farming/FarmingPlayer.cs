@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GameJam.Audio;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityGameJam.Shelter;
@@ -23,7 +24,7 @@ namespace ShelterRun
         {
             session = owner;
             Inventory = new FarmingInventory(owner.Rules.Capacity);
-            artwork = ArtworkFor(owner.Rules.StartingPersonId);
+            artwork = ArtworkFor(owner.StartingPersonId);
             AnimatePose(false, 0f);
         }
         internal SurvivorAnimation.Artwork ArtworkFor(string id) =>
@@ -37,6 +38,7 @@ namespace ShelterRun
         }
         void Update()
         {
+            if (GameOptions.BlocksInput) return;
             if (!session || !session.CanExplore)
             {
                 if (session && session.Phase == FarmingPhase.Ready) AnimatePose(false, Time.deltaTime);
@@ -119,6 +121,7 @@ namespace ShelterRun
                 if (!Take(Focused))
                 { session.Notify($"공간 부족 · {Focused.Record.Weight}칸 필요 / {Inventory.Capacity - Inventory.Used}칸 남음"); return; }
                 session.Notify(Focused.Record.Type == FarmingObjectType.Person ? "사람을 들었습니다" : "물자를 챙겼습니다");
+                if (Focused.Record.Type == FarmingObjectType.Item) GameAudio.Play(GameSound.FarmPickup);
                 Focused = null;
             }
             else if (Inventory.Used > 0)

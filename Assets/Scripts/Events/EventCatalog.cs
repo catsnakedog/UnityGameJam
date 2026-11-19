@@ -12,15 +12,18 @@ namespace UnityGameJam.Events
         public string Id { get; }
         public string Title { get; }
         public string Content { get; }
+        public string YesResult { get; }
+        public string NoResult { get; }
         public IReadOnlyList<EventEffect> Yes { get; }
         public IReadOnlyList<EventEffect> No { get; }
         public string RequiredItem { get; }
         public int RequiredCount { get; }
-        public EventDefinition(string id, string title, string content, IReadOnlyList<string> yes, IReadOnlyList<string> no, string requiredItem="", int requiredCount=0)
+        public EventDefinition(string id, string title, string content, IReadOnlyList<string> yes, IReadOnlyList<string> no, string requiredItem="", int requiredCount=0, string yesResult="", string noResult="")
         {
             if (id==null || !Regex.IsMatch(id,@"^ev_[a-z0-9_]+$") || string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content) || title.IndexOfAny(new[] { '\r', '\n' }) >= 0)
                 throw new FormatException("Events[" + id + "]: ev_* id, single-line title and nonempty content required.");
             Id = id; Title = title; Content = content;
+            YesResult = yesResult; NoResult = noResult;
             Yes=EventEffect.ParseMany(yes); No=EventEffect.ParseMany(no);
             if(requiredItem==null || (requiredItem.Length==0 ? requiredCount!=0 : requiredCount<=0)) throw new FormatException("Invalid event inventory condition: "+id);
             RequiredItem=requiredItem; RequiredCount=requiredCount;
@@ -39,9 +42,12 @@ namespace UnityGameJam.Events
             if (table.Count == 0) throw new FormatException("Events must contain at least one event.");
             if (table.Columns[table.KeyIndex].Name != "id") throw new FormatException("Events requires id as its key.");
             var values = new List<EventDefinition>();
+            bool hasYesResult = table.Columns.Any(column => column.Name == "yesResult");
+            bool hasNoResult = table.Columns.Any(column => column.Name == "noResult");
             foreach (var row in table.Rows)
             {
-                var entry=new EventDefinition(row.Get<string>("id"),row.Get<string>("title"),row.Get<string>("content"),row.Get<IReadOnlyList<string>>("yesEffects"),row.Get<IReadOnlyList<string>>("noEffects"),row.Get<string>("requiredItem"),row.Get<int>("requiredCount"));
+                var entry=new EventDefinition(row.Get<string>("id"),row.Get<string>("title"),row.Get<string>("content"),row.Get<IReadOnlyList<string>>("yesEffects"),row.Get<IReadOnlyList<string>>("noEffects"),row.Get<string>("requiredItem"),row.Get<int>("requiredCount"),
+                    hasYesResult ? row.Get<string>("yesResult") : "", hasNoResult ? row.Get<string>("noResult") : "");
                 foreach(var effect in entry.Yes.Concat(entry.No)) if(effect.Kind==EventEffectKind.Item) items.Name(effect.Target);
                 if(entry.RequiredItem.Length>0) items.Name(entry.RequiredItem);
                 values.Add(entry);

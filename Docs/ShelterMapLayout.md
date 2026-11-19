@@ -16,7 +16,13 @@
 
 방 그림은 `Assets/Art/Shelter/Rooms`에 있다. 원본 PNG를 생존자와 같은 22 PPU로 표시한다. 전투실은 288×128 px(13.09×5.82 유닛), 나머지 방은 240×128 px(10.91×5.82 유닛)이다. [공유 원본](https://drive.google.com/drive/folders/1-XJ1AU6Yk9nNNJWhlBI81PZtpUBUJ58B)
 
+여섯 방의 천장 전등은 `Light.png`의 왼쪽(켜짐)과 오른쪽(꺼짐) 프레임을 사용한다. 방마다 전등 세 개와 URP Light 2D 세 개가 함께 켜지고 꺼진다. 평상시 방마다 독립적으로 평균 45초에 한 번, 0.08~0.16초 동안 깜빡인다. `Assets/Prefabs/Shelter/RoomLighting.prefab`의 Average Flicker Interval에서 평균 간격을 조정할 수 있다. 좀비가 점거하면 바로 소등하고 마지막 점거자가 사라지면 다시 점등한다. [기획실 점등·소등 비교](Images/ShelterRoomLighting.png)
+
 씬의 방 중심 좌표는 그림 아래에서 16 px 위에 있는 보행선을 기준으로 한다. 각 방의 `Room artwork` SpriteRenderer에서 그림을 교체할 수 있다. 방 크기와 클릭 영역은 스프라이트 경계를 따른다. 기획실과 수면실에는 Flip X를 적용해 출입구가 복도를 향한다.
+
+수면실에는 바닥을 따라 텐트 두 동이 있다. 각 텐트의 SpriteRenderer는 `Rooms/Tent.png`의 왼쪽 프레임을 비었을 때, 오른쪽 프레임을 사람이 들어갔을 때 표시한다. 캐릭터를 선택하고 방의 빈 곳을 클릭하면 입장하고, 텐트를 클릭하면 그 텐트까지 걸어가 멘탈이 가득 찰 때까지 쉰다.
+
+기획·아트·프로그래밍 방의 `Workstation - person_XX` 오브젝트를 좌우로 옮기면 해당 캐릭터의 작업 위치를 조정할 수 있다. 방의 ShelterArea에 있는 Workstations 목록에서 인물 ID, 위치 참조, 작업 그림의 좌우 반전을 편집한다. 직군은 기존 Characters 표의 `role`을 따른다.
 
 | 방 | 중심 X | 바닥 Y | 방 분류 | 원본 그림 |
 |---|---:|---:|---|---|

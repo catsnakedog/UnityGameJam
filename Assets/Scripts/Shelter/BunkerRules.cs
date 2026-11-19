@@ -37,7 +37,8 @@ namespace UnityGameJam.Shelter
             throw new ArgumentOutOfRangeException(nameof(score));
         }
         [SerializeField, Min(1)] int invasionApproachTicks;
-        [SerializeField, Min(1), Tooltip("접근 중인 좀비에게 보초가 원거리 사격하는 벙커 틱 간격")] int guardVolleyEveryTicks;
+        [SerializeField, Min(1), Tooltip("문 앞 보초가 고정 피해를 주는 벙커 틱 간격")] int guardVolleyEveryTicks;
+        [SerializeField, Min(1)] int doorHitLimit;
         [SerializeField, Min(0)] int invasionMentalLoss;
         [SerializeField, Min(0)] int guardMentalLossPerTick;
         [SerializeField, Min(1)] int workEveryTicks;
@@ -47,7 +48,7 @@ namespace UnityGameJam.Shelter
         [SerializeField, Min(1)] int mentalMaximum;
         [SerializeField, Min(0), Tooltip("피곤한 대기·걷기를 표시하는 멘탈 상한 (포함)")] int tiredMentalThreshold;
         [SerializeField, Min(1)] int sleepMentalPerTick;
-        [SerializeField, Min(1), Tooltip("수면실 한 곳에 머무를 수 있는 생존자 수")] int sleepingRoomCapacity;
+        [SerializeField, Min(1), Tooltip("수면실 한 곳에서 동시에 텐트를 예약하거나 사용할 수 있는 인원")] int sleepingRoomCapacity;
         [SerializeField, Min(1)] int wakeMental;
         public const int HungerCapacity = 10;
         [Header("허기와 통조림")]
@@ -68,6 +69,8 @@ namespace UnityGameJam.Shelter
         public int MentalMaximum => mentalMaximum;
         public int TiredMentalThreshold => tiredMentalThreshold;
         public int SleepMentalPerTick => sleepMentalPerTick;
+        [SerializeField, Min(1)] int workRoomCapacity = 3;
+        public int WorkRoomCapacity => workRoomCapacity;
         public int SleepingRoomCapacity => sleepingRoomCapacity;
         public int WakeMental => wakeMental;
         public int TotalTicks => totalTicks;
@@ -76,6 +79,7 @@ namespace UnityGameJam.Shelter
         public int InvasionEveryTicks => invasionEveryTicks;
         public int InvasionApproachTicks => invasionApproachTicks;
         public int GuardVolleyEveryTicks => guardVolleyEveryTicks;
+        public int DoorHitLimit => doorHitLimit;
         public int InvasionMentalLoss => invasionMentalLoss;
         public int GuardMentalLossPerTick => guardMentalLossPerTick;
         public int WorkEveryTicks => workEveryTicks;
@@ -102,7 +106,7 @@ namespace UnityGameJam.Shelter
             }
             if (tiredMentalThreshold < 0 || tiredMentalThreshold > mentalMaximum)
                 throw new InvalidOperationException("Invalid data.bunker.rules: tiredMentalThreshold outside mental range.");
-            if (invasionApproachTicks < 1 || guardVolleyEveryTicks < 1 || invasionMentalLoss < 0 || guardMentalLossPerTick < 0)
+            if (invasionApproachTicks < 1 || guardVolleyEveryTicks < 1 || doorHitLimit < 1 || invasionMentalLoss < 0 || guardMentalLossPerTick < 0)
                 throw new InvalidOperationException("Invalid bunker invasion timing or mental loss.");
             if (mentalCostPerWork < 0)
                 throw new InvalidOperationException("Invalid data.bunker.rules: mentalCostPerWork must be nonnegative.");
@@ -110,7 +114,7 @@ namespace UnityGameJam.Shelter
                 foodRestore < 1 || foodRestore > HungerCapacity || servingsPerCan < 1)
                 throw new InvalidOperationException("Invalid bunker hunger or food settings.");
             if (evaluationTargetProgress <= 0 || double.IsNaN(evaluationTargetProgress) || double.IsInfinity(evaluationTargetProgress) || evaluationReferenceTicks <= 0 ||
-                mentalMaximum <= 0 || sleepMentalPerTick <= 0 || sleepingRoomCapacity <= 0 || wakeMental <= 0 || wakeMental > mentalMaximum ||
+                mentalMaximum <= 0 || sleepMentalPerTick <= 0 || sleepingRoomCapacity <= 0 || workRoomCapacity <= 0 || wakeMental <= 0 || wakeMental > mentalMaximum ||
                 totalTicks <= 0 || randomEventEveryTicks <= 0 || invasionEveryTicks <= 0 || workEveryTicks <= 0 ||
                 secondsPerTick <= 0 || float.IsNaN(secondsPerTick) || float.IsInfinity(secondsPerTick) ||
                 percentPerAbility < 0 || float.IsNaN(percentPerAbility) || float.IsInfinity(percentPerAbility) ||

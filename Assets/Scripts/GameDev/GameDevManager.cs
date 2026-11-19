@@ -1,4 +1,5 @@
 using System;
+using GameJam.Audio;
 using System.Threading.Tasks;
 using GameJam.Data;
 using UnityEngine;
@@ -119,6 +120,9 @@ namespace UnityGameJam.GameDev
             Ending = selected;
             LastError = null;
             Phase = GameDevPhase.Ended;
+            bool goodEnding = selected.Id == "ending_released" || selected.Id == "ending_breakthrough";
+            GameAudio.Music(goodEnding ? GameSound.Victory : GameSound.Fail);
+            GameAudio.Play(GameSound.Stamp);
             Changed?.Invoke();
             EndingReached?.Invoke(selected, totalScore);
             return true;

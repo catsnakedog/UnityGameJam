@@ -1,4 +1,4 @@
-﻿# 좀비 전투·침입 데이터 명세
+# 좀비 전투·침입 데이터 명세
 
 실행 시 시트 연동은 기존 종류/규칙 쌍 또는 현재 SpreadConfig의 종류 별칭 ZombieData를 읽는다. 종류만 연결된 별칭 형식에서는 내부 공통 규칙을 사용한다. 실제 전투는 GameData.LoadSettingsAsync<ZombieData>로 이번 실행의 검증된 SO를 받는다. 공용에 이미 존재하는 ZombieData.csv 호환 테이블과 전투가 같은 다운로드를 사용한다. [선택 설정](DataToolSettings.md)
 
@@ -13,7 +13,7 @@
 - ID `data.zombies`, v2, 2026-11-18, active / Codex zombie-sheets-20261118.
 - 소유: 좀비 종류·웨이브별 선택, 기본 HP/전투력, 주사위 전투 규칙, 좀비 이동/접촉 수치. 별칭 Zombies, zombie_1~4, COMBAT_TICK, RAID_COMBAT_TICKS.
 - 제외: 캐릭터 능력·초기 멘탈(data.characters), 전역 멘탈/기절·발생 주기(data.bunker.rules), 다음 웨이브 HP 보정(data.events의 런타임 효과), 방 배치(ShelterArea), 남은 HP·점거·전투 횟수(런타임).
-- 좀비는 6틱 거리에서 접근하고 전투 방에 도착하면 즉시 실내전을 시작한다. 수비자가 남아 있으면 반복 교전하고, 전원이 탈진하면 내부 이동을 시작한다. [벙커 규칙](BunkerRules.md)
+- 좀비는 1틱 거리에서 접근하고 문 앞 방어가 끝나면 실내전을 시작한다. 수비자가 남아 있으면 반복 교전하고, 전원이 탈진하면 내부 이동을 시작한다. [벙커 규칙](BunkerRules.md)
 
 ## 정본과 연결
 
@@ -38,7 +38,7 @@
 | diceSides | int | 주사위 면 수 | 2 이상, 최초 6 |
 | combatEveryTicks | int | 근접전 판정 간격 / 벙커 기본 틱 | >0, 5 |
 | attemptsPerDefender | int | 구 시트 호환 열, 현재 전투에서 미사용 | >0, 최초 3 |
-| damageToZombie | int | 캐릭터 승리당 HP 감소 | >0, 최초 1 |
+| damageToZombie | int | 문 앞 명중 또는 근접전 승리당 HP 감소 | >0, 최초 1 |
 | mentalDamage | int | 좀비 승리당 해당 캐릭터 멘탈 감소 | >0, 최초 2 |
 | mentalRecovery | int | 처치당 참가자 멘탈 회복 | >=0, 최초 5 |
 | walkSpeed / climbSpeed | float | 수평 이동 / 이전 사다리 속도(미소비 호환 필드), world units/sec | 유한 >0, 임시 2 / 1.6 |
@@ -52,9 +52,9 @@ ID 변경/삭제 전 소비자·기획 참조 검색 필수. 영구 저장 없�
 
 ## 동작 계약
 
-선두 좀비는 전투 방까지 벙커 시간 6틱에 해당하는 거리에서 생성된다. 거리는 BunkerRules.InvasionApproachTicks × SecondsPerTick × ZombieData.WalkSpeed이며 모든 종류가 공용 속도로 걷는다. 뒤에 생성된 개체는 줄 간격을 지킨다. 길이 막히면 실제 도착도 늦어진다.
+선두 좀비는 전투 방까지 벙커 시간 1틱에 해당하는 거리에서 생성된다. 거리는 BunkerRules.InvasionApproachTicks × SecondsPerTick × ZombieData.WalkSpeed이며 모든 종류가 공용 속도로 걷는다. 뒤에 생성된 개체는 줄 간격을 지킨다. 길이 막히면 실제 도착도 늦어진다.
 
-보초는 접근 중인 선두에게 생성 후 매 2틱마다 각자 사격한다. 간격은 BunkerRules.GuardVolleyEveryTicks로 읽는다. 입구 도착과 사격이 같은 틱이면 마지막 사격부터 처리한다. 살아서 진입하면 해당 개체가 전원 멘탈 손실을 한 번 적용하고 즉시 근접전으로 전환한다. 도착 시 미해결인 원거리 동점은 실내전으로 전환한다. [벙커 규칙](BunkerRules.md)
+선두 좀비가 입구에 도착하면 보초가 문 안쪽에서 번갈아 공격한다. 매번 기존 damageToZombie만큼 확정 피해를 주고, 도착 시 행동 가능한 보초가 없거나 세 번째 타격에서 생존하면 즉시 침입한다. 문 앞에서 쓰러지면 침입 멘탈 손실은 발생하지 않는다. [벙커 규칙](BunkerRules.md)
 
 실내전은 좀비가 죽거나 행동 가능한 아군이 없어질 때까지 같은 대상으로 반복한다. 한 회차에 좀비는 한 명만 공격한다. 실내 동점자만 재굴림한다. 판정 횟수에 의한 돌파는 없다. 전투 방에서는 수비 중인 동안 그 방을 점거하고, 수비가 무너지면 남은 HP로 다른 방까지 실제 경로로 이동한다. 통로 조우와 목표 방 점거 전투도 같은 종료 조건을 사용한다. 점거·HP·보상은 개체 단위이며 재시작 시 정리한다. [변경 계획](../DataHistory/20261118-zombie-approach-planned.md)
 

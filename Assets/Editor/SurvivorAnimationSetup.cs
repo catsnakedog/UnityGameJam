@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -13,7 +13,7 @@ public static class SurvivorAnimationSetup
     const string PrefabPath = "Assets/Prefabs/Shelter/Survivor.prefab";
 
     // The filenames correspond to SurvivorAnimation.Pose in serialized order.
-    static readonly string[] Files = { "idle_1", "idle_2", "walk_1", "walk_2", "sit", "typing", "sleep", "faint", "ranged_attack" };
+    static readonly string[] Files = { "idle_1", "idle_2", "walk_1", "walk_2", "workin", "working", "sleep", "dead_2", "attack", "hit", "dead_1" };
 
     [MenuItem("Tools/Shelter/Refresh Survivor Animations")]
     public static void Refresh()
@@ -53,6 +53,8 @@ public static class SurvivorAnimationSetup
                 for (int j = 0; j < Files.Length; j++)
                 {
                     var motion = ReadMotion(folder, Files[j]);
+                    if (!motion.firstFrame && j == (int)SurvivorAnimation.Pose.Sit) motion = ReadMotion(folder, "sit");
+                    if (!motion.firstFrame && j == (int)SurvivorAnimation.Pose.Type) motion = ReadMotion(folder, "typing");
                     var slot = motions.GetArrayElementAtIndex(j);
                     slot.FindPropertyRelative("clip").objectReferenceValue = motion.clip;
                     slot.FindPropertyRelative("firstFrame").objectReferenceValue = motion.firstFrame;

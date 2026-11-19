@@ -1,3 +1,4 @@
+using GameJam.Audio;
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
@@ -18,7 +19,7 @@ namespace UnityGameJam.Shelter
         readonly HashSet<object> inputBlocks = new HashSet<object>();
         readonly List<RaycastResult> pointerHits = new List<RaycastResult>();
         int inputReleasedFrame = -1;
-        public bool InputBlocked => inputBlocks.Count > 0 || inputReleasedFrame == Time.frameCount;
+        public bool InputBlocked => GameOptions.BlocksInput || inputBlocks.Count > 0 || inputReleasedFrame == Time.frameCount;
         public void AcquireInputBlock(object owner) { if (owner != null) inputBlocks.Add(owner); }
         public void ReleaseInputBlock(object owner) { if (inputBlocks.Remove(owner)) inputReleasedFrame = Time.frameCount; }
         public void Report(string message) { Message = message; }
@@ -54,10 +55,19 @@ namespace UnityGameJam.Shelter
             return false;
         }
 
+        void RegisterPointerSelection(ShelterWalker survivor)
+        {
+            if (view && view.TryGetComponent<ShelterCamera>(out var camera)) camera.RegisterPointerSelection(survivor);
+        }
+
         public bool ClickScreen(Vector2 screen)
         {
             if (view == null) view = Camera.main;
-            if (view == null || !view.pixelRect.Contains(screen) || IsPointerOverUI(screen)) return false;
+            if (view == null || !view.pixelRect.Contains(screen) || IsPointerOverUI(screen))
+            {
+                RegisterPointerSelection(null);
+                return false;
+            }
             var ray = view.ScreenPointToRay(screen);
             if (Mathf.Abs(ray.direction.z) < 0.001f) return false;
             return ClickWorld(ray.GetPoint(-ray.origin.z / ray.direction.z));
@@ -86,20 +96,25 @@ namespace UnityGameJam.Shelter
         // Same dispatch is used by mouse input and automated scene checks.
         public bool ClickWorld(Vector2 point)
         {
-            if (InputBlocked) return false;
+            if (InputBlocked) { RegisterPointerSelection(null); return false; }
             var hit = SurvivorAt(point);
             if (hit != null)
             {
                 if (Selected && Selected != hit && !Selected.IsMovementLocked && hit.NeedsRescue)
                 {
                     ClearRejected();
+                    RegisterPointerSelection(null);
                     bool accepted = Selected.TryRescue(hit);
+                    GameAudio.Play(accepted ? GameSound.Drop : GameSound.Wrong);
                     Message = accepted ? hit.characterName + " 구조 중 · 수면실로 이동" : Selected.RoomOrderFailure ?? "현재 구조할 수 없습니다";
                     return accepted;
                 }
+                GameAudio.Play(GameSound.Pickup);
                 SelectSurvivor(hit);
+                RegisterPointerSelection(hit);
                 return true;
             }
+            RegisterPointerSelection(null);
             if (navigation == null) return false;
             navigation.Refresh();
             ShelterArea destination = null;
@@ -112,14 +127,18 @@ namespace UnityGameJam.Shelter
             if (!destination) return false;
             if (!Selected) { Message = "SELECT A SURVIVOR FIRST"; return false; }
             ClearRejected();
-            if (!Selected.MoveTo(destination))
+            var tent = destination.roomType == ShelterRoomType.Sleeping
+                ? System.Array.Find(destination.GetComponentsInChildren<ShelterTent>(), t => t.Contains(point)) : null;
+            if (!(tent && Selected.UseTent(tent)) && !Selected.MoveTo(destination))
             {
+                GameAudio.Play(GameSound.Wrong);
                 rejected = destination;
                 rejectedUntil = Time.unscaledTime + 2f;
                 destination.ShowHighlight(true, true);
                 Message = Selected.RoomOrderFailure ?? (Selected.IsRescuing ? "부상자를 구조하고 있습니다" : Selected.IsMovementLocked ? "전투 중이거나 탈진하여 이동할 수 없습니다" : "NO ROUTE TO " + destination.displayName);
                 return false;
             }
+            GameAudio.Play(GameSound.Drop);
             SetSelection(null, Selected.characterName + "  >  " + destination.displayName);
             return true;
         }

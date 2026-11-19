@@ -15,7 +15,7 @@
 
 프리팹의 기본값은 사전 생성 효과음 8개, 최대 32개, Master 1 / Music 0.7 / SFX 1 / UI 1 / Ambience 0.8입니다. 프리팹은 씬에 따로 배치할 필요가 없습니다. `SoundManager`라는 Resources 이름은 하나만 유지하세요. 씬에 직접 배치하려면 전용 루트 GameObject에 넣으세요. 최초 활성 매니저가 사용됩니다.
 
-음원이 아직 없는 프로젝트이므로 예제 SoundCue의 Clips는 비어 있습니다. 소리 파일을 프로젝트에 추가한 뒤 연결해야 실제 소리가 납니다. 씬의 카메라에는 활성 AudioListener가 하나 있어야 합니다. 매니저는 AudioListener를 추가하지 않습니다.
+공유 사운드 표 v4의 음원 24개는 `Assets/Audio`에 있다. 역할별 음원·볼륨·반복·피치는 `Assets/Settings/Audio`의 SoundCue에서 편집한다. 미제작 25~32번은 해당 Cue의 Clips에 음원을 넣으면 연결된 이벤트에서 재생된다. [사운드 목록](DataSpecs/SoundCue.md)
 
 ## 코드에서 재생
 
