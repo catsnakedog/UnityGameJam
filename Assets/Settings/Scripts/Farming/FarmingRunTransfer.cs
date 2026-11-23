@@ -1,16 +1,22 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityGameJam.Shelter;
 
 namespace ShelterRun
 {
     public static class FarmingRunTransfer
     {
         public static string SelectedStarter { get; private set; }
-        public static void BeginRun(string personId)
+        public static BunkerDifficulty Difficulty { get; private set; } = BunkerDifficulty.Hard;
+        public static bool BunkerTutorialPending { get; private set; }
+        public static void BeginRun(string personId, BunkerDifficulty difficulty = BunkerDifficulty.Hard, bool tutorial = false)
         {
             Reset();
             SelectedStarter = personId;
+            Difficulty = difficulty;
+            BunkerTutorialPending = tutorial;
         }
+        public static void FinishBunkerTutorial() => BunkerTutorialPending = false;
         public static IReadOnlyList<string> People { get; private set; } = System.Array.Empty<string>();
         public static IReadOnlyList<FarmingRecord> Items { get; private set; } = System.Array.Empty<FarmingRecord>();
         public static bool HasResult { get; private set; }
@@ -33,6 +39,8 @@ namespace ShelterRun
         public static void Reset()
         {
             SelectedStarter = null;
+            BunkerTutorialPending = false;
+            Difficulty = BunkerDifficulty.Hard;
             ClearResults();
         }
         internal static void ClearResults()

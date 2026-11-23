@@ -32,6 +32,8 @@ public static class GameDevChecks
         var catalog = new GameDevEndingCatalog(new[] { Ending("high", 200), Ending("off", 150, false), Ending("low", 0), Ending("mid", 100) });
         Check(catalog.Select(0).Id == "low" && catalog.Select(99.999).Id == "low", "Baseline and below-threshold scores", checks);
         Check(catalog.Select(100).Id == "mid" && catalog.Select(199.999).Id == "mid", "Inclusive minimum and disabled row excluded", checks);
+        Check(catalog.FormatScore(99.9999) == 100d.ToString("0.000") + " 미만" &&
+            catalog.FormatScore(100) == 100d.ToString("0.000"), "Rounded display distinguishes a near miss from an exact threshold", checks);
         Check(catalog.Select(200).Id == "high" && catalog.Select(double.MaxValue).Id == "high", "Highest ending includes boundary and scores above final threshold", checks);
         Reject(() => catalog.Select(-1), "Reject negative total", checks);
         Reject(() => catalog.Select(double.NaN), "Reject NaN total", checks);
@@ -50,6 +52,11 @@ public static class GameDevChecks
         database.Initialize();
         Check(database.Tables.Count == plan.Tables.Count && plan.Tables.All(t => database.GetTable(t.Name).Count == t.Count), "Shared database matches every current CSV table", checks);
         var compiled = GameDevEndingCatalog.FromTable(database.GetTable(GameDevKeys.EndingsTable));
+        var rules = AssetDatabase.LoadAssetAtPath<BunkerRules>(BunkerSetup.RulesPath);
+        var scoring = new GameDevScoreCalculator(rules.EvaluationTargetProgress, rules.EvaluationReferenceTicks, () => rules.TotalTicks);
+        float maximum = GameDevProgress.MaximumPercent;
+        Check(scoring.TryCalculate(new GameDevProgress(maximum, maximum, maximum), out double maxScore) &&
+            compiled.Select(maxScore).Id == compiled.Active.Last().Id, "The highest enabled ending is reachable on the actual final tick", checks);
         foreach (var ending in actual.Active)
             Check(compiled.Select(ending.MinimumScore).Id == ending.Id, "Imported boundary: " + ending.Id, checks);
         var edited = CsvTableReader.Read("GameDevEndings.csv", "id:string,displayName:string,description:string,minimumScore:double,enabled:bool\na,가,설명,0,true\nb,나,설명,125,true\n");

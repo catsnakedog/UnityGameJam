@@ -17,6 +17,16 @@ MonoBehaviour:
   randomEventEveryTicks: 40
   invasionEveryTicks: 80
   firstInvasionTick: 20
+  easy:
+    secondsPerTick: 1
+    eventDivisions: 16
+    invasionDivisions: 8
+    firstInvasionDivisor: 12
+  medium:
+    secondsPerTick: 0.5
+    eventDivisions: 20
+    invasionDivisions: 10
+    firstInvasionDivisor: 24
   presentationTicks: f0000000e0010000d0020000
   presentationGrades:
   - minimumScore: 0
@@ -55,5 +65,5 @@ MonoBehaviour:
   foodRestore: 5
   servingsPerCan: 4
   evaluationTargetProgress: 96
-  evaluationReferenceTicks: 24
+  evaluationReferenceTicks: 192
   workRoomCapacity: 3

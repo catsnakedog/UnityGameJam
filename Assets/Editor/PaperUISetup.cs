@@ -148,7 +148,9 @@ internal static class PaperUISetup
     public static void Options()
     {
         Edit("UI/Resources/GameOptions", root=>{
-            var t=root.transform.Find("Options modal/Sound settings");Size(t,491,478);ArtImage(t,"Options");
+            FixedAspectSetup.ConfigureCanvas(root.GetComponent<Canvas>());
+            var options = root.GetComponent<GameOptions>();
+            var t=options.modal.transform.Find("Sound settings");Size(t,491,478);ArtImage(t,"Options");
             Caption(t,"Heading",62,22,180,52,30,Cream,TextAlignmentOptions.Center);
             Clear(t.Find("Rule"));
             int[] ys={124,178,224,276,328};string[] names={"전체 음량","배경 음악","효과음","인터페이스","환경음"};
@@ -161,7 +163,7 @@ internal static class PaperUISetup
             }
             ButtonStyle(Box(t,"Main menu",63,389,175,50),null,21,Cream);
             ButtonStyle(Box(t,"Close",270,389,153,50),null,22,Cream);
-            ButtonStyle(root.transform.Find("Options tab"),"Button2",20,Ink);
+            ButtonStyle(options.launcher.transform,"Button2",20,Ink);
         });
     }
     public static void Inventory()

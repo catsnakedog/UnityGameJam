@@ -48,17 +48,17 @@ namespace UnityGameJam.GameDev
             simulation.AcquirePause(this);
             commander.AcquireInputBlock(this);
             starter = FarmingRunTransfer.SelectedStarter ?? FindFirstObjectByType<ShelterRoster>()?.Characters.FirstOrDefault()?.Id;
-            StartCoroutine(Present(manager.Ending, manager.TotalScore.Value));
+            StartCoroutine(Present(manager.Ending, manager.FormattedScore));
         }
 
-        IEnumerator Present(GameDevEnding ending, double value)
+        IEnumerator Present(GameDevEnding ending, string formattedScore)
         {
             if (reactionFace)
                 reactionFace.sprite = ending.Id == "ending_breakthrough" ? happyFace :
                     ending.Id == "ending_unfinished" ? angryFace : neutralFace;
             title.text = ending.DisplayName;
             body.text = ending.Description;
-            score.text = $"평가 점수  {value:0.000}";
+            score.text = $"평가 점수  {formattedScore}";
             yield return Fade(1f);
             DontDestroyOnLoad(gameObject);
             yield return SceneManager.LoadSceneAsync(EndingCutscene.SceneName);
@@ -91,7 +91,7 @@ namespace UnityGameJam.GameDev
         {
             if (!IsOpen || leaving || blackout.gameObject.activeSelf || GameOptions.BlocksInput) return;
             leaving = true;
-            if (replay) FarmingRunTransfer.BeginRun(starter);
+            if (replay) FarmingRunTransfer.BeginRun(starter, FarmingRunTransfer.Difficulty);
             else FarmingRunTransfer.Reset();
             SceneManager.LoadSceneAsync(replay ? "Farming" : TitleMenu.SceneName);
         }

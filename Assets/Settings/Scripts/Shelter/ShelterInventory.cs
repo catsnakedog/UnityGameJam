@@ -63,11 +63,13 @@ namespace UnityGameJam.Shelter
             hovered = null;
         }
 
-        void Toggle()
+        void Toggle() => SetOpen(!panel.activeSelf);
+
+        public void SetOpen(bool open)
         {
             EndDragVisual();
             firstRow = 0;
-            panel.SetActive(!panel.activeSelf);
+            panel.SetActive(open);
             Refresh();
         }
 

@@ -53,7 +53,7 @@ public static class BunkerSetup
             rules = ScriptableObject.CreateInstance<BunkerRules>();
             var data = new SerializedObject(rules);
             data.FindProperty("totalTicks").intValue = 960;
-            data.FindProperty("secondsPerTick").floatValue = 1;
+            data.FindProperty("secondsPerTick").floatValue = 0.33f;
             data.FindProperty("randomEventEveryTicks").intValue = 40;
             data.FindProperty("invasionEveryTicks").intValue = 80;
             InitializeEventSchedule(data);
@@ -77,7 +77,7 @@ public static class BunkerSetup
             data.FindProperty("wakeMental").intValue = 50;
             // Initial authoring only; the existing SO remains the editable source of truth.
             data.FindProperty("evaluationTargetProgress").doubleValue = 96;
-            data.FindProperty("evaluationReferenceTicks").intValue = 24;
+            data.FindProperty("evaluationReferenceTicks").intValue = 192;
             data.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.CreateAsset(rules, RulesPath);
         }
@@ -133,6 +133,18 @@ public static class BunkerSetup
     {
         var data = new SerializedObject(rules);
         InitializeEventSchedule(data);
+        void SeedPacing(string name, float seconds, int events, int waves, int first)
+        {
+            var profile = data.FindProperty(name);
+            var duration = profile.FindPropertyRelative("secondsPerTick");
+            if (duration.floatValue != 0) return;
+            duration.floatValue = seconds;
+            profile.FindPropertyRelative("eventDivisions").intValue = events;
+            profile.FindPropertyRelative("invasionDivisions").intValue = waves;
+            profile.FindPropertyRelative("firstInvasionDivisor").intValue = first;
+        }
+        SeedPacing("easy", 1f, 16, 8, 12);
+        SeedPacing("medium", 0.5f, 20, 10, 24);
         var capacity = data.FindProperty("sleepingRoomCapacity");
         if (capacity.intValue == 0) capacity.intValue = 2;
         data.ApplyModifiedPropertiesWithoutUndo();

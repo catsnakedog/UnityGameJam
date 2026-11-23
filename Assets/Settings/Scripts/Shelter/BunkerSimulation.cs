@@ -16,6 +16,7 @@ namespace UnityGameJam.Shelter
         [SerializeField] ShelterRoster roster;
         Task initializing;
         BunkerTickClock clock;
+        BunkerRules difficultyOverride;
         readonly List<(CharacterIdentity actor, GameDevField field, int ability)> workers = new List<(CharacterIdentity, GameDevField, int)>();
         readonly double[] totalAbility = new double[3];
         readonly float[] appliedProgress = new float[3];
@@ -64,7 +65,10 @@ namespace UnityGameJam.Shelter
             if (!this) return;
             await roster.InitializeAsync();
             if (!this) return;
-            Rules = rules;
+            var difficulty = ShelterRun.FarmingRunTransfer.Difficulty;
+            if (difficulty != BunkerDifficulty.Hard)
+                difficultyOverride = rules.CreateDifficultyOverride(difficulty);
+            Rules = difficultyOverride ? difficultyOverride : rules;
             var people = roster.Characters;
             var walkers = new ShelterWalker[people.Count];
             for (int i = 0; i < people.Count; i++) walkers[i] = people[i].GetComponent<ShelterWalker>();
@@ -94,7 +98,11 @@ namespace UnityGameJam.Shelter
             Paused = false;
             LastError = null;
         }
-        void OnDestroy() { if (development) development.DevelopmentRestarted -= ResetClock; }
+        void OnDestroy()
+        {
+            if (development) development.DevelopmentRestarted -= ResetClock;
+            if (difficultyOverride) Destroy(difficultyOverride);
+        }
         void Update() => Advance(Time.deltaTime);
         public void Advance(double seconds)
         {

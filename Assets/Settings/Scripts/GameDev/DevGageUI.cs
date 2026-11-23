@@ -180,7 +180,7 @@ namespace UnityGameJam.GameDev
                 case GameDevPhase.Developing: break;
                 case GameDevPhase.AwaitingScore: status.text = string.IsNullOrEmpty(manager.LastError) ? "개발 종료 · 결과 집계 대기" : "결과 집계를 다시 시도해 주세요."; break;
                 case GameDevPhase.Ended:
-                    status.text = $"{manager.Ending.DisplayName}  ·  {manager.TotalScore:0.000}\n{manager.Ending.Description}";
+                    status.text = $"{manager.Ending.DisplayName}  ·  {manager.FormattedScore}\n{manager.Ending.Description}";
                     break;
                 case GameDevPhase.Failed: status.text = "개발 데이터를 확인해 주세요."; break;
             }

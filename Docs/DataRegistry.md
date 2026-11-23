@@ -6,6 +6,12 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 ## 등록된 데이터
 
+WebGL 파밍 씬은 `data.farming.rules` 로드가 끝나면 Addressables 완료 콜백을 통해 준비 시간을 시작한다. [연결 명세](DataSpecs/FarmingRules.md) · [WebGL 빌드 이력](DataHistory/20261123-webgl-farming-load.md)
+
+회차 난이도의 틱 길이, 사건 및 습격 일정은 기존 `data.bunker.rules`가 소유한다. 타이틀에서 고르거나 튜토리얼에서 쉬움으로 진입한다. [필드 명세](DataSpecs/BunkerRules.md) · [회차 검증](DataHistory/20261123-difficulty-verified.md)
+
+960틱 회차의 최종 엔딩은 `data.bunker.rules.evaluationReferenceTicks` 192틱과 기존 `data.game-dev.endings.minimumScore`를 사용한다. [판정 경계 검증](DataHistory/20261123-ending-score-verified.md)
+
 - `data.shelter.dialogue` · active · Codex dialogue-20261119 · 벙커 상황별 발화 후보와 주최 측 튜토리얼 방송·화면 전환 · 정본 [ShelterDialogue.csv](../Assets/Settings/Data/Csv/ShelterDialogue.csv) · [명세](DataSpecs/ShelterDialogue.md) · [적용 이력](DataHistory/20261119-shelter-dialogue.md)
 
 벙커 작업 완료 표시는 `data.bunker.rules`의 작업 주기·효율과 `data.characters`의 장비 보정 후 능력을 거쳐 실제로 더해진 분야별 진척을 읽는다. [작업 표시](UI/WorkProgressFeedback.md) · [소비 연결 이력](DataHistory/20261119-work-progress-feedback.md)
@@ -42,7 +48,7 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 벙커 캐릭터 정보 카드는 기존 `data.characters`의 이름·직군·네 가지 능력과 `data.bunker.rules`의 멘탈 상한을 읽는다. 현재 멘탈은 선택한 캐릭터의 런타임 상태다. [화면 명세](UI/ShelterCharacterCard.md) · [검증](DataHistory/20261118-shelter-character-card-verified.md)
 
-튜토리얼은 `data.shelter.dialogue.situation`에 따라 시작 구도와 전체 뷰를 전환하며, 열린 가방의 예시 물자명은 `data.shelter.items`에서 조회한다. [변경 이력](DataHistory/20261119-tutorial-views.md)
+튜토리얼은 `data.shelter.dialogue.situation`으로 파밍 전 방송과 벙커 도착 방송을 나눈다. 벙커에서는 실제 방, 가방과 시계를 강조한다. [방송 명세](DataSpecs/ShelterDialogue.md) · [변경 이력](DataHistory/20261123-bunker-tutorial.md)
 
 벙커 가방은 `data.farming.pickups`의 투입 결과와 `data.shelter.items`의 이벤트 재고를 함께 읽는다. 같은 종류를 여러 개 보유하면 개수만큼 슬롯을 표시한다. [가방 UI](UI/ShelterInventory.md) · [연동 검증](DataHistory/20261118-shelter-inventory-verified.md)
 

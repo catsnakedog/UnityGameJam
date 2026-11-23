@@ -30,6 +30,24 @@ public static class PresentationScheduleChecks
         Check(rules.PresentationTicks.SequenceEqual(rounds) && rules.FirstInvasionTick == 20 &&
             rules.InvasionEveryTicks == 80 && rules.RandomEventEveryTicks == 40 && rules.TotalTicks == 960 &&
             rules.EvaluationTargetProgress == 96, "Authored daily schedule and presentation target", report);
+        void CheckDifficulty(BunkerDifficulty difficulty, float seconds, int events, int first, int invasion)
+        {
+            var profile = rules.CreateDifficultyOverride(difficulty);
+            try
+            {
+                profile.Validate();
+                Check(profile.SecondsPerTick == seconds && profile.RandomEventEveryTicks == events &&
+                    profile.FirstInvasionTick == first && profile.InvasionEveryTicks == invasion &&
+                    profile.TotalTicks == rules.TotalTicks && profile.PresentationTicks.SequenceEqual(rounds),
+                    difficulty + " clock and schedule", report);
+            }
+            finally { Object.DestroyImmediate(profile); }
+        }
+        CheckDifficulty(BunkerDifficulty.Easy, 1f, 60, 80, 120);
+        CheckDifficulty(BunkerDifficulty.Medium, .5f, 48, 40, 96);
+        Check(rules.SecondsPerTick == .33f && rules.FirstInvasionTick == 20 &&
+            rules.RandomEventEveryTicks == 40 && rules.InvasionEveryTicks == 80,
+            "Difficulty selection preserves the shared Hard settings", report);
         void Grade(double score, string label, int mental)
         {
             var grade = rules.GradePresentation(score);

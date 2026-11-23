@@ -19,7 +19,7 @@ manager.AddProgress(GameDevField.Graphics, earnedGraphicsPercentagePoints);
 
 ## 점수와 엔딩
 
-`GameDevScoreCalculator.cs`가 평가 = **진척 합 ÷ (목표 진척 합 × 현재 벙커 틱 ÷ 기준 틱)** 을 계산한다. 목표 진척 합 96, 기준 틱 24는 기존 `BunkerRules.asset`에서 편집한다. ×100하지 않는다. BunkerSimulation이 현재 틱을 공급하며 마지막 틱의 작업 이후 자동으로 평가·엔딩을 확정한다. 틱 0 또는 시계 미연결 상태만 `AwaitingScore`로 보류한다.
+`GameDevScoreCalculator.cs`가 평가 = **진척 합 ÷ (목표 진척 합 × 현재 벙커 틱 ÷ 기준 틱)** 을 계산한다. 목표 진척 합 96, 기준 틱 192는 기존 `BunkerRules.asset`에서 편집한다. ×100하지 않는다. BunkerSimulation이 현재 틱을 공급하며 마지막 틱의 작업 이후 자동으로 평가·엔딩을 확정한다. 틱 0 또는 시계 미연결 상태만 `AwaitingScore`로 보류한다.
 
 - 기존 클래스에 공식을 구현하거나 `IGameDevScoreCalculator` 구현을 `SetScoreCalculator`로 전달한다. 대기 중 교체하면 `TryEvaluateScore()`로 다시 계산한다.
 - 외부 점수 시스템이라면 개발 종료 후 `SubmitFinalScore(totalScore)`를 호출한다. 총점은 0 이상의 유한한 double이다.
@@ -28,7 +28,7 @@ manager.AddProgress(GameDevField.Graphics, earnedGraphicsPercentagePoints);
 
 ## 데이터 편집
 
-편집 정본은 [GameDevEndings 시트](https://docs.google.com/spreadsheets/d/1aqTIvURQ7oMhWfVxXXmFpTbALwQnsVaHUbgAORpmxcM/edit?gid=459802846#gid=459802846), 데이터 ID는 `data.game-dev.endings`다. [GameDevEndings.csv](../../Assets/Settings/Data/Csv/GameDevEndings.csv)는 내려받은 스냅샷이다. 제목·본문·최소 평가값·활성 여부를 시트에서 편집한다. 현재 임시 기준은 0 / 0.3 / 0.5이며 120틱 종료 시 진척 합 144/240에서 두 상위 엔딩에 도달한다. 목표/틱 설정이나 게임 길이를 바꾸면 이 기준도 검토한다.
+편집 정본은 [GameDevEndings 시트](https://docs.google.com/spreadsheets/d/1aqTIvURQ7oMhWfVxXXmFpTbALwQnsVaHUbgAORpmxcM/edit?gid=459802846#gid=459802846), 데이터 ID는 `data.game-dev.endings`다. [GameDevEndings.csv](../../Assets/Settings/Data/Csv/GameDevEndings.csv)는 내려받은 스냅샷이다. 제목·본문·최소 평가값·활성 여부를 시트에서 편집한다. 현재 임시 기준은 0 / 0.3 / 0.5이며 960틱 종료 시 진척 합 144/240에서 두 상위 엔딩에 도달한다. 목표/틱 설정이나 게임 길이를 바꾸면 이 기준도 검토한다.
 
 `Tools > Game Dev > Import Ending CSV`는 공용 DataImporter에 엔딩 검사를 더해 기존 DB를 갱신한다. 공용 Data Manager의 미리보기/적용도 가능하며, 적용 후 `Tools > Game Dev > Validate Ending Rules and UI`로 의미 제약을 확인한다. 배포용 데이터는 공용 Data Manager의 **Addressables 콘텐츠 빌드**로 갱신한다. 생성 DB나 접근자 소스를 직접 편집하지 않는다.
 

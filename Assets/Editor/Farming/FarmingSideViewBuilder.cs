@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -91,9 +91,10 @@ namespace ShelterRun.Editor
                 var root=new GameObject(row.Id);root.AddComponent<FarmingDepth2D>();var pickup=root.AddComponent<FarmingPickup>();
                 var visual=SpriteObject("Visual",row.Id,root.transform,Vector3.zero,1);var focus=SpriteObject("Focus","focus",root.transform,Vector3.zero,-1);focus.SetActive(false);
                 var label = Label("",root.transform,Vector3.zero,1.5f,20);
-                ConfigureSlotCost(label, visual.GetComponent<SpriteRenderer>(), row.Type);
+
                 Text(pickup,"recordId",row.Id);Set(pickup,"visual",visual.transform);Set(pickup,"sprite",visual.GetComponent<SpriteRenderer>());Set(pickup,"standingSprite",FarmingSideViewArt.Load(row.Id));Set(pickup,"focusMarker",focus);Set(pickup,"weightLabel",label);
                 if (row.Type == FarmingObjectType.Person) ConfigureCharacter(root, row.Id);
+                ConfigureSlotCost(label, visual.GetComponent<SpriteRenderer>(), row.Type);
                 result.Add(row.Id,PrefabUtility.SaveAsPrefabAsset(root,Prefabs+row.Id+".prefab"));UnityEngine.Object.DestroyImmediate(root);
             }
             return result;
@@ -105,11 +106,16 @@ namespace ShelterRun.Editor
             label.fontSize = 1.5f;
             label.rectTransform.pivot = new Vector2(.5f, 0);
             label.rectTransform.sizeDelta = new Vector2(.8f, .22f);
-            label.gameObject.SetActive(type == FarmingObjectType.Item);
-            if (type != FarmingObjectType.Item) return;
+            label.gameObject.SetActive(true);
 
             // Anchor to the painted pixels. The transparent border varies between item sprites.
             var sprite = visual.sprite;
+            label.transform.SetParent(visual.transform, false);
+            if (type == FarmingObjectType.Person)
+            {
+                label.transform.localPosition = new Vector3(sprite.bounds.center.x, sprite.bounds.max.y + .02f, 0);
+                return;
+            }
             var source = new Texture2D(2, 2);
             try
             {
@@ -118,7 +124,6 @@ namespace ShelterRun.Editor
                 var pixels = source.GetPixels32();
                 int top = source.height - 1;
                 while (top > 0 && !RowHasInk(pixels, source.width, top)) top--;
-                label.transform.SetParent(visual.transform, false);
                 label.transform.localPosition = new Vector3(sprite.bounds.center.x,
                     (top + 1 - sprite.pivot.y) / sprite.pixelsPerUnit + .02f, 0);
             }

@@ -1,4 +1,4 @@
-PASS: 29 Edit checks
+PASS: 31 Edit checks
 Clamp each discipline to 0..100 independently
 Progress snapshots remain immutable
 Reject NaN progress
@@ -7,6 +7,7 @@ Reject unknown discipline
 Deferred calculator does not invent a score
 Baseline and below-threshold scores
 Inclusive minimum and disabled row excluded
+Rounded display distinguishes a near miss from an exact threshold
 Highest ending includes boundary and scores above final threshold
 Reject negative total
 Reject NaN total
@@ -19,6 +20,7 @@ Reject missing ending title
 Reject negative threshold
 CSV and generated DB fingerprints match
 Shared database matches every current CSV table
+The highest enabled ending is reachable on the actual final tick
 Imported boundary: ending_unfinished
 Imported boundary: ending_released
 Imported boundary: ending_breakthrough

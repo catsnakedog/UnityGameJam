@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace UnityGameJam.Shelter
 {
+    public enum BunkerDifficulty { Hard, Medium, Easy }
+
     public sealed class BunkerRules : ScriptableObject
     {
         public const string Address = "data/bunker-rules";
@@ -12,6 +14,39 @@ namespace UnityGameJam.Shelter
         [SerializeField, Min(1)] int randomEventEveryTicks;
         [SerializeField, Min(1)] int invasionEveryTicks;
         [SerializeField, Min(1)] int firstInvasionTick;
+        [Serializable]
+        struct DifficultyPacing
+        {
+            [Min(0.001f)] public float secondsPerTick;
+            [Min(1)] public int eventDivisions, invasionDivisions, firstInvasionDivisor;
+
+            public void Validate()
+            {
+                if (!float.IsFinite(secondsPerTick) || secondsPerTick <= 0 ||
+                    eventDivisions < 1 || invasionDivisions < 1 || firstInvasionDivisor < 1)
+                    throw new InvalidOperationException("Invalid bunker difficulty pacing.");
+            }
+        }
+        [SerializeField] DifficultyPacing easy, medium;
+
+        // The caller owns the scene-local copy. The addressable settings remain shared.
+        public BunkerRules CreateDifficultyOverride(BunkerDifficulty difficulty)
+        {
+            var pacing = difficulty switch
+            {
+                BunkerDifficulty.Easy => easy,
+                BunkerDifficulty.Medium => medium,
+                _ => throw new ArgumentOutOfRangeException(nameof(difficulty))
+            };
+            pacing.Validate();
+            int Interval(int divisions) => Mathf.Max(1, Mathf.RoundToInt((float)totalTicks / divisions));
+            var copy = Instantiate(this);
+            copy.secondsPerTick = pacing.secondsPerTick;
+            copy.randomEventEveryTicks = Interval(pacing.eventDivisions);
+            copy.invasionEveryTicks = Interval(pacing.invasionDivisions);
+            copy.firstInvasionTick = Interval(pacing.firstInvasionDivisor);
+            return copy;
+        }
         [SerializeField] int[] presentationTicks;
         [SerializeField] PresentationGrade[] presentationGrades;
         [Serializable]
@@ -88,6 +123,8 @@ namespace UnityGameJam.Shelter
         public float PlanningUnlockPercent => planningUnlockPercent;
         public void Validate()
         {
+            easy.Validate();
+            medium.Validate();
             if (firstInvasionTick < 1 || presentationTicks == null || presentationGrades == null ||
                 presentationGrades.Length == 0 || presentationGrades[0].MinimumScore != 0)
                 throw new InvalidOperationException("Missing bunker event schedule or presentation grades.");

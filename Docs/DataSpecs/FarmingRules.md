@@ -37,6 +37,8 @@
 
 ## 중복 조사와 검증
 
+- WebGL에서도 `FarmingDataLoader`는 `data/farming/rules` 핸들을 씬이 닫힐 때까지 보관한다. Addressables의 `Completed` 콜백으로 성공 또는 오류를 전달하며, 로드 도중 씬이 닫히면 대기를 취소한다. [브라우저 검증](../DataHistory/20261123-webgl-farming-load.md)
+
 - 준비 단계의 런타임·HUD 연결과 컴파일 범위는 [준비 단계 변경 이력](../DataHistory/20261119-farming-preparation-code.md)에 기록했다.
 
 - 플레이어 외형·방 배치·벙커 기본 확보 명단은 같은 회차의 `FarmingSession.StartingPersonId`를 참조한다. [캐릭터 선택](../UI/Title.md)

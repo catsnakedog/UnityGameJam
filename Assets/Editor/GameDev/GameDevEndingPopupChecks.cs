@@ -23,11 +23,13 @@ public static class GameDevEndingPopupChecks
         var results = new List<string>();
         var rules = AssetDatabase.LoadAssetAtPath<BunkerRules>(BunkerSetup.RulesPath);
         rules.Validate();
-        int tick = 24;
+        int tick = rules.EvaluationReferenceTicks;
         var calculator = new GameDevScoreCalculator(rules.EvaluationTargetProgress, rules.EvaluationReferenceTicks, () => tick);
-        Check(calculator.TryCalculate(new GameDevProgress(32,32,32), out double score) && Math.Abs(score-1) < 1e-12, "96 progress / 24 ticks = 1 without x100", results);
-        tick = 120;
-        Check(calculator.TryCalculate(new GameDevProgress(100,100,100),out score) && score == 0.625, "300 progress / 120 ticks = 0.625", results);
+        Check(calculator.TryCalculate(new GameDevProgress(32,32,32), out double score) && Math.Abs(score-1) < 1e-12, "96 progress at the reference tick = 1 without x100", results);
+        tick = rules.TotalTicks;
+        Check(calculator.TryCalculate(new GameDevProgress(48,48,48),out score) && score == 0.3, "144 progress at submission = 0.3", results);
+        Check(calculator.TryCalculate(new GameDevProgress(80,80,80),out score) && score == 0.5, "240 progress at submission = 0.5", results);
+        Check(calculator.TryCalculate(new GameDevProgress(100,100,100),out score) && score == 0.625, "300 progress at submission = 0.625", results);
         Check(calculator.TryCalculate(default,out score) && score == 0, "Zero progress is a valid baseline score after time passes", results);
         tick = 0;
         Check(!calculator.TryCalculate(new GameDevProgress(100,100,100),out _), "Tick zero defers evaluation without division by zero", results);

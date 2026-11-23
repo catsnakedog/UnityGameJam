@@ -15,7 +15,7 @@
 | 열 | 의미와 제약 |
 |---|---|
 | id | 테이블 내 고유하고 안정적인 행 ID. 역할·상황·일련번호로 발급한다. 공용 CSV 임포터가 중복 키를 거부한다. |
-| role | 생존자는 Characters.role의 기획·개발·아트, 좀비는 좀비. |
+| role | 생존자는 Characters.role의 기획·개발·아트, 좀비는 좀비, 튜토리얼 방송은 주최측. |
 | situation | 발화 시점 키. 아래 목록에서 고른다. 같은 역할·상황에 여러 행을 둘 수 있다. |
 | line | 말풍선에 표시할 한국어 원문 한 개. |
 
@@ -28,4 +28,11 @@
 
 ## 주최 측 튜토리얼 방송
 
-기존 role에 `주최측`을 추가한다. 이 역할의 `tutorial_XX` 행 ID는 두 자리 재생 순서다. situation은 tutorial_start(파밍 시작 구도), tutorial_overview(복도 전체), tutorial_entrance(셔터 확대), tutorial_bag(열린 가방), tutorial_clock(시계) 중 하나다. TutorialBriefing이 공용 GameData에서 이 역할의 행만 ID 오름차순으로 읽어 클릭할 때마다 다음 문장을 표시한다. 씬에서 나가면 읽기 위치를 버린다. 순서 변경은 행 ID를 함께 조정하며 저장 키와 외부 참조는 없다. CSV 로컬 정본과 기존 DB 생성 절차를 그대로 사용한다. 등록 목록·Assets·ProjectSettings·Docs에서 튜토리얼, speaker, 원문의 첫 문장과 주최측을 검색했다. Events의 라디오 선택지는 별개이며 튜토리얼 문장이나 순서와 겹치는 원본은 발견되지 않았다.
+`role=주최측`인 행은 `situation` 접두사로 방송을 나누고 각 방송 안에서 ID를 ordinal 오름차순으로 읽는다. ID는 기존 행과의 호환을 위해 유지하며 첫 글자가 소속 씬을 결정하지 않는다.
+
+| 구간 | 상황 키와 화면 |
+|---|---|
+| 파밍 전 | `tutorial_start` 시작 구도, `tutorial_overview` 복도 전체, `tutorial_entrance` 셔터 |
+| 벙커 도착 후 | `bunker_overview` 기본 시야, `bunker_people` 생활 공간, `bunker_planning` 기획실, `bunker_programming` 프로그래밍실, `bunker_graphics` 그래픽실, `bunker_rest` 수면실, `bunker_guard` 벙커 입구, `bunker_bag` 실제 보유 가방, `bunker_clock` 시계 |
+
+TutorialBriefing과 BunkerTutorial이 같은 TutorialBroadcast를 사용한다. 한 번 클릭하면 다음 행을 보여 준다. 파밍 재시작은 해당 회차의 벙커 안내 예약을 유지한다. 방송 종료, 타이틀 복귀 및 새 회차에서 예약을 해제한다. 영구 저장 키와 외부 대사 ID 참조는 없다. [화면 명세](../UI/Tutorial.md).

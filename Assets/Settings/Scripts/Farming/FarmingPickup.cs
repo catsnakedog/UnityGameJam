@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -42,9 +42,8 @@ namespace ShelterRun
                 depth.enabled = false;
                 group.sortingOrder = 20 + tabletop.GetSiblingIndex();
             }
-            bool isItem = record.Type == FarmingObjectType.Item;
-            weightLabel.gameObject.SetActive(isItem);
-            if (isItem) weightLabel.text = $"{record.Weight}칸";
+            weightLabel.gameObject.SetActive(true);
+            weightLabel.text = $"{record.Weight}칸";
             SetFocused(false);
             LateUpdate();
         }
@@ -95,7 +94,7 @@ namespace ShelterRun
                 visual.localPosition = Vector3.zero;
                 sprite.sprite = artwork != null ? artwork.standing : standingSprite;
                 State = PickupState.Available;
-                weightLabel.gameObject.SetActive(Record.Type == FarmingObjectType.Item);
+                weightLabel.gameObject.SetActive(true);
                 yield break;
             }
             for (float elapsed = 0; elapsed < rules.FadeDuration; elapsed += Time.deltaTime)
@@ -114,12 +113,9 @@ namespace ShelterRun
                     playback.Sample(artwork, waitingPose, SurvivorAnimation.Pose.Idle, sprite, Time.deltaTime);
                 visual.localPosition = Vector3.up * displayHeight;
                 focusMarker.transform.localPosition = Vector3.up * displayHeight;
-                if (Record.Type == FarmingObjectType.Item)
-                {
-                    var color = weightLabel.color;
-                    color.a = visibility;
-                    weightLabel.color = color;
-                }
+                var color = weightLabel.color;
+                color.a = visibility;
+                weightLabel.color = color;
             }
         }
     }

@@ -15,6 +15,7 @@ public sealed class TitleMenu : MonoBehaviour
     public const string SceneName = "Title";
     public GameObject home, selection;
     public Button start, tutorial, options, quit, back, confirm;
+    public Button easy, medium, hard;
     public Button[] candidates;
     public Image preview;
     public SpriteRenderer sampler;
@@ -26,6 +27,7 @@ public sealed class TitleMenu : MonoBehaviour
     BunkerRules rules;
     SurvivorAnimation.Artwork currentArt;
     int current;
+    BunkerDifficulty difficulty = BunkerDifficulty.Hard;
     bool loading;
 
     async void Start()
@@ -38,6 +40,10 @@ public sealed class TitleMenu : MonoBehaviour
         back.onClick.AddListener(() => SetSelection(false));
         start.onClick.AddListener(() => SetSelection(true));
         confirm.onClick.AddListener(Launch);
+        easy.onClick.AddListener(() => ChooseDifficulty(BunkerDifficulty.Easy));
+        medium.onClick.AddListener(() => ChooseDifficulty(BunkerDifficulty.Medium));
+        hard.onClick.AddListener(() => ChooseDifficulty(BunkerDifficulty.Hard));
+        ChooseDifficulty(difficulty);
         try
         {
             await GameData.InitializeAsync();
@@ -65,6 +71,14 @@ public sealed class TitleMenu : MonoBehaviour
         selection.SetActive(show);
         GameOptions.ShowLauncher(show);
         if (show) { Choose(current); confirm.Select(); } else start.Select();
+    }
+
+    void ChooseDifficulty(BunkerDifficulty value)
+    {
+        difficulty = value;
+        easy.interactable = value != BunkerDifficulty.Easy;
+        medium.interactable = value != BunkerDifficulty.Medium;
+        hard.interactable = value != BunkerDifficulty.Hard;
     }
 
     void Choose(int slot)
@@ -105,7 +119,7 @@ public sealed class TitleMenu : MonoBehaviour
     {
         if (loading || GameOptions.BlocksInput) return;
         loading = true;
-        FarmingRunTransfer.BeginRun(people[current].Id);
+        FarmingRunTransfer.BeginRun(people[current].Id, difficulty);
         SceneManager.LoadSceneAsync("Farming");
     }
 

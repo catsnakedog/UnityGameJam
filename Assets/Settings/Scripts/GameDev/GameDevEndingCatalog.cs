@@ -59,6 +59,15 @@ namespace UnityGameJam.GameDev
             return new GameDevEndingCatalog(endings);
         }
 
+        public string FormatScore(double totalScore)
+        {
+            var ending = Select(totalScore);
+            double rounded = Math.Round(totalScore, 3, MidpointRounding.AwayFromZero);
+            string text = rounded.ToString("0.000");
+            if (Select(rounded) == ending) return text;
+            return text + (totalScore < rounded ? " 미만" : " 초과");
+        }
+
         public GameDevEnding Select(double totalScore)
         {
             GameDevEnding.ValidateScore(totalScore);

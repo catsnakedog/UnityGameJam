@@ -10,6 +10,7 @@ namespace ShelterRun
     public sealed class FarmingDataLoader : IDisposable
     {
         AsyncOperationHandle<FarmingRules> rulesHandle;
+        readonly TaskCompletionSource<FarmingRules> rulesLoaded = new TaskCompletionSource<FarmingRules>();
         Task loadTask;
         bool disposed;
         public FarmingDatabase Database { get; private set; }
@@ -25,21 +26,33 @@ namespace ShelterRun
         {
             var database = GameData.LoadSettingsAsync<FarmingDatabase>(FarmingDataKeys.Database);
             rulesHandle = Addressables.LoadAssetAsync<FarmingRules>(FarmingDataKeys.Rules);
-            await Task.WhenAll(database, rulesHandle.Task);
+            rulesHandle.Completed += OnRulesLoaded;
+            await Task.WhenAll(database, rulesLoaded.Task);
             if (disposed) throw new ObjectDisposedException(nameof(FarmingDataLoader));
-            if (rulesHandle.Status != AsyncOperationStatus.Succeeded)
-                throw new InvalidOperationException("Addressables: farming database/rules load failed.");
             Database = await database;
-            Rules = rulesHandle.Result;
+            Rules = await rulesLoaded.Task;
             Database.Validate();
             Rules.Validate();
+        }
+
+        void OnRulesLoaded(AsyncOperationHandle<FarmingRules> result)
+        {
+            if (result.Status == AsyncOperationStatus.Succeeded)
+                rulesLoaded.TrySetResult(result.Result);
+            else
+                rulesLoaded.TrySetException(result.OperationException ?? new InvalidOperationException("Cannot load " + FarmingDataKeys.Rules));
         }
 
         public void Dispose()
         {
             if (disposed) return;
             disposed = true;
-            if (rulesHandle.IsValid()) Addressables.Release(rulesHandle);
+            if (rulesHandle.IsValid())
+            {
+                rulesHandle.Completed -= OnRulesLoaded;
+                Addressables.Release(rulesHandle);
+            }
+            rulesLoaded.TrySetCanceled();
             Database = null;
             Rules = null;
         }

@@ -16,6 +16,7 @@ namespace UnityGameJam.GameDev
         public GameDevProgress Progress { get; private set; }
         public GameDevProgress SubmittedProgress { get; private set; }
         public double? TotalScore { get; private set; }
+        public string FormattedScore => TotalScore.HasValue ? endings.FormatScore(TotalScore.Value) : string.Empty;
         public GameDevEnding Ending { get; private set; }
         public string LastError { get; private set; }
         public event Action Changed;
