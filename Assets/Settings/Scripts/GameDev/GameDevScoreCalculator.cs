@@ -8,6 +8,17 @@ namespace UnityGameJam.GameDev
         bool TryCalculate(GameDevProgress progress, out double totalScore);
     }
 
+    /// <summary>Final score for the three equally weighted development fields.</summary>
+    public sealed class GameDevFinalScoreCalculator : IGameDevScoreCalculator
+    {
+        public bool TryCalculate(GameDevProgress progress, out double totalScore)
+        {
+            totalScore = ((double)progress.Planning + progress.Programming + progress.Graphics)
+                / (3d * GameDevProgress.MaximumPercent);
+            return true;
+        }
+    }
+
     /// <summary>Progress divided by the expected progress at the current bunker tick. No percentage scaling.</summary>
     public sealed class GameDevScoreCalculator : IGameDevScoreCalculator
     {

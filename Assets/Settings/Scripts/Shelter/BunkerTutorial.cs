@@ -12,8 +12,8 @@ namespace UnityGameJam.Shelter
         public Camera view;
         public ShelterArea common, planning, programming, graphics, sleeping, guard;
         public ShelterInventory inventory;
-        public RectTransform bagPanel, clock;
-        public Canvas clockLayer, progressLayer;
+        public RectTransform bagPanel, clock, progressPanel;
+        Canvas clockLayer, progressLayer;
 
         Vector3 initialPosition;
         ShelterArea room;
@@ -29,6 +29,8 @@ namespace UnityGameJam.Shelter
             }
             initialPosition = view.transform.position;
             presenting = true;
+            clockLayer = clock.gameObject.AddComponent<Canvas>();
+            progressLayer = progressPanel.gameObject.AddComponent<Canvas>();
             simulation.AcquirePause(this);
             commander.AcquireInputBlock(this);
             dialogue.gameObject.SetActive(true);
@@ -64,8 +66,8 @@ namespace UnityGameJam.Shelter
             };
             hud = situation == "bunker_bag" ? bagPanel : situation == "bunker_clock" ? clock : null;
             // Lift the actual HUD above the ceiling strip for the line that explains it.
-            clockLayer.enabled = hud == clock;
-            progressLayer.enabled = situation == "bunker_graphics";
+            SetHighlighted(clockLayer, hud == clock);
+            SetHighlighted(progressLayer, situation == "bunker_graphics");
             if (bagOpen != (hud == bagPanel))
             {
                 bagOpen = hud == bagPanel;
@@ -83,6 +85,12 @@ namespace UnityGameJam.Shelter
         }
 
         void LateUpdate() => RefreshHighlight();
+
+        void SetHighlighted(Canvas layer, bool highlighted)
+        {
+            layer.overrideSorting = highlighted;
+            if (highlighted) layer.sortingOrder = dialogue.GetComponentInParent<Canvas>().sortingOrder + 1;
+        }
 
         void RefreshHighlight()
         {
@@ -108,8 +116,8 @@ namespace UnityGameJam.Shelter
             if (!presenting) return;
             presenting = false;
             if (bagOpen && inventory) inventory.SetOpen(false);
-            if (clockLayer) clockLayer.enabled = false;
-            if (progressLayer) progressLayer.enabled = false;
+            if (clockLayer) Destroy(clockLayer);
+            if (progressLayer) Destroy(progressLayer);
             if (view) view.transform.position = initialPosition;
             if (commander) commander.ReleaseInputBlock(this);
             if (simulation) simulation.ReleasePause(this);

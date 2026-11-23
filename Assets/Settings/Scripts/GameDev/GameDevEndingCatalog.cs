@@ -64,6 +64,7 @@ namespace UnityGameJam.GameDev
             var ending = Select(totalScore);
             double rounded = Math.Round(totalScore, 3, MidpointRounding.AwayFromZero);
             string text = rounded.ToString("0.000");
+            if (rounded == 1d && totalScore < 1d) return text + " 미만";
             if (Select(rounded) == ending) return text;
             return text + (totalScore < rounded ? " 미만" : " 초과");
         }

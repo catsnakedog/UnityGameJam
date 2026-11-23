@@ -9,6 +9,8 @@ using UnityGameJam.GameDev;
 
 namespace UnityGameJam.Shelter
 {
+    public enum BunkerEndReason { None, TimeExpired, AllFainted, GameCompleted }
+
     [DisallowMultipleComponent]
     public sealed class BunkerSimulation : MonoBehaviour
     {
@@ -16,6 +18,7 @@ namespace UnityGameJam.Shelter
         [SerializeField] ShelterRoster roster;
         Task initializing;
         BunkerTickClock clock;
+        IReadOnlyList<CharacterIdentity> survivors;
         BunkerRules difficultyOverride;
         readonly List<(CharacterIdentity actor, GameDevField field, int ability)> workers = new List<(CharacterIdentity, GameDevField, int)>();
         readonly double[] totalAbility = new double[3];
@@ -36,7 +39,8 @@ namespace UnityGameJam.Shelter
         public bool IsReady => clock != null;
         public int CurrentTick => clock?.CurrentTick ?? 0;
         public double FractionalTick => clock?.FractionalTick ?? 0;
-        public int RemainingTicks => Rules ? Mathf.Max(0, Rules.TotalTicks - CurrentTick) : 0;
+        public BunkerEndReason EndReason { get; private set; }
+        public int RemainingTicks => Rules && EndReason == BunkerEndReason.None ? Mathf.Max(0, Rules.TotalTicks - CurrentTick) : 0;
         public bool Paused { get; set; }
         readonly HashSet<object> pauseOwners = new HashSet<object>();
         public bool IsPaused => Paused || pauseOwners.Count > 0;
@@ -69,17 +73,18 @@ namespace UnityGameJam.Shelter
             if (difficulty != BunkerDifficulty.Hard)
                 difficultyOverride = rules.CreateDifficultyOverride(difficulty);
             Rules = difficultyOverride ? difficultyOverride : rules;
-            var people = roster.Characters;
+            var people = survivors = roster.Characters;
             var walkers = new ShelterWalker[people.Count];
             for (int i = 0; i < people.Count; i++) walkers[i] = people[i].GetComponent<ShelterWalker>();
             foreach (var header in FindObjectsByType<ShelterRoomHeader>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (header.gameObject.scene == gameObject.scene) header.Bind(walkers);
-            development.SetScoreCalculator(new GameDevScoreCalculator(Rules.EvaluationTargetProgress, Rules.EvaluationReferenceTicks, () => CurrentTick));
+            development.SetScoreCalculator(new GameDevFinalScoreCalculator());
             development.DevelopmentRestarted += ResetClock;
             ResetClock();
         }
         void ResetClock()
         {
+            EndReason = BunkerEndReason.None;
             GameAudio.Music(GameSound.Bunker);
             if (TryGetComponent<ShelterSpeech>(out var speech)) speech.Clear();
             foreach (var actor in roster.Characters)
@@ -106,7 +111,9 @@ namespace UnityGameJam.Shelter
         void Update() => Advance(Time.deltaTime);
         public void Advance(double seconds)
         {
-            if (!IsReady || !isActiveAndEnabled || IsPaused || development.Phase != GameDevPhase.Developing) return;
+            if (!IsReady || !isActiveAndEnabled || development.Phase != GameDevPhase.Developing) return;
+            // Event choices can change the whole team or the last gauge while the clock is paused.
+            if (TryFinishEarly() || IsPaused) return;
             if(pendingPostEventTick!=0)
             {
                 int tick=pendingPostEventTick; pendingPostEventTick=0; CompleteTick(tick);
@@ -121,6 +128,7 @@ namespace UnityGameJam.Shelter
                 if (actor) { actor.AdvanceHungerTick(tick); actor.AdvanceMentalTick(); }
             // All due work on the last tick precedes submission of the final progress snapshot.
             if (tick % Rules.WorkEveryTicks == 0) { ProcessWork(); WorkProcessed?.Invoke(tick); }
+            if (TryFinishEarly()) return;
             if (Rules.IsPresentationTick(tick))
             {
                 double score = GameDevScoreCalculator.Calculate(development.Progress, Rules.EvaluationTargetProgress, tick, Rules.TotalTicks);
@@ -128,6 +136,7 @@ namespace UnityGameJam.Shelter
                 LastPresentationTick = tick;
                 foreach (var actor in roster.Characters)
                     if (actor) actor.ApplyMentalChange(grade.MentalDelta, SurvivorEmotion.Cause.Presentation);
+                if (TryFinishEarly()) return;
                 PresentationDue?.Invoke(tick, score, grade);
             }
             else if (tick < Rules.TotalTicks && tick % Rules.RandomEventEveryTicks == 0) RandomEventDue?.Invoke(tick);
@@ -144,8 +153,41 @@ namespace UnityGameJam.Shelter
                 ZombieInvasionDue?.Invoke(tick);
             }
             TickOccurred?.Invoke(tick);
-            if (tick == Rules.TotalTicks) { development.FinishDevelopment(); DurationEnded?.Invoke(); }
+            if (TryFinishEarly()) return;
+            if (tick == Rules.TotalTicks)
+            {
+                Finish(BunkerEndReason.TimeExpired);
+                DurationEnded?.Invoke();
+                return;
+            }
             clock.Paused = IsPaused || development.Phase != GameDevPhase.Developing || !isActiveAndEnabled;
+        }
+
+        bool TryFinishEarly()
+        {
+            if (development.Progress.IsComplete)
+            {
+                Finish(BunkerEndReason.GameCompleted);
+                return true;
+            }
+            bool hasSurvivor = false;
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                var actor = survivors[i];
+                if (!actor || !actor.isActiveAndEnabled) continue;
+                hasSurvivor = true;
+                if (!actor.IsFainted) return false;
+            }
+            if (hasSurvivor) Finish(BunkerEndReason.AllFainted);
+            return hasSurvivor;
+        }
+
+        void Finish(BunkerEndReason reason)
+        {
+            EndReason = reason;
+            pendingPostEventTick = 0;
+            clock.Paused = true;
+            development.FinishDevelopment();
         }
         internal bool PlanningUnlocksDepartments => Rules && development && development.Progress.Planning > Rules.PlanningUnlockPercent;
 

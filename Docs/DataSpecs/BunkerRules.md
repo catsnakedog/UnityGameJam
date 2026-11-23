@@ -2,7 +2,7 @@
 
 ## 회차 난이도
 
-일반 시작 기본값은 어려움, 튜토리얼 완료는 쉬움이다. 기획자와 함께 선택한 난이도는 파밍, 벙커, 엔딩의 다시 하기까지 회차 메모리에 보관한다. 모든 난이도는 같은 `totalTicks`, 발표 일정, 작업 주기와 평가식을 쓴다.
+일반 시작 기본값은 어려움, 튜토리얼 완료는 보통(Medium)이다. 기획자와 함께 선택한 난이도는 파밍, 벙커, 엔딩의 다시 하기까지 회차 메모리에 보관한다. 모든 난이도는 같은 `totalTicks`, 발표 일정, 작업 주기와 평가식을 쓴다.
 
 | 난이도 | 초/틱 | 사건 간격 | 첫 습격 | 습격 간격 |
 |---|---:|---:|---:|---:|
@@ -24,7 +24,7 @@
 | presentationTicks | int 배열, 회차 내 틱 | 240·480·720. 양의 틱을 오름차순으로 중복 없이 설정한다. 종료 틱 이후의 예약은 실행하지 않는다. |
 | presentationGrades | 등급 배열 | 최저 점수 minimumScore(double, 0부터 오름차순), 표시 label(필수), 전원 mentalDelta(int, 포인트), 연출 color(RGBA)를 갖는다. 0부터 망겜 −15 빨강, 0.7부터 흠 0 회색, 1.0부터 굿 +10 초록, 1.2부터 갓겜 +20 금색. |
 
-발표 점수는 세 진척 합 ÷ (기존 evaluationTargetProgress × 현재 틱 / totalTicks)이다. 발표 틱에는 방 작업 후 전원의 멘탈을 한 번 반영하고 일반 사건을 대체한다. 기존 최종 엔딩의 별도 기준 틱과 분기는 유지한다. 시뮬레이션과 시계는 같은 일정과 실행 기록을 읽는다. 설정을 이전하거나 제거하면 두 소비자를 함께 전환한다. [노션 중간평가](https://app.notion.com/p/41caca30f5dc801c873be391bddeeade) · [시간표](https://app.notion.com/p/41caca30f5dc8065a8aae3eccbbd09c0)
+발표 점수는 세 진척 합 ÷ (기존 evaluationTargetProgress × 현재 틱 / totalTicks)이다. 발표 틱에는 방 작업 후 전원의 멘탈을 한 번 반영하고 일반 사건을 대체한다. 시뮬레이션과 시계는 같은 일정과 실행 기록을 읽는다. 설정을 이전하거나 제거하면 두 소비자를 함께 전환한다. [노션 중간평가](https://app.notion.com/p/41caca30f5dc801c873be391bddeeade) · [시간표](https://app.notion.com/p/41caca30f5dc8065a8aae3eccbbd09c0)
 
 ## 방 멘탈과 기절 구조
 
@@ -62,7 +62,7 @@ Windows 번들로 불러온 값 50과 6인의 51·50·0 전환을 확인했다. 
 
 ## 최종 엔딩 평가 기준
 
-현재 960틱 회차에서 evaluationReferenceTicks는 192틱이며 evaluationTargetProgress는 96이다. 마지막 틱의 작업을 반영한 세 분야 진척 합을 480으로 나눈다. 회차 길이를 변경할 때 같은 엔딩 난이도를 유지하려면 기준 틱도 같은 비율로 조정한다. 중간 발표는 위의 totalTicks 기준을 사용한다. [변경 및 검증](../DataHistory/20261123-ending-score-verified.md)
+최종 점수는 제출한 세 분야의 진척 합을 세 분야의 최대 진척 합으로 나눈 값이다. 중간 발표는 `evaluationTargetProgress`와 `totalTicks`를 사용한다. `evaluationReferenceTicks`는 이전 데이터와의 호환을 위해 보관한다. [최종 점수 변경 이력](../DataHistory/20261124-ending-full-score.md)
 
 ## 2026-11-18 엔딩 평가식 도입 당시 값
 
@@ -94,7 +94,7 @@ Windows 번들로 불러온 값 50과 6인의 51·50·0 전환을 확인했다. 
 | workEveryTicks | int | 작업 간격/틱 | 필수 >0, 초기 임시 1 |
 | percentPerAbility | float | 작업 1회 능력 1당 퍼센트포인트 | 필수 유한 >=0, 초기 임시 0.1 |
 
-모든 필드는 Validate에서 검사한다. 첫 습격은 firstInvasionTick에, 일반 사건은 첫 정시에 발생한다. 마지막 틱의 작업 처리 후 FinishDevelopment를 호출한다. 재시작하면 시계와 발행 기록을 초기화한다. 일시정지와 Time.timeScale을 따른다. 세 분야가 모두 100%에 도달해도 설정된 종료 틱까지 진행한다.
+모든 필드는 Validate에서 검사한다. 첫 습격은 firstInvasionTick에, 일반 사건은 첫 정시에 발생한다. 마지막 틱의 작업 처리 후 FinishDevelopment를 호출한다. 재시작하면 시계와 발행 기록을 초기화한다. 일시정지와 Time.timeScale을 따른다. 세 분야가 모두 100%이거나 참여 생존자가 모두 탈진하면 남은 틱을 건너뛰고 즉시 진척을 제출한다. 같은 작업에서 두 조건이 성립하면 완성을 우선한다. 최종 평가는 마감 시점의 기존 점수 기준을 적용한다.
 
 방 분류는 닫힌 기술 분류 `ShelterRoomType` (Common=0, Programming=1, Graphics=2, Planning=3, Sleeping=4, ZombieInvasion=5). 씬의 기존 ShelterArea.roomType이 방별 배치 정본이다. 캐릭터 능력을 복제하지 않는다. 시작 시 위치한 방/이동 도착 방에 소속되며 이동 지시가 수락되면 소속 해제. 복도·이동·사다리·비활성·닫힌 방은 작업 제외. 공용/수면/침공은 작업 없음. 여러 작업자는 합산; 분야별 100% 상한은 기존 GameDevProgress 사용.
 

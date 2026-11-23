@@ -22,6 +22,7 @@ namespace UnityGameJam.GameDev
         [SerializeField] Image reactionFace;
         [SerializeField] Sprite angryFace, neutralFace, happyFace;
         [SerializeField] CanvasGroup blackout;
+        [SerializeField] TMP_Text endReasonLabel;
         bool presenting, leaving;
         string starter;
         public bool IsOpen => panel && panel.activeSelf;
@@ -59,7 +60,25 @@ namespace UnityGameJam.GameDev
             title.text = ending.DisplayName;
             body.text = ending.Description;
             score.text = $"평가 점수  {formattedScore}";
+            string notice = simulation.EndReason switch
+            {
+                BunkerEndReason.AllFainted => "전원 탈진",
+                BunkerEndReason.GameCompleted => "게임 개발 완료",
+                _ => null
+            };
+            endReasonLabel.gameObject.SetActive(notice != null);
+            endReasonLabel.text = notice ?? string.Empty;
             yield return Fade(1f);
+            if (notice != null)
+            {
+                float elapsed = 0f;
+                while (elapsed < 1.5f)
+                {
+                    yield return null;
+                    if (!GameOptions.BlocksInput) elapsed += Time.unscaledDeltaTime;
+                }
+                endReasonLabel.gameObject.SetActive(false);
+            }
             DontDestroyOnLoad(gameObject);
             yield return SceneManager.LoadSceneAsync(EndingCutscene.SceneName);
             SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());

@@ -52,11 +52,12 @@ public static class GameDevChecks
         database.Initialize();
         Check(database.Tables.Count == plan.Tables.Count && plan.Tables.All(t => database.GetTable(t.Name).Count == t.Count), "Shared database matches every current CSV table", checks);
         var compiled = GameDevEndingCatalog.FromTable(database.GetTable(GameDevKeys.EndingsTable));
-        var rules = AssetDatabase.LoadAssetAtPath<BunkerRules>(BunkerSetup.RulesPath);
-        var scoring = new GameDevScoreCalculator(rules.EvaluationTargetProgress, rules.EvaluationReferenceTicks, () => rules.TotalTicks);
+        Check(compiled.FormatScore(0.9999) == 1d.ToString("0.000") + " 미만" &&
+            compiled.FormatScore(1) == 1d.ToString("0.000"), "Only complete development displays an exact 1.000", checks);
+        var scoring = new GameDevFinalScoreCalculator();
         float maximum = GameDevProgress.MaximumPercent;
         Check(scoring.TryCalculate(new GameDevProgress(maximum, maximum, maximum), out double maxScore) &&
-            compiled.Select(maxScore).Id == compiled.Active.Last().Id, "The highest enabled ending is reachable on the actual final tick", checks);
+            maxScore == 1 && compiled.Select(maxScore).Id == compiled.Active.Last().Id, "Full development earns one point and the highest ending", checks);
         foreach (var ending in actual.Active)
             Check(compiled.Select(ending.MinimumScore).Id == ending.Id, "Imported boundary: " + ending.Id, checks);
         var edited = CsvTableReader.Read("GameDevEndings.csv", "id:string,displayName:string,description:string,minimumScore:double,enabled:bool\na,가,설명,0,true\nb,나,설명,125,true\n");
@@ -226,7 +227,7 @@ public static class GameDevChecks
         {
             manager.EndingReached -= onEnding;
             manager.SetScoreCalculator(simulation
-                ? new GameDevScoreCalculator(simulation.Rules.EvaluationTargetProgress, simulation.Rules.EvaluationReferenceTicks, () => simulation.CurrentTick)
+                ? (IGameDevScoreCalculator)new GameDevFinalScoreCalculator()
                 : new GameDevScoreCalculator());
             manager.RestartDevelopment();
             ui.Bind(manager);

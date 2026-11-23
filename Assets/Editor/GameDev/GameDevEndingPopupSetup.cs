@@ -140,9 +140,28 @@ public static class GameDevEndingPopupSetup
             Set(popup, "blackout", curtain.GetComponent<CanvasGroup>());
             Set(popup, "retry", retry.GetComponent<Button>());
             PaperUISetup.Ending(root);
+            EnsureEndReasonLabel(popup, curtain);
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static void EnsureEndReasonLabel(GameDevEndingPopup popup, Transform curtain)
+    {
+        var child = curtain.Find("End reason");
+        if (child) return;
+        var label = new GameObject("End reason", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
+        var title = (TMP_Text)new SerializedObject(popup).FindProperty("title").objectReferenceValue;
+        Place(label.rectTransform, curtain, new Vector2(.5f, .5f), Vector2.zero, new Vector2(1000, 140));
+        label.font = title.font;
+        label.fontSize = 72;
+        label.color = Color.white;
+        label.alignment = TextAlignmentOptions.Center;
+        label.raycastTarget = false;
+        label.richText = false;
+        label.text = "전원 탈진";
+        label.gameObject.SetActive(false);
+        Set(popup, "endReasonLabel", label);
     }
 
     static Sprite Sprite(string name) => AssetDatabase.LoadAssetAtPath<Sprite>(Art + name + ".png") ?? throw new InvalidOperationException("Missing Sprite " + name);

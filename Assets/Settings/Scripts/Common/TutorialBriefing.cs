@@ -38,7 +38,7 @@ public sealed class TutorialBriefing : MonoBehaviour
 
     void BeginFarming()
     {
-        FarmingRunTransfer.BeginRun(starter, BunkerDifficulty.Easy, tutorial: true);
+        FarmingRunTransfer.BeginRun(starter, BunkerDifficulty.Medium, tutorial: true);
         SceneManager.LoadSceneAsync("Farming");
     }
 

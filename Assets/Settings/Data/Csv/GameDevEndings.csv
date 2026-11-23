@@ -1,6 +1,6 @@
 ﻿엔딩 ID,제목 (임시안),본문 (임시안),최소 점수 (임시안),활성 여부
 string,string,string,double,bool
 id,displayName,description,minimumScore,enabled
-ending_unfinished,남겨진 가능성,다음 작품을 위한 경험을 남겼습니다.,0.0,TRUE
-ending_released,첫 출시,벙커에서 만든 게임을 세상에 선보였습니다.,0.3,TRUE
-ending_breakthrough,새로운 시작,완성한 게임이 새로운 가능성을 열었습니다.,0.5,TRUE
+ending_unfinished,실패,좀비들이 게임에 만족하지 못하고 돌아갔습니다...,0.0,TRUE
+ending_released,평범,벙커에서 만든 게임을 세상에 선보였습니다.,0.3,TRUE
+ending_breakthrough,갓겜,벙커에서 만든 게임이 모든 좀비들을 만족시켰습니다!,0.5,TRUE

@@ -8,9 +8,11 @@ AI가 데이터 작업을 시작할 때 가장 먼저 읽는 공용 색인이다
 
 WebGL 파밍 씬은 `data.farming.rules` 로드가 끝나면 Addressables 완료 콜백을 통해 준비 시간을 시작한다. [연결 명세](DataSpecs/FarmingRules.md) · [WebGL 빌드 이력](DataHistory/20261123-webgl-farming-load.md)
 
-회차 난이도의 틱 길이, 사건 및 습격 일정은 기존 `data.bunker.rules`가 소유한다. 타이틀에서 고르거나 튜토리얼에서 쉬움으로 진입한다. [필드 명세](DataSpecs/BunkerRules.md) · [회차 검증](DataHistory/20261123-difficulty-verified.md)
+회차 난이도의 틱 길이, 사건 및 습격 일정은 기존 `data.bunker.rules`가 소유한다. 타이틀에서 고르거나 튜토리얼에서 보통(Medium)으로 진입한다. [필드 명세](DataSpecs/BunkerRules.md) · [회차 검증](DataHistory/20261123-difficulty-verified.md)
 
-960틱 회차의 최종 엔딩은 `data.bunker.rules.evaluationReferenceTicks` 192틱과 기존 `data.game-dev.endings.minimumScore`를 사용한다. [판정 경계 검증](DataHistory/20261123-ending-score-verified.md)
+전원 탈진 또는 세 분야 완성으로 조기 종료한 회차도 마감 시점과 동일한 기준으로 평가한다. [종료 처리](UI/GameDevEndingPopup.md)
+
+최종 점수는 세 개발 분야의 평균 완성률이다. 전부 완성하면 1점이며, `data.game-dev.endings.minimumScore`로 등급을 선택한다. [최종 점수 변경 이력](DataHistory/20261124-ending-full-score.md)
 
 - `data.shelter.dialogue` · active · Codex dialogue-20261119 · 벙커 상황별 발화 후보와 주최 측 튜토리얼 방송·화면 전환 · 정본 [ShelterDialogue.csv](../Assets/Settings/Data/Csv/ShelterDialogue.csv) · [명세](DataSpecs/ShelterDialogue.md) · [적용 이력](DataHistory/20261119-shelter-dialogue.md)
 
@@ -100,7 +102,7 @@ SpreadConfig 연결 작업 `Codex spread-config-20261118` 완료: 기존 `editor
 | `data.characters` | active (노션 콘텐츠) / Codex notion-sheets-20261118 | 캐릭터 이름·능력·초기 멘탈·직군·소개·노션 ID, Characters | [Characters](https://docs.google.com/spreadsheets/d/1OHkc6LfkRrNK5U2ZG6ENSyFSC5L_QOgUnAex0D5l6X8/edit?gid=897086903#gid=897086903) → `Assets/Settings/Data/Csv/Characters.csv` | [Characters](DataSpecs/Characters.md) |
 | `editor.data-tool` | active / Codex live-sheets-20261118 | 실행 시 시트/내부 CSV 선택, CSV 폴더·Config URL·시트 연결 목록, Excel 공유 읽기 | 로컬 설정 `ProjectSettings/GameDataTool.asset`; 연결 목록 [SpreadConfig](https://docs.google.com/spreadsheets/d/1oivFPajqTe1rILgtI4Xe1l6kPKtfSmG4UMat7keT84A/edit?gid=961703615) | [DataToolSettings](DataSpecs/DataToolSettings.md) |
 
-`data.events`는 사용자 예시 12건과 Yes/No 효과를 연결했고 `data.shelter.items`는 벙커 물자 참조 목록이다. 현재 planned 예약은 없다. data.characters는 구조 ID 기반 배치 연결과 검증을 완료했다. `data.game-dev.endings`는 연결·검증을 마쳤으며 엔딩 이름/점수는 사용자 요청대로 임시안을 유지한다. 벙커 진행도 증가와 총 틱 종료는 data.bunker.rules가 담당한다. 새 작업에서는 아래 절차에 따라 이 표에 행을 먼저 추가한다. 새 CSV는 **테이블마다** 명세를 작성한다. 같은 SO 스키마를 공유하는 에셋들은 SoundCue처럼 명세 한 곳의 인스턴스 목록으로 관리할 수 있지만, 각 에셋의 역할·경로·GUID·상태를 개별 등록해야 한다.
+`data.events`는 사용자 예시 12건과 Yes/No 효과를 연결했고 `data.shelter.items`는 벙커 물자 참조 목록이다. 현재 planned 예약은 없다. data.characters는 구조 ID 기반 배치 연결과 검증을 완료했다. `data.game-dev.endings`는 연결·검증을 마쳤으며 엔딩 제목과 본문은 [실패·평범·갓겜 변경 이력](DataHistory/20261123-tutorial-medium-endings.md)에 따라 확정했다. 벙커 진행도 증가와 총 틱 종료는 data.bunker.rules가 담당한다. 새 작업에서는 아래 절차에 따라 이 표에 행을 먼저 추가한다. 새 CSV는 **테이블마다** 명세를 작성한다. 같은 SO 스키마를 공유하는 에셋들은 SoundCue처럼 명세 한 곳의 인스턴스 목록으로 관리할 수 있지만, 각 에셋의 역할·경로·GUID·상태를 개별 등록해야 한다.
 
 상태: `planned`(정본 생성 전 예약), `active`(실사용), `example`(실게임 규칙 아님), `placeholder`(미연결 입력이 있음), `generated`(파생 결과), `deprecated`(대체 데이터와 폐기 조건 필수). `planned`에는 기능 담당 외에 실제 작업 ID/담당자도 적고, 종료 시 상태를 갱신한다.
 
