@@ -155,8 +155,35 @@ namespace ShelterRun.Editor
             var root=new GameObject("Player");var depth=root.AddComponent<FarmingDepth2D>();var so=new SerializedObject(depth);so.FindProperty("worldOrder").intValue=200;so.ApplyModifiedPropertiesWithoutUndo();var feet=root.AddComponent<CircleCollider2D>();feet.radius=.17f;feet.isTrigger=true;
             var body=SpriteObject("Body","player_idle",root.transform,Vector3.zero,1);var player=root.AddComponent<FarmingPlayer>();Set(player,"body",body.transform);Set(player,"sprite",body.GetComponent<SpriteRenderer>());Set(player,"feet",feet);
             ConfigureCharacter(root, null);
+            AddInteractPrompt(player);
             var prefab=PrefabUtility.SaveAsPrefabAsset(root,Prefabs+"Player.prefab");UnityEngine.Object.DestroyImmediate(root);return ((GameObject)PrefabUtility.InstantiatePrefab(prefab)).GetComponent<FarmingPlayer>();
         }
+        internal static void AddInteractPrompt(FarmingPlayer player)
+        {
+            var prompt = new GameObject("Interaction key");
+            prompt.transform.SetParent(player.transform, false);
+            var background = new GameObject("Keycap", typeof(SpriteRenderer)).GetComponent<SpriteRenderer>();
+            background.transform.SetParent(prompt.transform, false);
+            background.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/Farming/slot_empty.png");
+            background.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(
+                "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat");
+            var size = background.sprite.bounds.size;
+            background.transform.localScale = new Vector3(.38f / size.x, .38f / size.y, 1);
+            background.sortingOrder = 100;
+
+            var label = new GameObject("E", typeof(TextMeshPro)).GetComponent<TextMeshPro>();
+            label.transform.SetParent(prompt.transform, false);
+            label.font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/FarmingKorean.asset");
+            label.text = "E";
+            label.fontSize = 3.6f;
+            label.alignment = TextAlignmentOptions.Center;
+            label.color = FarmingSideViewArt.C("302820");
+            label.rectTransform.sizeDelta = new Vector2(.38f, .38f);
+            label.GetComponent<MeshRenderer>().sortingOrder = 101;
+            prompt.SetActive(false);
+            Set(player, "interactPrompt", prompt.transform);
+        }
+
         // Apply the original 3/2/1 layout migration once. Later Inspector choices remain authoritative.
         [MenuItem("Tools/Farming/Apply Starting Survivor and Character Art")]
         public static void ApplyStartingSurvivorAndCharacterArt()

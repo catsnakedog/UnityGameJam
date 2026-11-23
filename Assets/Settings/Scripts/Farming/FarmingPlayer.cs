@@ -9,6 +9,7 @@ namespace ShelterRun
     {
         [SerializeField] Transform body;
         [SerializeField] SpriteRenderer sprite;
+        [SerializeField] Transform interactPrompt;
         [SerializeField] SurvivorAnimation artworkSource;
         SurvivorAnimation.Artwork artwork;
         readonly SurvivorAnimation.Playback playback = new SurvivorAnimation.Playback();
@@ -20,6 +21,27 @@ namespace ShelterRun
         public FarmingPickup Focused { get; private set; }
         public FarmingDoor2D FocusedDoor { get; private set; }
         public bool AtBunker => session != null && session.Bunker.Contains(transform.position);
+
+        void LateUpdate()
+        {
+            if (!interactPrompt) return;
+            bool visible = session && session.CanExplore && !GameOptions.BlocksInput && CanUseInteraction();
+            if (interactPrompt.gameObject.activeSelf != visible) interactPrompt.gameObject.SetActive(visible);
+            if (visible)
+            {
+                var bounds = sprite.bounds;
+                interactPrompt.position = new Vector3(bounds.center.x, bounds.max.y + .26f, transform.position.z);
+            }
+        }
+
+        bool CanUseInteraction()
+        {
+            if (FocusedDoor) return true;
+            if (!session.CanAct) return false;
+            if (Inventory.Used > 0 && AtBunker) return true;
+            return Focused ? Inventory.CanAdd(Focused) : Inventory.Used > 0;
+        }
+
         public void Initialize(FarmingSession owner)
         {
             session = owner;
