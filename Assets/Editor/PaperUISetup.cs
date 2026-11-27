@@ -372,6 +372,8 @@ internal static class PaperUISetup
         try{
             if(scene.isDirty)throw new InvalidOperationException("Title has unsaved changes.");
             var t=scene.GetRootGameObjects().Single(r=>r.name=="Start screen").transform;
+            var viewport=t.Find(FixedAspectSetup.ViewportName);
+            if(viewport) t=viewport;
             var home=t.Find("Main menu");
             string[] names={"Start","Options","Quit"};
             for(int i=0;i<names.Length;i++)ButtonStyle(home.Find(names[i]),"Button"+(i+1),25,Ink);

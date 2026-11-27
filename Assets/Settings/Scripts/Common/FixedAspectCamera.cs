@@ -36,7 +36,8 @@ namespace UnityGameJam.Common
             ApplyViewport();
         }
 
-        void LateUpdate() => ApplyViewport();
+        // Update before gameplay reads pixelRect for pointer input on a resize frame.
+        void Update() => ApplyViewport();
         void OnPreCull() => ApplyViewport();
 
         void BeforeCameraRendering(ScriptableRenderContext context, Camera camera)

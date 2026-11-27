@@ -8,7 +8,7 @@ using UnityGameJam.Common;
 
 public static class FixedAspectSetup
 {
-    const string ViewportName = "Viewport 1920x1080";
+    public const string ViewportName = "Viewport 1920x1080";
 
     public static void ConfigureCanvas(Canvas canvas)
     {
@@ -16,7 +16,9 @@ public static class FixedAspectSetup
         var scaler = canvas.GetComponent<CanvasScaler>();
         if (!scaler) scaler = canvas.gameObject.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(FixedAspectCamera.ReferenceWidth, FixedAspectCamera.ReferenceHeight);
+        // The title menu is authored in 1280 x 720 canvas units. It shares the same 16:9 viewport.
+        if (!canvas.GetComponent<TitleMenu>())
+            scaler.referenceResolution = new Vector2(FixedAspectCamera.ReferenceWidth, FixedAspectCamera.ReferenceHeight);
         scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
 
         var viewport = canvas.transform.Find(ViewportName) as RectTransform;
@@ -38,8 +40,6 @@ public static class FixedAspectSetup
     public static void ApplyToProject()
     {
         if (EditorApplication.isPlaying) throw new System.InvalidOperationException("Exit Play mode before applying display settings.");
-        PlayerSettings.defaultScreenWidth = FixedAspectCamera.ReferenceWidth;
-        PlayerSettings.defaultScreenHeight = FixedAspectCamera.ReferenceHeight;
         PlayerSettings.defaultWebScreenWidth = FixedAspectCamera.ReferenceWidth;
         PlayerSettings.defaultWebScreenHeight = FixedAspectCamera.ReferenceHeight;
 
